@@ -1,228 +1,82 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Add Sale functionality, redesign UI components, and add Timer/Reminder feature",
+  "title": "Redesign Sound Button, Add Premium Codes, and Unit Selector for Quantity Fields",
   "requirements": [
     {
-      "id": "REQ-22",
-      "summary": "Fix Add Sale Submit button to properly save sale data to localStorage and ensure the saved data appears in the History screen immediately after submission",
+      "id": "REQ-1",
+      "summary": "Redesign the sound toggle button in the Settings page with new visually appropriate iconography and styling while preserving existing sound enable/disable and custom sound upload functionality",
       "acceptanceCriteria": [
-        "When Submit button is clicked on Add Sale screen, sale data must be saved to localStorage",
-        "Saved sale must appear in History screen immediately without refresh",
-        "localStorage data structure must be consistent across Add Sale and History components"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AddSale.tsx",
-          "operation": "modify",
-          "description": "Fix the handleSubmit function to properly save sale records to localStorage under a consistent key 'sales'. Ensure the sale object includes all form fields (itemName, quantity, costPrice, salePrice, profit, stockColor, photo, date, id). Add proper error handling and success feedback. After successful save, navigate to History page or show confirmation message."
-        },
-        {
-          "path": "frontend/src/pages/History.tsx",
-          "operation": "modify",
-          "description": "Update the component to read sales data from localStorage using the same key 'sales' that AddSale uses. Replace placeholder/mock data with actual localStorage data. Ensure the component re-renders when navigating from AddSale after a new sale is added. Add proper null/empty state handling."
-        }
-      ]
-    },
-    {
-      "id": "REQ-23",
-      "summary": "Update Today's Sales counter on Home screen to increment properly when new sales are added through Add Sale form",
-      "acceptanceCriteria": [
-        "Today's Sales card on Home screen must read from the same localStorage data as History screen",
-        "Counter must update automatically when a new sale is added",
-        "Counter must show the count of sales for today's date only"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Modify Today's Sales card to read sales data from localStorage key 'sales', filter by today's date, and display the count. Add useEffect to re-calculate when component mounts or when navigating back from AddSale. Calculate Today's Profit by summing profit values from today's sales. Ensure proper date comparison logic (compare date strings or timestamps)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-24",
-      "summary": "Make Add Sale form flexible by allowing submission with any one or more fields filled - do not require all fields to be completed before submitting",
-      "acceptanceCriteria": [
-        "Submit button must work if even one field is filled in the Add Sale form",
-        "Empty fields should be stored with empty strings or default values (0 for prices)",
-        "Form validation should only check that at least one field has data"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AddSale.tsx",
-          "operation": "modify",
-          "description": "Remove or modify validation logic to only check that at least one field (itemName, quantity, costPrice, salePrice, photo, or stockColor) is non-empty. Allow submission with partial data. Store empty fields as empty strings for text fields and 0 for numeric fields. Update the form validation function accordingly."
-        }
-      ]
-    },
-    {
-      "id": "REQ-25",
-      "summary": "Replace the existing theme color options (Orange Sunset, Red Passion, Golden Amber) with simplified color options: Red, Green, and Black inspired by the Bangladesh flag",
-      "acceptanceCriteria": [
-        "Settings screen Theme Color section must show three options: Red, Green, Black",
-        "Remove Orange Sunset, Red Passion, and Golden Amber color schemes",
-        "Red and Green should use colors inspired by Bangladesh flag (red: #F42A41, green: #006A4E)",
-        "Selecting a color must properly apply it throughout the app UI"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/contexts/ThemeContext.tsx",
-          "operation": "modify",
-          "description": "Update ThemeColor type to include 'red', 'green', and 'black' instead of 'orange', 'red', and 'amber'. Update the applyThemeColor function to apply the new color schemes. Use Bangladesh flag colors: red (#F42A41), green (#006A4E), and a black theme. Update CSS variable mappings for each color scheme."
-        },
-        {
-          "path": "frontend/src/pages/Settings.tsx",
-          "operation": "modify",
-          "description": "Replace the three theme color options (Orange Sunset, Red Passion, Golden Amber) with Red, Green, and Black. Update button labels and display colors accordingly. Ensure the selected color scheme is properly highlighted and applied via ThemeContext."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Define CSS custom properties for the new color schemes: red (#F42A41), green (#006A4E), and black. Replace existing orange-based color variables with the new Bangladesh flag-inspired palette. Ensure proper contrast for text readability in all three themes."
-        }
-      ]
-    },
-    {
-      "id": "REQ-26",
-      "summary": "Redesign the Quick Actions section on Home screen with improved visual design for the two action buttons (Add New Sale and View History)",
-      "acceptanceCriteria": [
-        "Quick Actions buttons must have enhanced visual design with better spacing and styling",
-        "Buttons should remain touch-friendly and clearly labeled",
-        "Design should be consistent with the overall app visual theme"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Redesign the Quick Actions section by improving button styling with enhanced shadows, rounded corners, gradient backgrounds, better icon sizing, and improved spacing. Ensure buttons are visually distinct and maintain mobile-first touch-friendly sizing (minimum 48px touch target). Use consistent design language with the rest of the app."
-        }
-      ]
-    },
-    {
-      "id": "REQ-27",
-      "summary": "Improve the design of the Splash screen tagline text 'Manage your shop efficiently' while keeping the same text content, and display it in Bangla or English based on the user's language setting in Settings",
-      "acceptanceCriteria": [
-        "Splash screen tagline must remain 'Manage your shop efficiently' in English",
-        "Tagline must be translated to Bangla when language setting is Bangla",
-        "Tagline design (typography, sizing, spacing) must be improved for better visual appeal",
-        "Language displayed must be determined by the Settings language selection"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/SplashScreen.tsx",
-          "operation": "modify",
-          "description": "Import useLanguage hook from LanguageContext and use t() function to display the tagline in the selected language. Improve tagline typography by increasing font size, adding letter spacing, using a better font weight, and adding subtle animation effects. Ensure the tagline is visually prominent and well-positioned below the logo."
-        },
-        {
-          "path": "frontend/src/locales/translations.ts",
-          "operation": "modify",
-          "description": "Ensure the splash screen tagline 'Manage your shop efficiently' exists in the English translations and add the Bangla translation if not already present. Verify the translation key is accessible for the SplashScreen component."
-        }
-      ]
-    },
-    {
-      "id": "REQ-28",
-      "summary": "Add a Timer/Reminder enable/disable toggle in the Settings screen that allows users to turn the Timer/Reminder feature on or off",
-      "acceptanceCriteria": [
-        "Settings screen must include a toggle switch labeled 'Timer/Reminder' or similar",
-        "Toggle state must be saved to localStorage and persist across sessions",
-        "When enabled, Timer component must appear on Home screen",
-        "When disabled, Timer component must be hidden from Home screen"
+        "The sound button in Settings page has a new visually distinct design with an appropriate icon (e.g., speaker/sound icon)",
+        "The button clearly conveys its sound-related function",
+        "Clicking the button still toggles sound on/off as before",
+        "Custom sound upload functionality remains intact",
+        "The new design fits cohesively within the Settings page layout"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/Settings.tsx",
           "operation": "modify",
-          "description": "Add a new Timer/Reminder section with a toggle switch. Store the toggle state in localStorage under key 'timerEnabled'. Add proper labels in both English and Bangla. Ensure the toggle state persists across sessions and is properly initialized from localStorage on component mount."
+          "description": "Replace the existing sound toggle button UI with a new visually appropriate design featuring clear sound iconography (speaker icon with sound waves). Update the button styling to make it more prominent and visually distinct. Ensure the redesigned button still integrates with useClickSound hook for toggling sound state and handling custom sound upload. Keep all existing functionality intact while improving the visual design and user experience."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Add 4 new premium access codes to PremiumModal.tsx that work exactly like the existing 987987 code, replacing the previously planned codes",
+      "acceptanceCriteria": [
+        "PremiumModal accepts 4 new premium codes in addition to the original 987987",
+        "Entering any of the 5 valid codes (987987 + 4 new ones) unlocks premium features",
+        "The 4 new codes replace the previously requested 987789 and 879987 codes",
+        "Invalid codes still show an error message",
+        "Premium unlock state is persisted in localStorage"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/PremiumModal.tsx",
+          "operation": "modify",
+          "description": "Add 4 new premium access codes following a consistent, memorable pattern (e.g., 123321, 456654, 789987, 321123). Update the code validation logic to accept all 5 codes: the original 987987 plus the 4 new codes. Ensure each code grants full premium access when entered, with the unlock state persisted in localStorage. Keep the invalid code error message behavior unchanged."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add a bilingual unit selector (gram/kg/liter) next to quantity input fields in AddSale and ProductList pages that respects the current app language using LanguageContext",
+      "acceptanceCriteria": [
+        "A unit selector icon appears next to quantity input fields in AddSale and ProductList pages",
+        "Clicking the icon opens a dropdown showing unit options: gram, kg, liter",
+        "When app language is Bengali, units display as গ্রাম, কেজি, লিটার",
+        "When app language is English, units display as gram, kg, liter",
+        "Switching app language updates the unit dropdown labels immediately",
+        "The selected unit is saved/stored alongside the quantity value",
+        "The quantity input still accepts numeric values normally"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AddSale.tsx",
+          "operation": "modify",
+          "description": "Add a unit selector icon/button next to the quantity input field. Implement a dropdown menu that opens when the icon is clicked, showing three unit options: gram, kg, liter. Use the existing LanguageContext and translation keys (unitGram, unitKg, unitLiter) to display Bengali labels (গ্রাম, কেজি, লিটার) or English labels (gram, kg, liter) based on the current app language. Store the selected unit alongside the quantity value in the sale data structure saved to localStorage. Ensure the quantity input continues to accept numeric values normally and the unit selector updates immediately when the app language is switched."
         },
+        {
+          "path": "frontend/src/pages/ProductList.tsx",
+          "operation": "modify",
+          "description": "Add a unit selector icon/button next to the quantity/measurement input field in the product form (both add and edit modes). Implement a dropdown menu that opens when the icon is clicked, showing three unit options: gram, kg, liter. Use the existing LanguageContext and translation keys (unitGram, unitKg, unitLiter) to display Bengali labels (গ্রাম, কেজি, লিটার) or English labels (gram, kg, liter) based on the current app language. Store the selected unit alongside the quantity value in the product data structure saved to localStorage. Ensure the quantity input continues to accept numeric values normally and the unit selector updates immediately when the app language is switched."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Add translation keys for unit selector options (gram, kg, liter) in both English and Bengali to the translations object",
+      "acceptanceCriteria": [
+        "translations.ts contains English entries: gram, kg, liter",
+        "translations.ts contains Bengali entries: গ্রাম, কেজি, লিটার",
+        "The translation keys are accessible via the existing translation lookup function in LanguageContext"
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/locales/translations.ts",
           "operation": "modify",
-          "description": "Add translation keys for Timer/Reminder settings section including toggle label, description text, and related UI text in both English and Bangla."
-        }
-      ]
-    },
-    {
-      "id": "REQ-29",
-      "summary": "Create a Dynamic Island-style compact timer display component that appears below the Quick Actions section on the Home screen when Timer/Reminder is enabled in Settings",
-      "acceptanceCriteria": [
-        "Timer component must appear below Quick Actions section on Home screen when enabled",
-        "Component must be compact and styled in black color, inspired by iPhone Dynamic Island design",
-        "Timer display size should adapt based on remaining time or timer state",
-        "Component must be clickable to open the timer setting modal"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/TimerDisplay.tsx",
-          "operation": "create",
-          "description": "Create a new compact timer display component styled like iPhone Dynamic Island. Use black background, rounded pill shape, subtle shadow, and animated transitions. Display remaining time in a readable format (e.g., '5:30' for 5 minutes 30 seconds or '1h 23m' for longer times). Component should be clickable and emit an onClick event to open the timer modal. Size should adapt based on timer state (e.g., slightly larger when active)."
-        },
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Import TimerDisplay component and conditionally render it below the Quick Actions section when timerEnabled is true in localStorage. Pass timer state and onClick handler to open the timer setting modal. Ensure proper spacing and layout integration."
-        }
-      ]
-    },
-    {
-      "id": "REQ-30",
-      "summary": "Create a timer setting modal that opens when the user clicks on the timer display component on the Home screen, allowing them to set reminder time in minutes or hours",
-      "acceptanceCriteria": [
-        "Clicking the timer display on Home screen must open a modal/popup",
-        "Modal must include input fields for setting time in minutes and/or hours",
-        "Modal must include a 'Set Reminder' button to save the timer",
-        "Modal must include a 'Cancel' button to close without saving",
-        "Timer data must be saved to localStorage when set"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/TimerModal.tsx",
-          "operation": "create",
-          "description": "Create a modal component for timer/reminder settings. Include input fields for hours and minutes, 'Set Reminder' and 'Cancel' buttons. Support bilingual labels using LanguageContext. On submit, calculate target timestamp and save to localStorage under key 'timerData' with structure: { targetTime: timestamp, startTime: timestamp, duration: number }. Include validation to ensure at least one field is non-zero. Close modal after successful save."
-        },
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Add state to manage TimerModal visibility. Pass modal open/close handlers to TimerDisplay. Render TimerModal component with proper state management. After timer is set via modal, update TimerDisplay to show the countdown."
-        }
-      ]
-    },
-    {
-      "id": "REQ-31",
-      "summary": "Implement browser notification system that triggers when a timer reaches zero, displaying a notification to the user about the reminder they set",
-      "acceptanceCriteria": [
-        "When timer countdown reaches zero, a browser notification must be displayed",
-        "Notification must request permission from the user on first use",
-        "Notification text should indicate what the reminder was for (e.g., 'Time to eat' or generic reminder message)",
-        "No alarm sound should play - only visual browser notification"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useTimerNotification.ts",
-          "operation": "create",
-          "description": "Create a custom hook that manages browser notifications for timer completion. Request notification permission on first use. Provide a function to trigger notification when timer reaches zero. Notification title should use bilingual text (e.g., 'Timer Complete' or 'সময় শেষ'). Include a generic reminder message body. Handle permission denied gracefully."
-        },
-        {
-          "path": "frontend/src/components/TimerDisplay.tsx",
-          "operation": "modify",
-          "description": "Import and use useTimerNotification hook. When countdown reaches zero, trigger the browser notification and clear the timer data from localStorage. Optionally show a visual indicator that the timer has completed."
-        }
-      ]
-    },
-    {
-      "id": "REQ-32",
-      "summary": "Update timer display component to show countdown in real-time, updating every second or minute based on the remaining time until the reminder",
-      "acceptanceCriteria": [
-        "Timer must count down in real-time and update the display",
-        "Display format should adapt based on remaining time (e.g., show hours if more than 60 minutes remain)",
-        "When timer reaches zero, it should stop and trigger the notification"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/TimerDisplay.tsx",
-          "operation": "modify",
-          "description": "Implement countdown logic using useEffect and setInterval. Read timerData from localStorage on mount. Calculate remaining time by comparing current time with targetTime. Update display every second. Format time display adaptively: show hours and minutes for long durations, show minutes and seconds for under 1 hour, show only seconds for under 1 minute. When remaining time reaches zero, trigger notification and clear timer. Clean up interval on unmount."
+          "description": "Add three new translation key pairs to the translations object: 'unitGram' with English value 'gram' and Bengali value 'গ্রাম', 'unitKg' with English value 'kg' and Bengali value 'কেজি', and 'unitLiter' with English value 'liter' and Bengali value 'লিটার'. Place these keys in a logical location within the existing translations structure, ensuring they are accessible via the translation lookup function in LanguageContext."
         }
       ]
     }

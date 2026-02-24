@@ -3,13 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Camera, Upload, ArrowLeft, X } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Camera, Upload, ArrowLeft, X, ChevronDown, Scale } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCamera } from '../camera/useCamera';
 import { toast } from 'sonner';
 
 type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings';
 type StockColor = 'red' | 'yellow' | 'green' | null;
+type QuantityUnit = 'gram' | 'kg' | 'liter' | 'piece';
 
 interface AddSaleProps {
   onNavigate: (page: Page) => void;
@@ -21,6 +28,7 @@ interface SaleRecord {
   wholesalePrice: number;
   sellingPrice: number;
   quantity: number;
+  quantityUnit: QuantityUnit;
   stockColor: StockColor;
   photo: string | null;
   date: string;
@@ -35,6 +43,7 @@ export default function AddSale({ onNavigate }: AddSaleProps) {
     sellingPrice: '',
     quantity: '',
   });
+  const [quantityUnit, setQuantityUnit] = useState<QuantityUnit>('piece');
   const [stockColor, setStockColor] = useState<StockColor>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -59,6 +68,13 @@ export default function AddSale({ onNavigate }: AddSaleProps) {
     { id: 'red' as StockColor, label: t('addSale.stockColors.red'), color: 'bg-red-500' },
     { id: 'yellow' as StockColor, label: t('addSale.stockColors.yellow'), color: 'bg-yellow-500' },
     { id: 'green' as StockColor, label: t('addSale.stockColors.green'), color: 'bg-green-500' },
+  ];
+
+  const unitOptions: { id: QuantityUnit; label: string }[] = [
+    { id: 'gram', label: t('units.gram') },
+    { id: 'kg', label: t('units.kg') },
+    { id: 'liter', label: t('units.liter') },
+    { id: 'piece', label: t('units.piece') },
   ];
 
   const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +127,6 @@ export default function AddSale({ onNavigate }: AddSaleProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if at least one field is filled
     const hasItemName = formData.itemName.trim() !== '';
     const hasQuantity = formData.quantity.trim() !== '';
     const hasSellingPrice = formData.sellingPrice.trim() !== '';
@@ -124,13 +139,10 @@ export default function AddSale({ onNavigate }: AddSaleProps) {
       return;
     }
 
-    // Auto-default empty fields
     const wholesalePrice = formData.wholesalePrice.trim() === '' ? 0 : parseFloat(formData.wholesalePrice);
     const sellingPrice = formData.sellingPrice.trim() === '' ? 0 : parseFloat(formData.sellingPrice);
     const quantity = formData.quantity.trim() === '' ? 0 : parseInt(formData.quantity);
-    const profit = (sellingPrice - wholesalePrice) * quantity;
 
-    // Create sale record
     const now = new Date();
     const saleRecord: SaleRecord = {
       id: Date.now().toString(),
@@ -138,36 +150,32 @@ export default function AddSale({ onNavigate }: AddSaleProps) {
       wholesalePrice,
       sellingPrice,
       quantity,
+      quantityUnit,
       stockColor: stockColor || null,
       photo,
-      date: now.toISOString().split('T')[0], // YYYY-MM-DD format
+      date: now.toISOString().split('T')[0],
       timestamp: Date.now(),
     };
 
-    // Save to localStorage
     try {
       const existingSales = localStorage.getItem('sales');
       const salesArray: SaleRecord[] = existingSales ? JSON.parse(existingSales) : [];
       salesArray.push(saleRecord);
       localStorage.setItem('sales', JSON.stringify(salesArray));
 
-      console.log('Sale saved successfully:', saleRecord);
-
-      // Success feedback
       toast.success('বিক্রয় সফলভাবে সংরক্ষিত হয়েছে / Sale saved successfully');
 
-      // Clear form
       setFormData({
         itemName: '',
         wholesalePrice: '',
         sellingPrice: '',
         quantity: '',
       });
+      setQuantityUnit('piece');
       setStockColor(null);
       setPhoto(null);
       setPhotoFile(null);
 
-      // Navigate to history after a short delay
       setTimeout(() => {
         onNavigate('history');
       }, 1000);
@@ -176,6 +184,8 @@ export default function AddSale({ onNavigate }: AddSaleProps) {
       toast.error('বিক্রয় সংরক্ষণে ব্যর্থ / Failed to save sale');
     }
   };
+
+  const selectedUnit = unitOptions.find(u => u.id === quantityUnit);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-accent/5">
@@ -262,27 +272,60 @@ export default function AddSale({ onNavigate }: AddSaleProps) {
                 </div>
               </div>
 
-              {/* Quantity */}
+              {/* Quantity with Unit Selector */}
               <div className="space-y-2">
                 <Label htmlFor="quantity">{t('addSale.quantity')}</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  placeholder="1"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="quantity"
+                    type="number"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    placeholder="1"
+                    className="flex-1"
+                  />
+                  {/* Unit Selector Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex h-10 min-w-[72px] items-center justify-between gap-1 rounded-lg border-2 border-border bg-secondary/50 px-3 text-sm font-bold uppercase tracking-wide transition-colors hover:border-primary/60 hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                        aria-label={t('units.label')}
+                      >
+                        <Scale className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        <span className="text-xs font-bold">{selectedUnit?.label}</span>
+                        <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="min-w-[110px] rounded-xl">
+                      {unitOptions.map((unit) => (
+                        <DropdownMenuItem
+                          key={unit.id}
+                          onClick={() => setQuantityUnit(unit.id)}
+                          className={`cursor-pointer rounded-lg text-sm font-semibold ${
+                            quantityUnit === unit.id ? 'bg-primary/10 text-primary' : ''
+                          }`}
+                        >
+                          {unit.label}
+                          {quantityUnit === unit.id && (
+                            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
 
               {/* Photo Upload */}
               <div className="space-y-2">
                 <Label>{t('addSale.photo')}</Label>
-                
+
                 {!showCamera && !photo && (
                   <div className="flex gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       className="flex-1"
                       onClick={handleCameraOpen}
@@ -291,11 +334,11 @@ export default function AddSale({ onNavigate }: AddSaleProps) {
                       <Camera className="mr-2 h-4 w-4" />
                       ক্যামেরা / Camera
                     </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
-                      className="flex-1" 
+                      className="flex-1"
                       onClick={() => document.getElementById('photo-upload')?.click()}
                     >
                       <Upload className="mr-2 h-4 w-4" />

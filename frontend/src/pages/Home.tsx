@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, Package, Plus, History as HistoryIcon } from 'lucide-react';
+import { TrendingUp, Package, Plus, History as HistoryIcon, ShoppingBag, Lock } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import TimerDisplay from '../components/TimerDisplay';
-import TimerModal from '../components/TimerModal';
 
-type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings';
+type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings' | 'product-list';
 
 interface HomeProps {
   onNavigate: (page: Page) => void;
@@ -25,25 +23,21 @@ export default function Home({ onNavigate }: HomeProps) {
   const { t } = useLanguage();
   const [todayProfit, setTodayProfit] = useState(0);
   const [todaySales, setTodaySales] = useState(0);
-  const [timerEnabled, setTimerEnabled] = useState(false);
-  const [showTimerModal, setShowTimerModal] = useState(false);
+  const [isPremiumUnlocked, setIsPremiumUnlocked] = useState(false);
+  const [lockedShake, setLockedShake] = useState(false);
 
   useEffect(() => {
-    // Load timer enabled state
-    const loadTimerEnabled = () => {
+    const checkPremium = () => {
       try {
-        const enabled = localStorage.getItem('timerEnabled');
-        setTimerEnabled(enabled === 'true');
-      } catch (error) {
-        console.error('Error loading timer enabled state:', error);
+        setIsPremiumUnlocked(localStorage.getItem('premiumUnlocked') === 'true');
+      } catch {
+        setIsPremiumUnlocked(false);
       }
     };
+    checkPremium();
 
-    loadTimerEnabled();
-
-    // Listen for storage changes
     const handleStorageChange = () => {
-      loadTimerEnabled();
+      checkPremium();
       calculateTodayStats();
     };
 
@@ -59,23 +53,15 @@ export default function Home({ onNavigate }: HomeProps) {
         setTodaySales(0);
         return;
       }
-
       const sales: SaleRecord[] = JSON.parse(data);
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
+      const today = new Date().toISOString().split('T')[0];
       const todaySalesData = sales.filter(sale => sale.date === today);
-      
       const profit = todaySalesData.reduce((sum, sale) => {
-        const saleProfit = (sale.sellingPrice - sale.wholesalePrice) * sale.quantity;
-        return sum + saleProfit;
+        return sum + (sale.sellingPrice - sale.wholesalePrice) * sale.quantity;
       }, 0);
-
       setTodayProfit(profit);
       setTodaySales(todaySalesData.length);
-
-      console.log('Today stats calculated:', { profit, count: todaySalesData.length });
-    } catch (error) {
-      console.error('Error calculating today stats:', error);
+    } catch {
       setTodayProfit(0);
       setTodaySales(0);
     }
@@ -84,6 +70,15 @@ export default function Home({ onNavigate }: HomeProps) {
   useEffect(() => {
     calculateTodayStats();
   }, []);
+
+  const handleProductListClick = () => {
+    if (isPremiumUnlocked) {
+      onNavigate('product-list');
+    } else {
+      setLockedShake(true);
+      setTimeout(() => setLockedShake(false), 600);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-accent/5">
@@ -96,7 +91,6 @@ export default function Home({ onNavigate }: HomeProps) {
 
         {/* Stats Cards */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2">
-          {/* Today's Profit */}
           <Card className="border-2 transition-shadow hover:shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -111,7 +105,6 @@ export default function Home({ onNavigate }: HomeProps) {
             </CardContent>
           </Card>
 
-          {/* Today's Sales */}
           <Card className="border-2 transition-shadow hover:shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -136,14 +129,19 @@ export default function Home({ onNavigate }: HomeProps) {
               className="group cursor-pointer border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl"
               onClick={() => onNavigate('add-sale')}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-5">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-lg transition-transform group-hover:scale-110">
-                    <Plus className="h-8 w-8 text-primary-foreground" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md transition-transform group-hover:scale-110">
+                    <Plus className="h-7 w-7" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground">{t('home.addSale')}</h3>
+                    <h3 className="text-lg font-bold text-foreground">{t('home.addSale')}</h3>
                     <p className="text-sm text-muted-foreground">{t('home.addSaleDesc')}</p>
+                  </div>
+                  <div className="text-muted-foreground/40 transition-transform group-hover:translate-x-1">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                 </div>
               </CardContent>
@@ -154,35 +152,74 @@ export default function Home({ onNavigate }: HomeProps) {
               className="group cursor-pointer border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl"
               onClick={() => onNavigate('history')}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-5">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-secondary to-secondary/80 shadow-lg transition-transform group-hover:scale-110">
-                    <HistoryIcon className="h-8 w-8 text-secondary-foreground" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-md transition-transform group-hover:scale-110">
+                    <HistoryIcon className="h-7 w-7" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground">{t('home.viewHistory')}</h3>
+                    <h3 className="text-lg font-bold text-foreground">{t('home.viewHistory')}</h3>
                     <p className="text-sm text-muted-foreground">{t('home.viewHistoryDesc')}</p>
+                  </div>
+                  <div className="text-muted-foreground/40 transition-transform group-hover:translate-x-1">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Product List — Premium */}
+            <Card
+              className={`group cursor-pointer border-2 transition-all hover:scale-[1.02] hover:shadow-xl ${
+                isPremiumUnlocked
+                  ? 'hover:border-amber-500 border-amber-400/60 bg-gradient-to-r from-amber-50/50 to-yellow-50/50 dark:from-amber-950/20 dark:to-yellow-950/20'
+                  : 'border-dashed border-muted-foreground/30 opacity-80'
+              } ${lockedShake ? 'animate-shake' : ''}`}
+              onClick={handleProductListClick}
+            >
+              <CardContent className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-md transition-transform group-hover:scale-110 ${
+                    isPremiumUnlocked
+                      ? 'bg-gradient-to-br from-amber-400 to-yellow-500 text-white'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {isPremiumUnlocked ? (
+                      <ShoppingBag className="h-7 w-7" />
+                    ) : (
+                      <Lock className="h-7 w-7" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-foreground">{t('home.productList')}</h3>
+                      {!isPremiumUnlocked && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                          PREMIUM
+                        </span>
+                      )}
+                      {isPremiumUnlocked && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                          ✓ UNLOCKED
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {isPremiumUnlocked ? t('home.productListDesc') : t('home.premiumLocked')}
+                    </p>
+                  </div>
+                  <div className="text-muted-foreground/40 transition-transform group-hover:translate-x-1">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
-
-        {/* Timer Display */}
-        {timerEnabled && (
-          <div className="mb-8">
-            <TimerDisplay 
-              onClick={() => setShowTimerModal(true)}
-              onTimerComplete={() => {
-                calculateTodayStats();
-              }}
-            />
-          </div>
-        )}
-
-        {/* Timer Modal */}
-        <TimerModal open={showTimerModal} onOpenChange={setShowTimerModal} />
       </div>
     </div>
   );

@@ -1,150 +1,59 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T08:40:54.239Z",
+  "generatedAt": "2026-02-24T13:36:09.253Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 11,
-    "implemented": 11,
+    "total": 4,
+    "implemented": 4,
     "items": [
       {
-        "id": "REQ-22",
-        "summary": "Fix Add Sale Submit button to properly save sale data to localStorage and ensure the saved data appears in the History screen immediately after submission",
+        "id": "REQ-1",
+        "summary": "Redesign the sound toggle/change button in the Settings page with a new visually appropriate design. The button should clearly communicate its function (sound control) through iconography and styling. Replace the existing button UI with the new design while preserving the underlying sound enable/disable and custom sound upload functionality from useClickSound.ts.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Settings.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Settings.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Replace the previously planned premium access codes 987789 and 879987 with 4 new well-designed codes in PremiumModal.tsx. All 4 new codes must work exactly like the existing code 987987 — granting full premium access when entered. The original code 987987 must remain valid. Generate the 4 new codes following a consistent, memorable pattern.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/PremiumModal.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/PremiumModal.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Add a unit selector to quantity/measurement input fields in the AddSale page and ProductList page. Next to each quantity input field, display a small icon/button. Clicking this icon opens a dropdown with unit options: gram, kg, liter. The displayed unit labels must respect the current app language — showing Bengali labels (গ্রাম, কেজি, লিটার) when Bengali is active, and English labels (gram, kg, liter) when English is active, using the existing LanguageContext and translations system. The selected unit should be stored alongside the quantity value.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/AddSale.tsx",
-          "frontend/src/pages/History.tsx"
+          "frontend/src/pages/ProductList.tsx"
         ],
         "matchedFiles": [
           "frontend/src/pages/AddSale.tsx",
-          "frontend/src/pages/History.tsx"
+          "frontend/src/pages/ProductList.tsx"
         ]
       },
       {
-        "id": "REQ-23",
-        "summary": "Update Today's Sales counter on Home screen to increment properly when new sales are added through Add Sale form",
+        "id": "REQ-4",
+        "summary": "Add translation keys for the unit selector options (gram, kg, liter in both English and Bengali) to the translations object in frontend/src/locales/translations.ts.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Home.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Home.tsx"
-        ]
-      },
-      {
-        "id": "REQ-24",
-        "summary": "Make Add Sale form flexible by allowing submission with any one or more fields filled - do not require all fields to be completed before submitting",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AddSale.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AddSale.tsx"
-        ]
-      },
-      {
-        "id": "REQ-25",
-        "summary": "Replace the existing theme color options (Orange Sunset, Red Passion, Golden Amber) with simplified color options: Red, Green, and Black inspired by the Bangladesh flag",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/contexts/ThemeContext.tsx",
-          "frontend/src/pages/Settings.tsx",
-          "frontend/src/index.css"
-        ],
-        "matchedFiles": [
-          "frontend/src/contexts/ThemeContext.tsx",
-          "frontend/src/pages/Settings.tsx",
-          "frontend/src/index.css"
-        ]
-      },
-      {
-        "id": "REQ-26",
-        "summary": "Redesign the Quick Actions section on Home screen with improved visual design for the two action buttons (Add New Sale and View History)",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Home.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Home.tsx"
-        ]
-      },
-      {
-        "id": "REQ-27",
-        "summary": "Improve the design of the Splash screen tagline text 'Manage your shop efficiently' while keeping the same text content, and display it in Bangla or English based on the user's language setting in Settings",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/SplashScreen.tsx",
           "frontend/src/locales/translations.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/SplashScreen.tsx",
           "frontend/src/locales/translations.ts"
-        ]
-      },
-      {
-        "id": "REQ-28",
-        "summary": "Add a Timer/Reminder enable/disable toggle in the Settings screen that allows users to turn the Timer/Reminder feature on or off",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Settings.tsx",
-          "frontend/src/locales/translations.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Settings.tsx",
-          "frontend/src/locales/translations.ts"
-        ]
-      },
-      {
-        "id": "REQ-29",
-        "summary": "Create a Dynamic Island-style compact timer display component that appears below the Quick Actions section on the Home screen when Timer/Reminder is enabled in Settings",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/TimerDisplay.tsx",
-          "frontend/src/pages/Home.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/TimerDisplay.tsx",
-          "frontend/src/pages/Home.tsx"
-        ]
-      },
-      {
-        "id": "REQ-30",
-        "summary": "Create a timer setting modal that opens when the user clicks on the timer display component on the Home screen, allowing them to set reminder time in minutes or hours",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/TimerModal.tsx",
-          "frontend/src/pages/Home.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/TimerModal.tsx",
-          "frontend/src/pages/Home.tsx"
-        ]
-      },
-      {
-        "id": "REQ-31",
-        "summary": "Implement browser notification system that triggers when a timer reaches zero, displaying a notification to the user about the reminder they set",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useTimerNotification.ts",
-          "frontend/src/components/TimerDisplay.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useTimerNotification.ts",
-          "frontend/src/components/TimerDisplay.tsx"
-        ]
-      },
-      {
-        "id": "REQ-32",
-        "summary": "Update timer display component to show countdown in real-time, updating every second or minute based on the remaining time until the reminder",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/TimerDisplay.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/TimerDisplay.tsx"
         ]
       }
     ]
@@ -154,17 +63,10 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
-    "frontend/src/components/SplashScreen.tsx",
-    "frontend/src/components/TimerDisplay.tsx",
-    "frontend/src/components/TimerModal.tsx",
-    "frontend/src/contexts/ThemeContext.tsx",
-    "frontend/src/hooks/useTimerNotification.ts",
-    "frontend/src/index.css",
+    "frontend/src/components/PremiumModal.tsx",
     "frontend/src/locales/translations.ts",
     "frontend/src/pages/AddSale.tsx",
-    "frontend/src/pages/History.tsx",
-    "frontend/src/pages/Home.tsx",
+    "frontend/src/pages/ProductList.tsx",
     "frontend/src/pages/Settings.tsx",
     "project_state.json",
     "scratch/component-selection.json",

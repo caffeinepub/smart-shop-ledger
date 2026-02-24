@@ -1,19 +1,14 @@
 # Specification
 
 ## Summary
-**Goal:** Fix Add Sale functionality, redesign UI components with Bangladesh flag-inspired colors, and add an optional Timer/Reminder feature.
+**Goal:** Redesign the sound toggle button in Settings, add new premium access codes, and introduce a language-aware unit selector for quantity fields in AddSale and ProductList pages.
 
 **Planned changes:**
-- Fix Add Sale Submit button to properly save sales to localStorage and display in History immediately
-- Update Today's Sales counter on Home screen to reflect newly added sales
-- Allow Add Sale form submission with any one or more fields filled (remove requirement for all fields)
-- Replace theme colors (Orange Sunset, Red Passion, Golden Amber) with Red, Green, and Black inspired by Bangladesh flag
-- Redesign Quick Actions buttons on Home screen with improved visual styling
-- Improve Splash screen tagline design while keeping "Manage your shop efficiently" text, displayed in Bangla or English based on Settings
-- Add Timer/Reminder toggle in Settings to enable/disable the feature
-- Create Dynamic Island-style compact timer display below Quick Actions when enabled
-- Add timer setting modal that opens when clicking the timer display
-- Implement browser notifications when timer reaches zero
-- Update timer display to show real-time countdown
+- Replace the existing sound toggle button UI in the Settings page with a new design featuring a speaker/sound icon, while preserving toggle and custom sound upload functionality
+- Add 4 new premium access codes to PremiumModal.tsx (replacing previously planned codes 987789 and 879987), keeping the original code 987987 valid; all 5 codes grant full premium access
+- Add a unit selector icon next to quantity input fields in AddSale and ProductList pages; clicking it opens a dropdown with gram, kg, and liter options
+- Unit dropdown labels switch between English (gram, kg, liter) and Bengali (গ্রাম, কেজি, লিটার) based on the active app language via existing LanguageContext
+- Store the selected unit alongside the quantity value
+- Add English and Bengali translation keys for gram, kg, and liter to translations.ts
 
-**User-visible outcome:** Users can successfully add sales that appear immediately in History, customize the app with Bangladesh flag colors (Red, Green, Black), enjoy improved UI design for Quick Actions and Splash screen, and optionally enable a timer/reminder feature with browser notifications.
+**User-visible outcome:** Users see a redesigned sound button in Settings, can unlock premium with additional codes, and can select a unit (gram/kg/liter) next to quantity fields with labels matching the current app language.

@@ -2,72 +2,9 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-add-sale-submit-button-to-properly-save-sale-data-to-localstorage-and-ensure-the-saved-data-appears-in-the-history-screen-immediately-after-submission",
-      "featureTitle": "Fix Add Sale Submit button to properly save sale data to localStorage and ensure the saved data appears in the History screen immediately after submission",
+      "featureId": "feature-redesign-the-sound-toggle-change-button-in-the-settings-page-with-a-new-visually-appropriate-design-the-button-should-clearly-communicate-its-function-sound-control-through-iconography-and-styling-replace-the-existing-button-ui-with-the-new-design-while-preserving-the-underlying-sound-enable-disable-and-custom-sound-upload-functionality-from-useclicksound-ts",
+      "featureTitle": "Redesign the sound toggle/change button in the Settings page with a new visually appropriate design. The button should clearly communicate its function (sound control) through iconography and styling. Replace the existing button UI with the new design while preserving the underlying sound enable/disable and custom sound upload functionality from useClickSound.ts.",
       "files": [
-        "frontend/src/pages/AddSale.tsx",
-        "frontend/src/pages/History.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-22"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-today-s-sales-counter-on-home-screen-to-increment-properly-when-new-sales-are-added-through-add-sale-form",
-      "featureTitle": "Update Today's Sales counter on Home screen to increment properly when new sales are added through Add Sale form",
-      "files": [
-        "frontend/src/pages/Home.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-23"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-make-add-sale-form-flexible-by-allowing-submission-with-any-one-or-more-fields-filled-do-not-require-all-fields-to-be-completed-before-submitting",
-      "featureTitle": "Make Add Sale form flexible by allowing submission with any one or more fields filled - do not require all fields to be completed before submitting",
-      "files": [
-        "frontend/src/pages/AddSale.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-24"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-replace-the-existing-theme-color-options-orange-sunset-red-passion-golden-amber-with-simplified-color-options-red-green-and-black-inspired-by-the-bangladesh-flag",
-      "featureTitle": "Replace the existing theme color options (Orange Sunset, Red Passion, Golden Amber) with simplified color options: Red, Green, and Black inspired by the Bangladesh flag",
-      "files": [
-        "frontend/src/contexts/ThemeContext.tsx",
-        "frontend/src/index.css",
         "frontend/src/pages/Settings.tsx"
       ],
       "components": [
@@ -80,15 +17,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-25"
+        "REQ-1"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-redesign-the-quick-actions-section-on-home-screen-with-improved-visual-design-for-the-two-action-buttons-add-new-sale-and-view-history",
-      "featureTitle": "Redesign the Quick Actions section on Home screen with improved visual design for the two action buttons (Add New Sale and View History)",
+      "featureId": "feature-replace-the-previously-planned-premium-access-codes-987789-and-879987-with-4-new-well-designed-codes-in-premiummodal-tsx-all-4-new-codes-must-work-exactly-like-the-existing-code-987987-granting-full-premium-access-when-entered-the-original-code-987987-must-remain-valid-generate-the-4-new-codes-following-a-consistent-memorable-pattern",
+      "featureTitle": "Replace the previously planned premium access codes 987789 and 879987 with 4 new well-designed codes in PremiumModal.tsx. All 4 new codes must work exactly like the existing code 987987 — granting full premium access when entered. The original code 987987 must remain valid. Generate the 4 new codes following a consistent, memorable pattern.",
       "files": [
-        "frontend/src/pages/Home.tsx"
+        "frontend/src/components/PremiumModal.tsx"
       ],
       "components": [
         "camera@1.0.0",
@@ -100,15 +37,35 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-26"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-improve-the-design-of-the-splash-screen-tagline-text-manage-your-shop-efficiently-while-keeping-the-same-text-content-and-display-it-in-bangla-or-english-based-on-the-user-s-language-setting-in-settings",
-      "featureTitle": "Improve the design of the Splash screen tagline text 'Manage your shop efficiently' while keeping the same text content, and display it in Bangla or English based on the user's language setting in Settings",
+      "featureId": "feature-add-a-unit-selector-to-quantity-measurement-input-fields-in-the-addsale-page-and-productlist-page-next-to-each-quantity-input-field-display-a-small-icon-button-clicking-this-icon-opens-a-dropdown-with-unit-options-gram-kg-liter-the-displayed-unit-labels-must-respect-the-current-app-language-showing-bengali-labels-when-bengali-is-active-and-english-labels-gram-kg-liter-when-english-is-active-using-the-existing-languagecontext-and-translations-system-the-selected-unit-should-be-stored-alongside-the-quantity-value",
+      "featureTitle": "Add a unit selector to quantity/measurement input fields in the AddSale page and ProductList page. Next to each quantity input field, display a small icon/button. Clicking this icon opens a dropdown with unit options: gram, kg, liter. The displayed unit labels must respect the current app language — showing Bengali labels (গ্রাম, কেজি, লিটার) when Bengali is active, and English labels (gram, kg, liter) when English is active, using the existing LanguageContext and translations system. The selected unit should be stored alongside the quantity value.",
       "files": [
-        "frontend/src/components/SplashScreen.tsx",
+        "frontend/src/pages/AddSale.tsx",
+        "frontend/src/pages/ProductList.tsx"
+      ],
+      "components": [
+        "camera@1.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-translation-keys-for-the-unit-selector-options-gram-kg-liter-in-both-english-and-bengali-to-the-translations-object-in-frontend-src-locales-translations-ts",
+      "featureTitle": "Add translation keys for the unit selector options (gram, kg, liter in both English and Bengali) to the translations object in frontend/src/locales/translations.ts.",
+      "files": [
         "frontend/src/locales/translations.ts"
       ],
       "components": [
@@ -121,111 +78,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-27"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-a-timer-reminder-enable-disable-toggle-in-the-settings-screen-that-allows-users-to-turn-the-timer-reminder-feature-on-or-off",
-      "featureTitle": "Add a Timer/Reminder enable/disable toggle in the Settings screen that allows users to turn the Timer/Reminder feature on or off",
-      "files": [
-        "frontend/src/locales/translations.ts",
-        "frontend/src/pages/Settings.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-28"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-a-dynamic-island-style-compact-timer-display-component-that-appears-below-the-quick-actions-section-on-the-home-screen-when-timer-reminder-is-enabled-in-settings",
-      "featureTitle": "Create a Dynamic Island-style compact timer display component that appears below the Quick Actions section on the Home screen when Timer/Reminder is enabled in Settings",
-      "files": [
-        "frontend/src/components/TimerDisplay.tsx",
-        "frontend/src/pages/Home.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-29"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-a-timer-setting-modal-that-opens-when-the-user-clicks-on-the-timer-display-component-on-the-home-screen-allowing-them-to-set-reminder-time-in-minutes-or-hours",
-      "featureTitle": "Create a timer setting modal that opens when the user clicks on the timer display component on the Home screen, allowing them to set reminder time in minutes or hours",
-      "files": [
-        "frontend/src/components/TimerModal.tsx",
-        "frontend/src/pages/Home.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-30"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-browser-notification-system-that-triggers-when-a-timer-reaches-zero-displaying-a-notification-to-the-user-about-the-reminder-they-set",
-      "featureTitle": "Implement browser notification system that triggers when a timer reaches zero, displaying a notification to the user about the reminder they set",
-      "files": [
-        "frontend/src/components/TimerDisplay.tsx",
-        "frontend/src/hooks/useTimerNotification.ts"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-31"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-timer-display-component-to-show-countdown-in-real-time-updating-every-second-or-minute-based-on-the-remaining-time-until-the-reminder",
-      "featureTitle": "Update timer display component to show countdown in real-time, updating every second or minute based on the remaining time until the reminder",
-      "files": [
-        "frontend/src/components/TimerDisplay.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-32"
+        "REQ-4"
       ],
       "confidence": "high"
     }

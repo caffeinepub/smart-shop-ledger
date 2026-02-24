@@ -10,28 +10,52 @@ import AddSale from './pages/AddSale';
 import History from './pages/History';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import ProductList from './pages/ProductList';
+import { useClickSound } from './hooks/useClickSound';
 
-type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings';
+type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings' | 'product-list';
 
-function App() {
-  console.log('[App] Component mounting at', new Date().toISOString());
+function AppContent() {
+  const { playSound } = useClickSound();
 
-  const [showSplash, setShowSplash] = useState(() => {
+  // Clear stale timer localStorage keys on startup
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('showSplash');
-      return saved ? JSON.parse(saved) : true;
-    } catch (error) {
-      console.warn('[App] Failed to load showSplash from localStorage:', error);
-      return true;
+      localStorage.removeItem('timerEnabled');
+      localStorage.removeItem('currentTimer');
+      localStorage.removeItem('timerNotification');
+    } catch {
+      // ignore
     }
-  });
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.closest('input') ||
+        target.closest('textarea')
+      ) {
+        return;
+      }
+      playSound();
+    };
+
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [playSound]);
+
+  // Always show splash on every app load
+  const [showSplash, setShowSplash] = useState(true);
 
   const [showRegistration, setShowRegistration] = useState(() => {
     try {
       const shopData = localStorage.getItem('shop_profile');
       return !shopData;
-    } catch (error) {
-      console.warn('[App] Failed to check shop_profile in localStorage:', error);
+    } catch {
       return false;
     }
   });
@@ -44,79 +68,78 @@ function App() {
         return page;
       }
       return 'home';
-    } catch (error) {
-      console.warn('[App] Failed to load currentPage from localStorage:', error);
+    } catch {
       return 'home';
     }
   });
 
-  console.log('[App] Initial state:', { showSplash, showRegistration, currentPage });
-
   const handleSplashComplete = useCallback(() => {
-    console.log('[App] Splash complete at', new Date().toISOString());
     setShowSplash(false);
     try {
-      localStorage.setItem('showSplash', 'false');
       const shopData = localStorage.getItem('shop_profile');
       if (!shopData) {
-        console.log('[App] No shop profile found, showing registration');
         setShowRegistration(true);
       }
-    } catch (error) {
-      console.error('[App] Error in handleSplashComplete:', error);
+    } catch {
+      // ignore
     }
   }, []);
 
   const handleRegistrationComplete = useCallback(() => {
-    console.log('[App] Registration complete at', new Date().toISOString());
     setShowRegistration(false);
   }, []);
 
   const handleRegistrationSkip = useCallback(() => {
-    console.log('[App] Registration skipped at', new Date().toISOString());
     setShowRegistration(false);
   }, []);
 
   const handleNavigate = useCallback((page: Page) => {
-    console.log('[App] Navigating to', page, 'at', new Date().toISOString());
     setCurrentPage(page);
     try {
-      localStorage.setItem('currentPage', page);
-    } catch (error) {
-      console.error('[App] Failed to save currentPage to localStorage:', error);
+      if (page !== 'product-list') {
+        localStorage.setItem('currentPage', page);
+      }
+    } catch {
+      // ignore
     }
   }, []);
 
   if (showSplash) {
-    return (
-      <ThemeProvider>
-        <LanguageProvider>
-          <SplashScreen onComplete={handleSplashComplete} />
-        </LanguageProvider>
-      </ThemeProvider>
-    );
+    return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
+  const isSubPage = currentPage === 'product-list';
+
+  return (
+    <div className="min-h-screen">
+      <Toaster position="top-center" richColors />
+      
+      <RegistrationModal 
+        open={showRegistration}
+        onComplete={handleRegistrationComplete}
+        onSkip={handleRegistrationSkip}
+      />
+
+      {isSubPage ? (
+        <ProductList onNavigate={handleNavigate} />
+      ) : (
+        <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+          {currentPage === 'home' && <Home onNavigate={handleNavigate} />}
+          {currentPage === 'add-sale' && <AddSale onNavigate={handleNavigate} />}
+          {currentPage === 'history' && <History onNavigate={handleNavigate} />}
+          {currentPage === 'profile' && <Profile onNavigate={handleNavigate} />}
+          {currentPage === 'settings' && <Settings />}
+        </Layout>
+      )}
+    </div>
+  );
+}
+
+function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <div className="min-h-screen">
-          <Toaster position="top-center" richColors />
-          
-          <RegistrationModal 
-            open={showRegistration}
-            onComplete={handleRegistrationComplete}
-            onSkip={handleRegistrationSkip}
-          />
-
-          <Layout currentPage={currentPage} onNavigate={handleNavigate}>
-            {currentPage === 'home' && <Home onNavigate={handleNavigate} />}
-            {currentPage === 'add-sale' && <AddSale onNavigate={handleNavigate} />}
-            {currentPage === 'history' && <History onNavigate={handleNavigate} />}
-            {currentPage === 'profile' && <Profile onNavigate={handleNavigate} />}
-            {currentPage === 'settings' && <Settings />}
-          </Layout>
-        </div>
+        <AppContent />
       </LanguageProvider>
     </ThemeProvider>
   );
