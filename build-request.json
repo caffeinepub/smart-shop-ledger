@@ -1,0 +1,242 @@
+{
+  "kind": "build_request",
+  "title": "Fix Add Sale functionality, redesign UI components, and add Timer/Reminder feature",
+  "projectName": "Smart Shop Ledger",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-22",
+      "text": "Fix Add Sale Submit button to properly save sale data to localStorage and ensure the saved data appears in the History screen immediately after submission",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-bangla-3-issues"
+        ],
+        "quotes": [
+          "যে কোন জিনিস এড করার পর ঠিক আছে সেটা হিস্টরি বা তোমার ওই জায়গা ঠিক আছে অ্যাড হয় না",
+          "এড করার পরও আরেকটা সমস্যা হচ্ছে যে একটা একটা করে অ্যাড করতে চাইলে সেটাও হয় না",
+          "এড বাটনে ক্লিক করার পরও বাটন এখন কাজ করে কিন্তু বাটনের যে আসল কাজ ঠিক আছে হিস্টোরিতে অ্যাড হওয়া বা সেই জিনিসটাকে অ্যাড করে রাখা সেটা হয় না"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When Submit button is clicked on Add Sale screen, sale data must be saved to localStorage",
+        "Saved sale must appear in History screen immediately without refresh",
+        "localStorage data structure must be consistent across Add Sale and History components"
+      ]
+    },
+    {
+      "id": "REQ-23",
+      "text": "Update Today's Sales counter on Home screen to increment properly when new sales are added through Add Sale form",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-bangla-3-issues"
+        ],
+        "quotes": [
+          "যেহেতু অ্যাড হয় না মেয়েটাও জানিনা যে কোয়ান্টিটি বাড়ে কিনা তোমার যে হোম স্ক্রিনের অপশনটা তো সেটা প্রথমে ফিক্সড করো"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Today's Sales card on Home screen must read from the same localStorage data as History screen",
+        "Counter must update automatically when a new sale is added",
+        "Counter must show the count of sales for today's date only"
+      ]
+    },
+    {
+      "id": "REQ-24",
+      "text": "Make Add Sale form flexible by allowing submission with any one or more fields filled - do not require all fields to be completed before submitting",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-bangla-3-issues"
+        ],
+        "quotes": [
+          "যে কোন জিনিসের তোলার পর এক কেজি ২ কেজি তার নাম তোলার পর ঠিক আছে যদি যে কোন একটা অপশন ছেড়ে যায় তাহলে সেটা জন্য আমাকে কমপ্লিট করতে চায় না",
+          "তুমি এমন করতে হবে যে তোমার যদি দুটো অপশন চালু করে দেয় ঠিক আছে মানে কে তুই আর দামটা আবার নামটাও যদি দিয়ে দেয় তাও তোমার অপশনটা ওকে দিলে যাতে হিস্টোরি অ্যাড হয়",
+          "যদি একটাও যদি লেখা হয় বা কমপ্লিট করা হয় তাও যাতে এড বাটনে ক্লিক করার পর যাতে অ্যাড হয়ে যায়"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Submit button must work if even one field is filled in the Add Sale form",
+        "Empty fields should be stored with empty strings or default values (0 for prices)",
+        "Form validation should only check that at least one field has data"
+      ]
+    },
+    {
+      "id": "REQ-25",
+      "text": "Replace the existing theme color options (Orange Sunset, Red Passion, Golden Amber) with simplified color options: Red, Green, and Black inspired by the Bangladesh flag",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-bangla-3-issues"
+        ],
+        "quotes": [
+          "থিম তুমি যে তিনটা তিন ব্যবহার করেছে সেগুলো ব্যবহার করার পরও কোন কালারের পরিবর্তন আসে না তুমি সেখানে শুধু মেইন কালার গুলো রাখ লাল সবুজ কালো বাংলাদেশের গ্যালারি থেকে তুমি রাখো"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Settings screen Theme Color section must show three options: Red, Green, Black",
+        "Remove Orange Sunset, Red Passion, and Golden Amber color schemes",
+        "Red and Green should use colors inspired by Bangladesh flag (red: #F42A41, green: #006A4E)",
+        "Selecting a color must properly apply it throughout the app UI"
+      ]
+    },
+    {
+      "id": "REQ-26",
+      "text": "Redesign the Quick Actions section on Home screen with improved visual design for the two action buttons (Add New Sale and View History)",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-bangla-3-issues"
+        ],
+        "quotes": [
+          "আরেকটা হচ্ছে হোম স্ক্রিনের নিচে যে অপশন গুলো রয়েছে যেটা আছে কুইক প্যানেলের জন্য তুমি রেখেছো দুটো অপশন সেগুলোকে আরেকটু ডিজাইন কর"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Quick Actions buttons must have enhanced visual design with better spacing and styling",
+        "Buttons should remain touch-friendly and clearly labeled",
+        "Design should be consistent with the overall app visual theme"
+      ]
+    },
+    {
+      "id": "REQ-27",
+      "text": "Improve the design of the Splash screen tagline text 'Manage your shop efficiently' while keeping the same text content, and display it in Bangla or English based on the user's language setting in Settings",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-bangla-3-issues",
+          "msg-assistant-clarify",
+          "msg-user-final-clarify"
+        ],
+        "quotes": [
+          "অ্যাপ এ ঢোকার পর যে এনিমেশন টা দেখা যায় সেটার মধ্যে যে বাংলা বাজে লোগোটা রয়েছে সেই লোগো আমি পরিবর্তন করব কিন্তু পরে শেষে পরিবর্তন করব finishing touch হিসেবে কিন্তু এখন তোমাকে যে মানে সেটা নিচে যে লেখাটা আছে ঠিক আছে সেটা পরিবর্তন করে একটা ভালো ইংরেজি টেক্সট বসাও আর কোন ভাষাতে সেটা বুঝবে সেটা নির্ভর করে তোমার সেটিংস এর মধ্যে কোনটা সেট করা আছে বাংলা নাকি ইংরেজি",
+          "যেগুলো জিনিস ভুল হয়েছে সেগুলো অবশ্যই ঠিক করবে আর আগের টেক্সটাই রাখবে কিন্তু একটু ডিজাইন করে দিবে আর বাংলা ইংরেজি ফিচারসটা রেখে দিবে"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Splash screen tagline must remain 'Manage your shop efficiently' in English",
+        "Tagline must be translated to Bangla when language setting is Bangla",
+        "Tagline design (typography, sizing, spacing) must be improved for better visual appeal",
+        "Language displayed must be determined by the Settings language selection"
+      ]
+    },
+    {
+      "id": "REQ-28",
+      "text": "Add a Timer/Reminder enable/disable toggle in the Settings screen that allows users to turn the Timer/Reminder feature on or off",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-final-clarify"
+        ],
+        "quotes": [
+          "টাইমারের অপশনটা সেটা সেটিংসের মধ্যে থাকবে একটা অপশন এক্সট্রা ভাইরা থাকা থাকবে যেটা যদি চালু করা হয় তাহলে আলাদা একটা সেকশন হয়ে যাবে আর না চাইলে অফ হয়ে যাবে"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Settings screen must include a toggle switch labeled 'Timer/Reminder' or similar",
+        "Toggle state must be saved to localStorage and persist across sessions",
+        "When enabled, Timer component must appear on Home screen",
+        "When disabled, Timer component must be hidden from Home screen"
+      ]
+    },
+    {
+      "id": "REQ-29",
+      "text": "Create a Dynamic Island-style compact timer display component that appears below the Quick Actions section on the Home screen when Timer/Reminder is enabled in Settings",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-final-clarify"
+        ],
+        "quotes": [
+          "যেটা মোবাইল না অ্যাপ চালু হওয়ার সময় যেটা টাইমারের অপশনটা তুমি হয়তো এপলে ডায়নামিক আইল্যান্ডে দেখেছো সেরকম একটা ছোট্ট অপশন তুমি রাখবে নিচে কিন্তু একটু ছোট করে যাতে দেখা যায় কালো কালারের আর সেখানে টাইম কিভাবে কাজ করবে কতটুকু বড় হবে কতটুকু ছোট হবে সেটা নির্ভর করে টাইম কিভাবে সেট করা হয়েছে"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Timer component must appear below Quick Actions section on Home screen when enabled",
+        "Component must be compact and styled in black color, inspired by iPhone Dynamic Island design",
+        "Timer display size should adapt based on remaining time or timer state",
+        "Component must be clickable to open the timer setting modal"
+      ]
+    },
+    {
+      "id": "REQ-30",
+      "text": "Create a timer setting modal that opens when the user clicks on the timer display component on the Home screen, allowing them to set reminder time in minutes or hours",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-assistant-clarify",
+          "msg-user-final-clarify"
+        ],
+        "quotes": [
+          "Home screen-এ timer-এ ক্লিক করলে একটা modal/popup খুলবে যেখান থেকে reminder সেট করা যাবে",
+          "আমি জানি এজন্য আলাদা একটা ইউ আই ডিজাইন করতে হবে আর একটা ছোট্ট হলেও এডিট করতে হবে কিন্তু তারপরও তুমি এটা করবে ব্যবসায়ীদের চাহিদা অনুযায়ী"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking the timer display on Home screen must open a modal/popup",
+        "Modal must include input fields for setting time in minutes and/or hours",
+        "Modal must include a 'Set Reminder' button to save the timer",
+        "Modal must include a 'Cancel' button to close without saving",
+        "Timer data must be saved to localStorage when set"
+      ]
+    },
+    {
+      "id": "REQ-31",
+      "text": "Implement browser notification system that triggers when a timer reaches zero, displaying a notification to the user about the reminder they set",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-assistant-clarify",
+          "msg-user-final-clarify"
+        ],
+        "quotes": [
+          "নোটিফিকেশনের ব্যাপারটা হচ্ছে যে তুমি নোটিফিকেশনে রাখো তোমার অ্যালার্ম দেয়ার দরকার নেই",
+          "সময় হলে browser notification দেখাবে (অ্যালার্ম সাউন্ড নয়)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When timer countdown reaches zero, a browser notification must be displayed",
+        "Notification must request permission from the user on first use",
+        "Notification text should indicate what the reminder was for (e.g., 'Time to eat' or generic reminder message)",
+        "No alarm sound should play - only visual browser notification"
+      ]
+    },
+    {
+      "id": "REQ-32",
+      "text": "Update timer display component to show countdown in real-time, updating every second or minute based on the remaining time until the reminder",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-final-clarify"
+        ],
+        "quotes": [
+          "সেখানে টাইম কিভাবে কাজ করবে কতটুকু বড় হবে কতটুকু ছোট হবে সেটা নির্ভর করে টাইম কিভাবে সেট করা হয়েছে"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Timer must count down in real-time and update the display",
+        "Display format should adapt based on remaining time (e.g., show hours if more than 60 minutes remain)",
+        "When timer reaches zero, it should stop and trigger the notification"
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not edit any files in frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
+    "All Motoko backend logic must remain in backend/main.mo as a single actor",
+    "Must maintain mobile-first responsive design for all UI changes",
+    "Must preserve existing Bangla/English language support throughout all modified components",
+    "Timer/Reminder feature must work entirely in the frontend using browser APIs - no backend changes required"
+  ],
+  "nonGoals": [
+    "Changing the Bangla Bazar logo image on the splash screen (user will do this later as a finishing touch)",
+    "Adding alarm sound to the timer notification system",
+    "Backend data persistence for sales records (this is a frontend-only localStorage modification)",
+    "Multiple simultaneous timers (only one timer/reminder at a time)",
+    "Advanced timer features like recurring reminders or snooze functionality"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

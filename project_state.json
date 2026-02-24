@@ -1,0 +1,442 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 9,
+  "summary": "Smart Shop Ledger & Auto Profit Tracker - A mobile-optimized web app for shopkeepers to manage sales, track profit, and organize products with photos. Features include product pre-set prices, auto profit calculation, photo uploads, manual stock status color dots (Red/Yellow/Green), sales history, due & interest tracking, multi-user profiles, graphs & analytics, invoice generation, and offline support. Development is divided into three phases: Phase 1 (UI Structure with splash screen, registration popup with 6 shop info fields and skip option, home/add sale/history/profile/settings screens, dark/light mode, Bangla/English language support, and separate UI theme customization), Phase 2 (Feature Programming), Phase 3 (Final Polish & Optimization). Currently starting Phase 1.",
+  "architectural_notes": [
+    "Three-phase development: Phase 1 (UI Structure/Design), Phase 2 (Feature Programming), Phase 3 (Final Polish & Optimization)",
+    "Mobile-first responsive design optimized for mobile browsers, installable as PWA",
+    "Frontend: React + TypeScript with mobile-optimized layout",
+    "Backend: Motoko on Internet Computer for cloud data storage",
+    "Authentication: Internet Identity (supports Google, Apple, Microsoft, passkeys)",
+    "Offline: IndexedDB for local storage with automatic cloud sync when online",
+    "Two separate color systems: (1) Manual 3-color stock dots (Red/Yellow/Green) for items, (2) UI theme colors for app design customization",
+    "Registration flow: Splash screen → Home screen → Registration popup (6 fields) with Skip option, editable later from Profile",
+    "Language support: Bangla + English with toggle in Settings",
+    "Profile system: Shop Name, Owner Name, Mobile Number (no OTP), Shop Address, Shop Type, Profile Photo (shop logo/store photo/owner photo/branding)"
+  ],
+  "known_issues": [
+    "Add Sale Submit button saves data but doesn't add to History screen or update Home screen Today's Sales counter",
+    "Add Sale form requires all fields - needs to allow submission with any one or more fields filled"
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-create-a-splash-screen-with-animated-app-logo-that-displays-on-first-app-launch-before-transitioning-to-the-home-screen",
+      "title": "Create a splash screen with animated app logo that displays on first app launch before transitioning to the home screen",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-registration-popup-modal-that-appears-after-splash-screen-with-6-input-fields-shop-name-owner-name-mobile-number-no-otp-verification-shop-address-shop-type-and-profile-photo-upload-supporting-shop-logo-store-photo-owner-photo-or-branding-image",
+      "title": "Create a registration popup/modal that appears after splash screen with 6 input fields: Shop Name, Owner Name, Mobile Number (no OTP verification), Shop Address, Shop Type, and Profile Photo upload (supporting shop logo, store photo, owner photo, or branding image)",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-skip-button-to-the-registration-popup-that-allows-users-to-bypass-registration-and-proceed-directly-to-the-home-screen",
+      "title": "Add a 'Skip' button to the registration popup that allows users to bypass registration and proceed directly to the home screen",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-home-screen-that-serves-as-the-main-dashboard-with-navigation-to-other-sections-add-sale-history-profile-settings",
+      "title": "Create a home screen that serves as the main dashboard with navigation to other sections (Add Sale, History, Profile, Settings)",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-add-sale-screen-with-form-fields-for-recording-sales-including-product-item-name-wholesale-price-selling-price-quantity-and-a-manual-stock-status-color-dot-selector-with-3-options-red-yellow-green",
+      "title": "Create an 'Add Sale' screen with form fields for recording sales including product/item name, wholesale price, selling price, quantity, and a manual stock status color dot selector with 3 options (Red, Yellow, Green)",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-photo-upload-capability-to-the-add-sale-screen-allowing-users-to-attach-an-image-with-each-sale-record-camera-or-gallery-access",
+      "title": "Add photo upload capability to the Add Sale screen allowing users to attach an image with each sale record (camera or gallery access)",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-history-screen-that-displays-past-sales-records-with-options-to-filter-by-date-search-by-item-name-edit-entries-and-delete-entries",
+      "title": "Create a History screen that displays past sales records with options to filter by date, search by item name, edit entries, and delete entries",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-profile-screen-where-users-can-view-all-6-registration-fields-shop-name-owner-name-mobile-number-shop-address-shop-type-profile-photo-and-edit-update-any-field-at-any-time",
+      "title": "Create a Profile screen where users can view all 6 registration fields (Shop Name, Owner Name, Mobile Number, Shop Address, Shop Type, Profile Photo) and edit/update any field at any time",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-settings-screen-with-toggles-for-dark-light-mode-bangla-english-language-selection-and-ui-theme-color-customization-with-2-3-additional-color-scheme-options-beyond-the-base-white-and-black-themes",
+      "title": "Create a Settings screen with toggles for Dark/Light mode, Bangla/English language selection, and UI theme color customization with 2-3 additional color scheme options beyond the base White and Black themes",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-bangla-and-english-language-support-throughout-all-ui-screens-splash-registration-home-add-sale-history-profile-settings-with-text-displayed-in-the-selected-language",
+      "title": "Implement Bangla and English language support throughout all UI screens (splash, registration, home, add sale, history, profile, settings) with text displayed in the selected language",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-dark-light-mode-styling-across-all-screens-with-appropriate-color-schemes-that-respect-the-selected-ui-theme-colors-and-ensure-readability-in-both-modes",
+      "title": "Apply Dark/Light mode styling across all screens with appropriate color schemes that respect the selected UI theme colors and ensure readability in both modes",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-design-all-screens-with-mobile-first-responsive-layout-optimized-for-smartphone-screens-with-touch-friendly-controls-and-appropriate-spacing",
+      "title": "Design all screens with mobile-first responsive layout optimized for smartphone screens with touch-friendly controls and appropriate spacing",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-cohesive-visual-design-system-with-vibrant-warm-color-palette-avoiding-blue-and-purple-modern-typography-and-clean-layouts-that-feel-inviting-and-professional-for-shopkeeper-users",
+      "title": "Implement a cohesive visual design system with vibrant, warm color palette (avoiding blue and purple), modern typography, and clean layouts that feel inviting and professional for shopkeeper users",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-submit-button-on-the-add-sale-screen-to-be-properly-clickable-and-responsive-when-clicked-it-must-validate-all-required-fields-save-the-sale-data-to-localstorage-show-appropriate-success-error-feedback-and-clear-the-form-after-successful-submission",
+      "title": "Fix the Submit button on the Add Sale screen to be properly clickable and responsive - when clicked, it must validate all required fields, save the sale data to localStorage, show appropriate success/error feedback, and clear the form after successful submission",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-auto-default-logic-for-the-wholesale-buy-price-field-if-the-field-is-left-empty-when-submitting-automatically-assign-a-value-of-0-zero-wholesale-price-and-selling-price-must-remain-completely-separate-fields-with-no-auto-calculation-between-them",
+      "title": "Implement auto-default logic for the wholesale (buy) price field - if the field is left empty when submitting, automatically assign a value of 0 (zero). Wholesale price and selling price must remain completely separate fields with no auto-calculation between them",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-redesign-the-photo-upload-interface-on-the-add-sale-screen-with-two-options-camera-and-gallery-in-a-clean-minimal-smaller-design-when-camera-is-tapped-open-the-camera-immediately-automatically-attach-the-captured-photo-and-display-a-cancel-remove-button-next-to-the-attached-image-preview",
+      "title": "Redesign the photo upload interface on the Add Sale screen with two options (Camera and Gallery) in a clean, minimal, smaller design. When Camera is tapped, open the camera immediately, automatically attach the captured photo, and display a Cancel/Remove button next to the attached image preview",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-react-error-boundary-component-to-catch-and-display-any-javascript-errors-that-prevent-the-app-from-rendering-wrapping-the-entire-app-component-tree",
+      "title": "Add React error boundary component to catch and display any JavaScript errors that prevent the app from rendering, wrapping the entire App component tree",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-defensive-checks-and-error-handling-in-app-tsx-for-splash-screen-state-registration-modal-state-and-page-navigation-state-to-prevent-crashes-from-invalid-localstorage-data",
+      "title": "Add defensive checks and error handling in App.tsx for splash screen state, registration modal state, and page navigation state to prevent crashes from invalid localStorage data",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-try-catch-error-handling-in-themecontext-and-languagecontext-to-ensure-theme-and-language-initialization-never-crashes-the-app-with-console-logging-of-any-errors",
+      "title": "Add try-catch error handling in ThemeContext and LanguageContext to ensure theme and language initialization never crashes the app, with console logging of any errors",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-console-log-statements-at-key-initialization-points-app-mount-splash-screen-render-registration-modal-render-context-provider-initialization-to-help-debug-the-white-screen-issue",
+      "title": "Add console.log statements at key initialization points (App mount, splash screen render, registration modal render, context provider initialization) to help debug the white screen issue",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-all-required-dependencies-in-useeffect-hooks-throughout-the-app-are-correctly-specified-to-prevent-stale-closures-or-missing-re-renders-that-could-cause-blank-screens",
+      "title": "Ensure all required dependencies in useEffect hooks throughout the app are correctly specified to prevent stale closures or missing re-renders that could cause blank screens",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-add-sale-submit-button-to-properly-save-sale-data-to-localstorage-and-ensure-the-saved-data-appears-in-the-history-screen-immediately-after-submission",
+      "title": "Fix Add Sale Submit button to properly save sale data to localStorage and ensure the saved data appears in the History screen immediately after submission",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-today-s-sales-counter-on-home-screen-to-increment-properly-when-new-sales-are-added-through-add-sale-form",
+      "title": "Update Today's Sales counter on Home screen to increment properly when new sales are added through Add Sale form",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-add-sale-form-flexible-by-allowing-submission-with-any-one-or-more-fields-filled-do-not-require-all-fields-to-be-completed-before-submitting",
+      "title": "Make Add Sale form flexible by allowing submission with any one or more fields filled - do not require all fields to be completed before submitting",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-existing-theme-color-options-orange-sunset-red-passion-golden-amber-with-simplified-color-options-red-green-and-black-inspired-by-the-bangladesh-flag",
+      "title": "Replace the existing theme color options (Orange Sunset, Red Passion, Golden Amber) with simplified color options: Red, Green, and Black inspired by the Bangladesh flag",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-redesign-the-quick-actions-section-on-home-screen-with-improved-visual-design-for-the-two-action-buttons-add-new-sale-and-view-history",
+      "title": "Redesign the Quick Actions section on Home screen with improved visual design for the two action buttons (Add New Sale and View History)",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-the-design-of-the-splash-screen-tagline-text-manage-your-shop-efficiently-while-keeping-the-same-text-content-and-display-it-in-bangla-or-english-based-on-the-user-s-language-setting-in-settings",
+      "title": "Improve the design of the Splash screen tagline text 'Manage your shop efficiently' while keeping the same text content, and display it in Bangla or English based on the user's language setting in Settings",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-timer-reminder-enable-disable-toggle-in-the-settings-screen-that-allows-users-to-turn-the-timer-reminder-feature-on-or-off",
+      "title": "Add a Timer/Reminder enable/disable toggle in the Settings screen that allows users to turn the Timer/Reminder feature on or off",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-dynamic-island-style-compact-timer-display-component-that-appears-below-the-quick-actions-section-on-the-home-screen-when-timer-reminder-is-enabled-in-settings",
+      "title": "Create a Dynamic Island-style compact timer display component that appears below the Quick Actions section on the Home screen when Timer/Reminder is enabled in Settings",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-timer-setting-modal-that-opens-when-the-user-clicks-on-the-timer-display-component-on-the-home-screen-allowing-them-to-set-reminder-time-in-minutes-or-hours",
+      "title": "Create a timer setting modal that opens when the user clicks on the timer display component on the Home screen, allowing them to set reminder time in minutes or hours",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-browser-notification-system-that-triggers-when-a-timer-reaches-zero-displaying-a-notification-to-the-user-about-the-reminder-they-set",
+      "title": "Implement browser notification system that triggers when a timer reaches zero, displaying a notification to the user about the reminder they set",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-timer-display-component-to-show-countdown-in-real-time-updating-every-second-or-minute-based-on-the-remaining-time-until-the-reminder",
+      "title": "Update timer display component to show countdown in real-time, updating every second or minute based on the remaining time until the reminder",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Shop registration system with 6 fields (Shop Name, Owner Name, Mobile Number, Shop Address, Shop Type, Profile Photo) shown on first launch with skip option, editable from Profile section",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Product pre-set price system with wholesale & selling prices stored separately, auto-fetched by item name",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Auto profit calculation when adding sales (profit = selling price - wholesale)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Photo upload with each sale record (camera/gallery access)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Manual stock status color dot selector (Red/Yellow/Green) for each product",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Sales history with date filter, item search, edit, and delete options",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Due tracking with interest rate calculation and reminders",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Multi-user profiles with Internet Identity login and separate data",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Graphs & analytics (daily graph, profit trend, stock trend)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Invoice generation and CSV export for reports",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Dark/Light mode toggle in Settings",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Bangla + English language support with toggle in Settings",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-13",
+      "summary": "UI theme color customization (separate from stock dots) with 2-3 extra color options",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Offline support with browser storage (IndexedDB) and cloud sync",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Splash screen with app logo animation on first launch",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Add wholesale (buy) price field separate from selling price with auto-default to 0 if left empty (no auto-calculation between prices)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Improve photo upload with Camera + Gallery options in clean minimal design, camera opens immediately on tap, photo auto-attaches, with Cancel/Remove button beside image",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Fix Add Sale to History - ensure data is properly saved to localStorage and displayed in History screen regardless of how many fields are filled",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Make Add Sale form flexible - allow submission with any one or more fields filled (not all fields required)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Fix Today's Sales counter on Home screen to increment properly when new sales are added",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Simplify theme colors to Red, Green, Black (inspired by Bangladesh flag) - remove Orange Sunset, Red Passion, Golden Amber",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Redesign Quick Actions buttons on Home screen with improved design",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Improve Splash screen text design - keep 'Manage your shop efficiently' but make it more attractive, show in Bangla/English based on language setting",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Add Timer/Reminder feature with Settings toggle to enable/disable, Dynamic Island-style black timer display below Quick Actions on Home screen when enabled",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Timer modal for setting reminders - click timer on Home screen opens modal where users can set time (minutes/hours) for reminders like meal times or other tasks",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "Browser notification system for timer - when timer reaches zero, show browser notification (no alarm sound)",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Smart Shop Ledger",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

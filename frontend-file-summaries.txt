@@ -1,0 +1,21 @@
+{
+  "frontend/src/App.tsx": "Main application component with defensive localStorage error handling, debug logging at key lifecycle points, proper useCallback for all handlers, and ThemeProvider/LanguageProvider wrapping both splash screen and main app to prevent context errors.",
+  "frontend/src/components/SplashScreen.tsx": "Animated splash screen with bilingual tagline display based on language setting, improved typography and spacing for better visual appeal.",
+  "frontend/src/components/RegistrationModal.tsx": "Shop registration modal with debug logging for form submission and skip events, 6 input fields with photo upload, and proper error handling for localStorage operations.",
+  "frontend/src/components/Layout.tsx": "Main layout component providing bottom navigation bar with 5 tabs (Home, Add Sale, History, Profile, Settings) for mobile-first navigation.",
+  "frontend/src/pages/Home.tsx": "Home dashboard displaying today's profit and sales calculated from localStorage data, redesigned Quick Actions cards with enhanced styling, and conditional timer display when enabled in settings.",
+  "frontend/src/pages/AddSale.tsx": "Add sale form page with flexible validation allowing submission with any one or more fields filled, proper localStorage persistence with date field, and improved camera preview with fixed dimensions.",
+  "frontend/src/pages/History.tsx": "Sales history page that reads from localStorage 'sales' key, displays filtered sales with search and date filters, and includes delete functionality with proper state updates.",
+  "frontend/src/pages/Profile.tsx": "Shop profile page displaying all 6 registration fields with view/edit mode toggle and profile photo upload capability.",
+  "frontend/src/pages/Settings.tsx": "Settings page with dark mode toggle, language selector, simplified theme color options (Red, Green, Black inspired by Bangladesh flag), and new Timer/Reminder enable/disable toggle.",
+  "frontend/src/contexts/ThemeContext.tsx": "React context managing theme state (light/dark) and theme color (red/green/black) with Bangladesh flag-inspired color schemes applied via CSS custom properties.",
+  "frontend/src/contexts/LanguageContext.tsx": "React context providing language state (English/Bangla) and translation function with defensive localStorage error handling, language value validation, debug logging, and safe fallback to defaults.",
+  "frontend/src/locales/translations.ts": "Complete bilingual translation dictionaries for English and Bangla including new timer/reminder related translations.",
+  "frontend/src/index.css": "Global styles with OKLCH color system using Bangladesh flag red as default primary color, mobile-optimized touch targets, and custom animations.",
+  "frontend/tailwind.config.js": "Tailwind configuration with warm color palette (orange, amber, yellow), custom animations, mobile-first responsive settings, and design tokens.",
+  "frontend/src/components/ErrorBoundary.tsx": "React error boundary class component that catches JavaScript errors in child component trees, displays bilingual error UI with reload button, and logs full error details to console.",
+  "frontend/src/main.tsx": "Application entry point wrapping the root App component with ErrorBoundary, QueryClientProvider, and InternetIdentityProvider in the correct order.",
+  "frontend/src/hooks/useTimerNotification.ts": "Custom React hook that manages browser notification permissions and displays notifications when timer completes, with bilingual support.",
+  "frontend/src/components/TimerDisplay.tsx": "Dynamic Island-style compact timer display component with real-time countdown, progress indicator, and expandable UI that triggers notifications when timer reaches zero.",
+  "frontend/src/components/TimerModal.tsx": "Modal dialog component for setting timer/reminder with hours and minutes input fields, notification permission handling, and localStorage persistence."
+}
