@@ -114,12 +114,7 @@ function AppContent() {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':     return <Home />;
-      case 'add-sale': return (
-        <AddSale
-          onBack={() => setCurrentPage('home')}
-          onSaleAdded={() => setCurrentPage('home')}
-        />
-      );
+      case 'add-sale': return <AddSale />;
       case 'history':  return <History />;
       case 'profile':  return <Profile />;
       case 'settings': return <Settings />;

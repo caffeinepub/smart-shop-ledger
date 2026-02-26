@@ -1,32 +1,23 @@
 import { useState, useCallback } from 'react';
 import { useNotificationSound } from './useNotificationSound';
 
-const NOTIFICATIONS_KEY = 'notificationsEnabled';
-
-export interface NotificationState {
-  visible: boolean;
-  message: string;
-}
-
 export function useNotification() {
-  const [notification, setNotification] = useState<NotificationState>({ visible: false, message: '' });
+  const [isVisible, setIsVisible] = useState(false);
+  const [message, setMessage] = useState('');
   const { playNotificationSound } = useNotificationSound();
 
-  const showNotification = useCallback((message: string) => {
-    const notifEnabled = localStorage.getItem(NOTIFICATIONS_KEY);
-    if (notifEnabled === 'false') return;
+  const showNotification = useCallback((msg: string) => {
+    const notificationsEnabled = localStorage.getItem('notificationsEnabled');
+    if (notificationsEnabled === 'false') return;
 
-    setNotification({ visible: true, message });
+    setMessage(msg);
+    setIsVisible(true);
     playNotificationSound();
-
-    setTimeout(() => {
-      setNotification({ visible: false, message: '' });
-    }, 3500);
   }, [playNotificationSound]);
 
   const hideNotification = useCallback(() => {
-    setNotification({ visible: false, message: '' });
+    setIsVisible(false);
   }, []);
 
-  return { notification, showNotification, hideNotification };
+  return { isVisible, message, showNotification, hideNotification };
 }

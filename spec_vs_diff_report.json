@@ -1,45 +1,73 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T03:40:44.204Z",
-  "summary": "The diff implements most of the requested requirements. REQ-6 (dark mode persistence), REQ-8 (color tag lock), REQ-9 (task/product list nav lock), REQ-10 (3 premium themes), REQ-11 (199-item limit for sales, products, tasks, shopping list), REQ-12 (custom sound lock), and REQ-13 (data export) are all clearly implemented. REQ-14 (Advanced Statistics) shows a BarChart2 icon import in Settings but no actual AdvancedStatistics section is visible in the diff. REQ-7 (revert PremiumModal to Version 27 style) is ambiguous — the modal was changed but it cannot be confirmed it matches Version 27 style.",
+  "generatedAt": "2026-02-25T16:10:11.920Z",
+  "summary": "The diff implements most of the requested features including toast notifications, ad banners, premium redesign, premium modal, language support, and splash screen redesign. However, several specific requirements have gaps or missing details.",
   "missing_requirements": [
     {
-      "id": "REQ-14",
-      "requirement": "Add an 'Advanced Statistics' premium feature: show premium users a detailed analytics section (weekly/monthly profit trends, top-selling products, best sales days) accessible from the Home or History page. For free users, show the section with a lock overlay that opens the PremiumModal when tapped.",
-      "reason": "No AdvancedStatistics component or section is visible in any of the modified files. The BarChart2 icon is imported in Settings but no advanced statistics UI with profit trends, top-selling products, or best sales days is implemented in the diff.",
+      "id": "REQ-1",
+      "requirement": "Toast must respect active language (Bengali or English) for all visible text including timestamp label.",
+      "reason": "In NotificationToast.tsx, the text 'এখনই' is hardcoded in Bengali rather than using a translation key, violating the language-aware requirement.",
       "evidence": [
-        "frontend/src/pages/Settings.tsx"
+        "frontend/src/components/NotificationToast.tsx"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Toast must appear after any trust completion in addition to task completion.",
+      "reason": "The diff shows task completion triggering notifications but there is no explicit evidence that trust/credit item completion triggers the toast notification as specifically required.",
+      "evidence": [
+        "frontend/src/components/TaskListPopup.tsx",
+        "frontend/src/pages/Lists.tsx"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "No hardcoded UI strings outside translations.ts.",
+      "reason": "In TaskListPopup.tsx the hint text '২ সেকেন্ড ধরে রাখুন কাজ সম্পন্ন করতে' is hardcoded in Bengali. In Lists.tsx strings like 'আমার তালিকা' and 'My Lists' are hardcoded inline rather than using t() calls.",
+      "evidence": [
+        "frontend/src/components/TaskListPopup.tsx",
+        "frontend/src/pages/Lists.tsx"
       ]
     },
     {
       "id": "REQ-7",
-      "requirement": "Revert the PremiumModal component's visual design back to the Version 27 style with original layout, color scheme, card styles, typography, and button styles.",
-      "reason": "The PremiumModal.tsx was modified but the diff shows a design with animated bubbles background and tab-based layout. Without access to the Version 27 reference design, it cannot be confirmed this matches Version 27. The implementation appears to be a new design rather than a literal revert.",
+      "requirement": "The new logo image must be rendered from the generated asset in frontend/public/assets/generated/ (ssl-logo.dim_512x512.png).",
+      "reason": "SplashScreen.tsx uses an inline SVG drawn directly in the component rather than loading the image asset from frontend/public/assets/generated/ssl-logo.dim_512x512.png as specified. No image file was added in the diff.",
       "evidence": [
-        "frontend/src/components/PremiumModal.tsx"
+        "frontend/src/components/SplashScreen.tsx"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Extra promo codes 'PREMIUM2024' and 'SMART2024' added to VALID_PROMO_CODES array in PremiumModal",
-      "reason": "The build request explicitly states 'Do not change any existing promo code values (987987, 789789, 2580, 01736026413, 01859040014)'. The diff adds two new undocumented promo codes 'PREMIUM2024' and 'SMART2024' that were never requested.",
+      "description": "NotificationProvider context with useNotificationSound hook integration as a global notification architecture.",
+      "reason": "The build request asked for toast notifications but did not specify a NotificationContext/NotificationProvider architecture or a useNotificationSound hook. These are unsolicited architectural additions.",
       "evidence": [
-        "frontend/src/components/PremiumModal.tsx"
+        "frontend/src/contexts/NotificationContext.tsx",
+        "frontend/src/hooks/useNotification.ts"
+      ]
+    },
+    {
+      "description": "Hold-to-complete mechanic with progress bar in TaskListPopup requiring a 2-second hold to complete a task.",
+      "reason": "The build request only asked for toast notifications to appear after task completion. The specific hold-to-complete interaction pattern with progress tracking was not requested.",
+      "evidence": [
+        "frontend/src/components/TaskListPopup.tsx"
       ]
     }
   ],
   "confidence": 0.72,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/Layout.tsx",
+    "frontend/src/components/NotificationToast.tsx",
     "frontend/src/components/PremiumModal.tsx",
-    "frontend/src/components/ShoppingListPopup.tsx",
+    "frontend/src/components/SplashScreen.tsx",
     "frontend/src/components/TaskListPopup.tsx",
-    "frontend/src/contexts/ThemeContext.tsx",
-    "frontend/src/pages/AddSale.tsx",
+    "frontend/src/contexts/NotificationContext.tsx",
+    "frontend/src/hooks/useNotification.ts",
+    "frontend/src/locales/translations.ts",
+    "frontend/src/pages/History.tsx",
+    "frontend/src/pages/Home.tsx",
     "frontend/src/pages/Lists.tsx",
     "frontend/src/pages/ProductList.tsx",
     "frontend/src/pages/Settings.tsx",

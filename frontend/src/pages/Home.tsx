@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { TrendingUp, ShoppingCart, Package, Tag, Plus, History, List, ShoppingBag } from 'lucide-react';
-import TaskListPopup from '../components/TaskListPopup';
+import { useTheme } from '../contexts/ThemeContext';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
 import ShoppingListPopup from '../components/ShoppingListPopup';
+import TaskListPopup from '../components/TaskListPopup';
 import TodaysSalesPopup from '../components/TodaysSalesPopup';
+import AdBanner from '../components/AdBanner';
+import { ShoppingCart, CheckSquare, TrendingUp, Package, Plus, BarChart2 } from 'lucide-react';
 
 interface Sale {
   id: string;
@@ -11,264 +14,225 @@ interface Sale {
   quantity: number;
   unit: string;
   sellingPrice: number;
-  buyingPrice?: number;
+  buyingPrice: number;
+  colorTag: string;
+  note: string;
   date: string;
-  colorTag?: string;
 }
 
-interface ShopProfile {
-  shopName: string;
-  ownerName: string;
-}
+export default function Home() {
+  const { t } = useLanguage();
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
+  const { isActive } = usePremiumStatus();
 
-function getTodaysSales(): Sale[] {
-  try {
-    const data = localStorage.getItem('sales');
-    if (!data) return [];
-    const sales: Sale[] = JSON.parse(data);
-    const today = new Date().toDateString();
-    return sales.filter(s => {
-      try {
-        return new Date(s.date).toDateString() === today;
-      } catch {
-        return false;
-      }
-    });
-  } catch {
-    return [];
-  }
-}
-
-function getShopProfile(): ShopProfile {
-  try {
-    const data = localStorage.getItem('shopProfile');
-    if (!data) return { shopName: 'আমার দোকান', ownerName: '' };
-    return JSON.parse(data);
-  } catch {
-    return { shopName: 'আমার দোকান', ownerName: '' };
-  }
-}
-
-const COLOR_CONFIG = [
-  { key: 'red', label: 'লাল', labelEn: 'Red', bg: 'bg-red-500' },
-  { key: 'yellow', label: 'হলুদ', labelEn: 'Yellow', bg: 'bg-yellow-500' },
-  { key: 'green', label: 'সবুজ', labelEn: 'Green', bg: 'bg-green-500' },
-  { key: 'blue', label: 'নীল', labelEn: 'Blue', bg: 'bg-blue-500' },
-];
-
-const Home: React.FC = () => {
-  const { t, language } = useLanguage();
-  const [todaysSales, setTodaysSales] = useState<Sale[]>([]);
-  const [shopProfile, setShopProfile] = useState<ShopProfile>({ shopName: '', ownerName: '' });
-  const [taskPopupOpen, setTaskPopupOpen] = useState(false);
-  const [shoppingPopupOpen, setShoppingPopupOpen] = useState(false);
-  const [salesPopupOpen, setSalesPopupOpen] = useState(false);
-
-  const refreshData = useCallback(() => {
-    setTodaysSales(getTodaysSales());
-    setShopProfile(getShopProfile());
-  }, []);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [showShoppingList, setShowShoppingList] = useState(false);
+  const [showTaskList, setShowTaskList] = useState(false);
+  const [showTodaysSales, setShowTodaysSales] = useState(false);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    refreshData();
-
-    // Listen for storage changes (when sales are added from AddSale page)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'sales') {
-        setTodaysSales(getTodaysSales());
-      }
+    const load = () => {
+      const stored = localStorage.getItem('sales');
+      if (stored) { try { setSales(JSON.parse(stored)); } catch { /* ignore */ } }
     };
-
-    // Also listen for custom navigate events to refresh on return
-    const handleNavigate = () => {
-      refreshData();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', refreshData);
-    document.addEventListener('visibilitychange', handleNavigate);
-
+    load();
+    window.addEventListener('storage', load);
+    window.addEventListener('salesUpdated', load as EventListener);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', refreshData);
-      document.removeEventListener('visibilitychange', handleNavigate);
+      window.removeEventListener('storage', load);
+      window.removeEventListener('salesUpdated', load as EventListener);
     };
-  }, [refreshData]);
+  }, []);
 
-  // Count of individual sale records added today (not sum of quantities)
-  const itemsSold = todaysSales.length;
+  const today = new Date().toDateString();
+  const todaySales = sales.filter(s => new Date(s.date).toDateString() === today);
+  const todayIncome = todaySales.reduce((sum, s) => sum + (s.sellingPrice * s.quantity), 0);
+  const todayProfit = todaySales.reduce((sum, s) => sum + ((s.sellingPrice - s.buyingPrice) * s.quantity), 0);
+  const itemsSold = todaySales.reduce((sum, s) => sum + s.quantity, 0);
 
-  const totalIncome = todaysSales.reduce((sum, s) => sum + (s.sellingPrice || 0), 0);
-  const totalCost = todaysSales.reduce((sum, s) => sum + (s.buyingPrice || 0), 0);
-  const netProfit = totalIncome - totalCost;
+  const colorCounts: Record<string, number> = {};
+  todaySales.forEach(s => {
+    if (s.colorTag) colorCounts[s.colorTag] = (colorCounts[s.colorTag] || 0) + s.quantity;
+  });
 
-  const colorCounts = COLOR_CONFIG.reduce((acc, c) => {
-    acc[c.key] = todaysSales.filter(s => s.colorTag === c.key).length;
-    return acc;
-  }, {} as Record<string, number>);
+  const colorMap: Record<string, string> = {
+    red: '#ef4444', green: '#22c55e', blue: '#3b82f6', yellow: '#eab308',
+  };
 
-  const hasColorData = Object.values(colorCounts).some(v => v > 0);
-
-  const today = new Date();
-  const dateStr = language === 'bn'
-    ? today.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-    : today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const cardBg = isDark ? 'rgba(255,255,255,0.06)' : '#ffffff';
+  const cardBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)';
+  const textPrimary = isDark ? '#ffffff' : '#1a1a1a';
+  const textSecondary = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-4">
-      {/* Welcome Banner */}
-      <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-green-800 to-green-700 p-4 flex items-center gap-4 shadow-lg">
-        <img
-          src="/assets/generated/app-logo.dim_80x80.png"
-          alt="Logo"
-          className="w-14 h-14 rounded-xl object-contain"
-        />
-        <div>
-          <p className="text-green-200 text-sm">{t('welcome')}!</p>
-          <h2 className="text-white text-xl font-bold">{shopProfile.shopName || t('myShop')}</h2>
-          <p className="text-green-300 text-xs mt-0.5">{dateStr}</p>
-        </div>
-      </div>
+    <div className="min-h-screen pb-4" style={{ background: isDark ? '#0f172a' : '#f1f5f9' }}>
+      <div className="px-4 pt-4 max-w-lg mx-auto">
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 mx-4 mt-4">
-        {/* Today's Profit */}
-        <button
-          onClick={() => setSalesPopupOpen(true)}
-          className="bg-gray-900 border border-gray-800 rounded-2xl p-4 text-left hover:border-green-700 transition-colors"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp size={16} className="text-green-400" />
-            <span className="text-xs text-green-400 font-medium">{t('todayProfit')}</span>
-          </div>
-          <p className="text-2xl font-bold text-white">৳{netProfit.toFixed(0)}</p>
-        </button>
-
-        {/* Total Sales */}
-        <button
-          onClick={() => setSalesPopupOpen(true)}
-          className="bg-gray-900 border border-gray-800 rounded-2xl p-4 text-left hover:border-green-700 transition-colors"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <ShoppingCart size={16} className="text-green-400" />
-            <span className="text-xs text-green-400 font-medium">{t('totalSales')}</span>
-          </div>
-          <p className="text-2xl font-bold text-white">৳{totalIncome.toFixed(0)}</p>
-        </button>
-
-        {/* Items Sold — counts individual sale records added today */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Package size={16} className="text-green-400" />
-            <span className="text-xs text-green-400 font-medium">{t('itemsSold')}</span>
-          </div>
-          <p className="text-2xl font-bold text-white">{itemsSold}</p>
+        {/* Welcome */}
+        <div className="mb-5">
+          <h1 className="text-2xl font-bold" style={{ color: textPrimary }}>
+            {t('home')} 👋
+          </h1>
+          <p className="text-sm mt-0.5" style={{ color: textSecondary }}>
+            {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
         </div>
 
-        {/* Color Breakdown */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Tag size={16} className="text-green-400" />
-            <span className="text-xs text-green-400 font-medium">{t('colorBreakdown') || 'রঙ বিভাজন'}</span>
-          </div>
-          {hasColorData ? (
-            <div className="flex flex-wrap gap-1.5">
-              {COLOR_CONFIG.map(c => colorCounts[c.key] > 0 ? (
-                <div key={c.key} className="flex items-center gap-1">
-                  <div className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
-                  <span className="text-xs text-gray-300">{colorCounts[c.key]}</span>
-                </div>
-              ) : null)}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          {/* Today's Profit */}
+          <div
+            className="rounded-2xl p-4 flex flex-col gap-2"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium" style={{ color: textSecondary }}>{t('todayProfit')}</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)' }}>
+                <TrendingUp size={16} color="#22c55e" />
+              </div>
             </div>
-          ) : (
-            <p className="text-xs text-gray-500">{t('noSalesToday') || 'আজ কোনো বিক্রয় নেই'}</p>
-          )}
-        </div>
-      </div>
+            <p className="text-xl font-bold" style={{ color: textPrimary }}>৳{todayProfit.toFixed(0)}</p>
+          </div>
 
-      {/* Quick Actions */}
-      <div className="mx-4 mt-5">
-        <h3 className="text-white font-bold text-base mb-3">{t('quickActions') || 'দ্রুত কাজ'}</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => {
-              const event = new CustomEvent('navigate', { detail: 'add-sale' });
-              window.dispatchEvent(event);
-            }}
-            className="bg-green-700 hover:bg-green-600 rounded-2xl p-4 text-left transition-colors"
+          {/* Total Income */}
+          <div
+            className="rounded-2xl p-4 flex flex-col gap-2"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
           >
-            <Plus size={22} className="text-white mb-2" />
-            <p className="text-white font-bold text-sm">{t('addSale')}</p>
-            <p className="text-green-200 text-xs">{t('newSaleRecord')}</p>
-          </button>
-          <button
-            onClick={() => {
-              const event = new CustomEvent('navigate', { detail: 'history' });
-              window.dispatchEvent(event);
-            }}
-            className="bg-green-700 hover:bg-green-600 rounded-2xl p-4 text-left transition-colors"
-          >
-            <History size={22} className="text-white mb-2" />
-            <p className="text-white font-bold text-sm">{t('viewHistory')}</p>
-            <p className="text-green-200 text-xs">{t('pastSales')}</p>
-          </button>
-          <button
-            onClick={() => {
-              const event = new CustomEvent('navigate', { detail: 'products' });
-              window.dispatchEvent(event);
-            }}
-            className="bg-green-700 hover:bg-green-600 rounded-2xl p-4 text-left transition-colors"
-          >
-            <Package size={22} className="text-white mb-2" />
-            <p className="text-white font-bold text-sm">{t('productList')}</p>
-            <p className="text-green-200 text-xs">{t('manageProducts')}</p>
-          </button>
-          <button
-            onClick={() => {
-              const event = new CustomEvent('navigate', { detail: 'lists' });
-              window.dispatchEvent(event);
-            }}
-            className="bg-green-700 hover:bg-green-600 rounded-2xl p-4 text-left transition-colors"
-          >
-            <List size={22} className="text-white mb-2" />
-            <p className="text-white font-bold text-sm">{t('lists') || 'তালিকা'}</p>
-            <p className="text-green-200 text-xs">{t('shoppingList') || 'কেনাকাটার তালিকা'}</p>
-          </button>
-        </div>
-      </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium" style={{ color: textSecondary }}>{t('totalIncome')}</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)' }}>
+                <BarChart2 size={16} color="#3b82f6" />
+              </div>
+            </div>
+            <p className="text-xl font-bold" style={{ color: textPrimary }}>৳{todayIncome.toFixed(0)}</p>
+          </div>
 
-      {/* Lists Section */}
-      <div className="mx-4 mt-5">
-        <h3 className="text-white font-bold text-base mb-3">{t('lists') || 'তালিকা'}</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {/* Shopping List */}
-          <button
-            onClick={() => setShoppingPopupOpen(true)}
-            className="bg-gray-900 border border-gray-800 hover:border-green-700 rounded-2xl p-4 text-left transition-colors"
+          {/* Items Sold */}
+          <div
+            className="rounded-2xl p-4 flex flex-col gap-2"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
           >
-            <ShoppingBag size={20} className="text-green-400 mb-2" />
-            <p className="text-white font-semibold text-sm">{t('shoppingList') || 'কেনাকাটার তালিকা'}</p>
-            <p className="text-gray-500 text-xs mt-0.5">{t('noList') || 'কোনো তালিকা নেই'}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium" style={{ color: textSecondary }}>{t('itemsSold')}</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(249,115,22,0.15)' }}>
+                <Package size={16} color="#f97316" />
+              </div>
+            </div>
+            <p className="text-xl font-bold" style={{ color: textPrimary }}>{itemsSold} {t('pieces')}</p>
+          </div>
+
+          {/* Color breakdown */}
+          <div
+            className="rounded-2xl p-4"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+          >
+            <p className="text-xs font-medium mb-2" style={{ color: textSecondary }}>Colors</p>
+            {Object.keys(colorCounts).length === 0 ? (
+              <p className="text-xs" style={{ color: textSecondary }}>—</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(colorCounts).map(([color, count]) => (
+                  <div key={color} className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full" style={{ background: colorMap[color] || '#888' }} />
+                    <span className="text-xs font-medium" style={{ color: textPrimary }}>{count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <p className="text-sm font-semibold mb-3" style={{ color: textSecondary }}>{t('quickActions')}</p>
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <button
+            onClick={() => setShowShoppingList(true)}
+            className="rounded-2xl p-4 flex flex-col items-center gap-2 transition-all active:scale-95"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)' }}>
+              <ShoppingCart size={22} color="#3b82f6" />
+            </div>
+            <span className="text-xs font-medium text-center" style={{ color: textPrimary }}>{t('shoppingList')}</span>
           </button>
-          {/* Task List */}
           <button
-            onClick={() => setTaskPopupOpen(true)}
-            className="bg-gray-900 border border-gray-800 hover:border-green-700 rounded-2xl p-4 text-left transition-colors"
+            onClick={() => setShowTaskList(true)}
+            className="rounded-2xl p-4 flex flex-col items-center gap-2 transition-all active:scale-95"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
           >
-            <List size={20} className="text-green-400 mb-2" />
-            <p className="text-white font-semibold text-sm">{t('taskList') || 'কাজের তালিকা'}</p>
-            <p className="text-gray-500 text-xs mt-0.5">{t('noList') || 'কোনো তালিকা নেই'}</p>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)' }}>
+              <CheckSquare size={22} color="#22c55e" />
+            </div>
+            <span className="text-xs font-medium text-center" style={{ color: textPrimary }}>{t('taskList')}</span>
+          </button>
+          <button
+            onClick={() => setShowTodaysSales(true)}
+            className="rounded-2xl p-4 flex flex-col items-center gap-2 transition-all active:scale-95"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(249,115,22,0.15)' }}>
+              <TrendingUp size={22} color="#f97316" />
+            </div>
+            <span className="text-xs font-medium text-center" style={{ color: textPrimary }}>{t('todaysSales')}</span>
           </button>
         </div>
+
+        {/* Recent Sales */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold" style={{ color: textSecondary }}>{t('todaysSales')}</p>
+          <button
+            onClick={() => setShowTodaysSales(true)}
+            className="text-xs font-medium"
+            style={{ color: '#22c55e' }}
+          >
+            {t('viewAll')}
+          </button>
+        </div>
+
+        {todaySales.length === 0 ? (
+          <div
+            className="rounded-2xl p-8 flex flex-col items-center gap-2 mb-5"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+          >
+            <Plus size={32} color={textSecondary} />
+            <p className="text-sm" style={{ color: textSecondary }}>{t('noSalesToday')}</p>
+          </div>
+        ) : (
+          <div className="space-y-2 mb-5">
+            {todaySales.slice(0, 3).map(sale => (
+              <div
+                key={sale.id}
+                className="rounded-xl px-4 py-3 flex items-center justify-between"
+                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full" style={{ background: colorMap[sale.colorTag] || '#888' }} />
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: textPrimary }}>{sale.productName}</p>
+                    <p className="text-xs" style={{ color: textSecondary }}>{sale.quantity} {sale.unit}</p>
+                  </div>
+                </div>
+                <p className="text-sm font-bold" style={{ color: '#22c55e' }}>৳{(sale.sellingPrice * sale.quantity).toFixed(0)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Ad Banner at bottom for non-premium users */}
+        {!isActive && (
+          <div className="mb-4">
+            <AdBanner />
+          </div>
+        )}
+
       </div>
 
       {/* Popups */}
-      <TaskListPopup open={taskPopupOpen} onClose={() => setTaskPopupOpen(false)} />
-      <ShoppingListPopup open={shoppingPopupOpen} onClose={() => setShoppingPopupOpen(false)} />
-      <TodaysSalesPopup open={salesPopupOpen} onClose={() => setSalesPopupOpen(false)} />
+      <ShoppingListPopup open={showShoppingList} onClose={() => setShowShoppingList(false)} />
+      <TaskListPopup open={showTaskList} onClose={() => setShowTaskList(false)} />
+      <TodaysSalesPopup open={showTodaysSales} onClose={() => setShowTodaysSales(false)} />
     </div>
   );
-};
-
-export default Home;
+}

@@ -1,120 +1,107 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T03:40:44.209Z",
+  "generatedAt": "2026-02-25T16:10:11.923Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 9,
-    "implemented": 8,
+    "total": 7,
+    "implemented": 7,
     "items": [
       {
-        "id": "REQ-10",
-        "summary": "In the Settings page, lock 3 specific color themes behind premium. Mark those 3 themes with a lock icon for free users. When a free user taps a locked theme, show the PremiumModal. Premium users can apply all themes freely. The default theme must remain usable by free users.",
+        "id": "REQ-1",
+        "summary": "Fix in-app toast notifications so they appear after any task or trust completion. The toast must display for exactly 3 seconds then auto-dismiss, slide in from the top with a smooth animation, show the app logo and a relevant message, support click-to-dismiss, and respect the active language (Bengali or English). Use a polished, visually distinct design consistent with the app theme.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Settings.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Settings.tsx"
-        ]
-      },
-      {
-        "id": "REQ-11",
-        "summary": "Enforce a 199-item free tier limit across all addable content (sales records, product list entries, task list items, shopping list items). When a free user attempts to add a 200th item of any type, block the action and show a PremiumModal prompt. Premium users have no item limit. The 199-item cap applies per content type.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AddSale.tsx",
-          "frontend/src/pages/ProductList.tsx",
+          "frontend/src/components/NotificationToast.tsx",
+          "frontend/src/hooks/useNotification.ts",
           "frontend/src/components/TaskListPopup.tsx",
-          "frontend/src/components/ShoppingListPopup.tsx"
+          "frontend/src/locales/translations.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/AddSale.tsx",
-          "frontend/src/pages/ProductList.tsx",
+          "frontend/src/components/NotificationToast.tsx",
+          "frontend/src/hooks/useNotification.ts",
           "frontend/src/components/TaskListPopup.tsx",
-          "frontend/src/components/ShoppingListPopup.tsx"
+          "frontend/src/locales/translations.ts"
         ]
       },
       {
-        "id": "REQ-12",
-        "summary": "Lock the custom sound upload feature in Settings behind premium. Free users should see the custom sound upload option with a lock icon; tapping it must open the PremiumModal. Premium users can upload and use custom sounds freely.",
+        "id": "REQ-2",
+        "summary": "Place a visible ad banner at the very bottom of the Home screen (above the bottom navigation bar), visible only to non-premium users. The banner must always be visible and not hidden by default.",
         "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Settings.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Settings.tsx"
-        ]
-      },
-      {
-        "id": "REQ-13",
-        "summary": "Add a 'Data Export' premium feature: allow premium users to export their sales history and product list data as a downloadable CSV or text file from the Settings or History page. For free users, show the export option with a lock icon that opens the PremiumModal when tapped.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Settings.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Settings.tsx"
-        ]
-      },
-      {
-        "id": "REQ-14",
-        "summary": "Add an 'Advanced Statistics' premium feature: show premium users a detailed analytics section (e.g., weekly/monthly profit trends, top-selling products, best sales days) accessible from the Home or History page. For free users, show the section with a lock overlay that opens the PremiumModal when tapped.",
-        "status": "missing",
         "plannedFiles": [
           "frontend/src/pages/Home.tsx"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/pages/Home.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Place a visible ad banner at the very bottom of the History page. As new history entries are added, they stack upward while the banner stays fixed at the bottom. The banner must be visible only to non-premium users and must not be hidden or auto-dismissed.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/History.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/History.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Redesign the premium section to match the layout shown in the uploaded screenshots. The outer card (Settings page) must show: a crown icon + 'Premium' title, subtitle 'Unlock all premium features', the free/premium limit line, a checklist of 7 features (Unlimited Products, Unlimited Sales (Free: 199 limit), Advanced Reports, Data Backup & Sync, Priority Support, Custom Themes, DO TO LIST (Unlimited)), and at the bottom a full-width 'Get Premium' button. Replace the top-right 'Buy' button with a styled offer tag reading '🔥 অফার! ১০০ টাকায় ১ বছর' (or English equivalent when language is English). Clicking this offer tag must automatically copy 'mdjahidhasanrubel73@gmail.com' to clipboard.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Settings.tsx",
+          "frontend/src/locales/translations.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Settings.tsx",
+          "frontend/src/locales/translations.ts"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Redesign the premium modal to match Screenshot 2. The modal must include: crown emoji + 'Premium' title, close button, 7-item feature checklist, a '⏰ Premium stays active for up to 1 year. It will automatically reset after 1 year.' info box, two tabs ('Promo Code' and 'Purchase Code'), a code input field, and an orange 'Activate' button. Valid promo codes are '987987' and '789789'. Valid purchase password is 'RUBELBOSS987'. Add an email icon/button that when clicked copies 'mdjahidhasanrubel73@gmail.com' to clipboard and opens the device email app with that address pre-filled as recipient. Add a 'Trial' button that grants 1 minute of premium access, usable only once per device (stored in localStorage); after the trial is used, the button is disabled/hidden permanently on that device.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/PremiumModal.tsx",
+          "frontend/src/hooks/usePremiumStatus.ts",
+          "frontend/src/locales/translations.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/PremiumModal.tsx",
+          "frontend/src/locales/translations.ts"
+        ]
       },
       {
         "id": "REQ-6",
-        "summary": "Fix dark mode persistence: save the user's dark/light mode preference to localStorage so that when the app is closed and reopened, the dark mode state is restored exactly as it was left. The ThemeContext must read from localStorage on initialization and write to localStorage on every toggle.",
+        "summary": "Ensure the entire app UI (all pages, modals, buttons, labels, placeholders, error messages) renders in Bengali when Bengali is selected in Settings, and in English when English is selected. The language switch must apply immediately app-wide without a reload, using the existing LanguageContext and translations.ts. Any missing translation keys for new UI elements (offer tag, trial button, email copy feedback, etc.) must be added to both language sets in translations.ts.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/contexts/ThemeContext.tsx"
+          "frontend/src/locales/translations.ts",
+          "frontend/src/components/NotificationToast.tsx",
+          "frontend/src/components/PremiumModal.tsx",
+          "frontend/src/pages/Settings.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/contexts/ThemeContext.tsx"
+          "frontend/src/locales/translations.ts",
+          "frontend/src/components/NotificationToast.tsx",
+          "frontend/src/components/PremiumModal.tsx",
+          "frontend/src/pages/Settings.tsx"
         ]
       },
       {
         "id": "REQ-7",
-        "summary": "Revert the PremiumModal component's visual design back to the Version 27 style. The modal must use the original layout, color scheme, card styles, typography, button styles, and overall visual appearance from Version 27. Do not change any promo code logic or plan pricing — only restore the UI design.",
+        "summary": "Redesign the splash screen logo in SplashScreen.tsx. Replace the current logo with a new, professionally designed logo for 'Smart Shop Ledger'. The logo must be visually distinct: use a shop/ledger icon motif, incorporate green (Bangladesh-inspired) as the primary brand color, have clean modern typography for the app name, and look polished at splash-screen scale. The new logo image must be rendered from the generated asset in frontend/public/assets/generated/. The rest of the splash screen (progress bar, animation timing) remains unchanged.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/PremiumModal.tsx"
+          "frontend/src/components/SplashScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/PremiumModal.tsx"
-        ]
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Lock the color categorization feature on the Home screen behind premium. When a free user tries to use color tags to categorize items (the color picker/color tag selector in the AddSale form or home screen breakdown), show a PremiumModal prompt instead of allowing access. Premium users can use it freely.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AddSale.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AddSale.tsx"
-        ]
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Lock the 'Task List' (তোমার কাজের তালিকা) and 'Product List' (তোমার পণ্যের তালিকা) bottom navigation or bottom options behind premium. Free users tapping these options must see a PremiumModal prompt. Premium users can access them freely.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/pages/Lists.tsx",
-          "frontend/src/pages/ProductList.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/pages/Lists.tsx",
-          "frontend/src/pages/ProductList.tsx"
+          "frontend/src/components/SplashScreen.tsx"
         ]
       }
     ]
@@ -124,13 +111,16 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
-    "frontend/src/components/Layout.tsx",
+    "frontend/public/assets/generated/ssl-logo.dim_512x512.png",
+    "frontend/src/components/NotificationToast.tsx",
     "frontend/src/components/PremiumModal.tsx",
-    "frontend/src/components/ShoppingListPopup.tsx",
+    "frontend/src/components/SplashScreen.tsx",
     "frontend/src/components/TaskListPopup.tsx",
-    "frontend/src/contexts/ThemeContext.tsx",
-    "frontend/src/pages/AddSale.tsx",
+    "frontend/src/contexts/NotificationContext.tsx",
+    "frontend/src/hooks/useNotification.ts",
+    "frontend/src/locales/translations.ts",
+    "frontend/src/pages/History.tsx",
+    "frontend/src/pages/Home.tsx",
     "frontend/src/pages/Lists.tsx",
     "frontend/src/pages/ProductList.tsx",
     "frontend/src/pages/Settings.tsx",

@@ -1,131 +1,135 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type ThemeMode = 'light' | 'dark';
-type ThemeColor = 'red' | 'green' | 'black' | 'purple' | 'orange' | 'teal';
+export type AccentColor = 'red' | 'green' | 'dark' | 'blue' | 'yellow' | 'orange';
+export type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {
   mode: ThemeMode;
-  color: ThemeColor;
-  isDark: boolean;
+  accentColor: AccentColor;
+  setMode: (mode: ThemeMode) => void;
+  setAccentColor: (color: AccentColor) => void;
   toggleMode: () => void;
-  setColor: (color: ThemeColor) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({
-  mode: 'light',
-  color: 'green',
-  isDark: false,
-  toggleMode: () => {},
-  setColor: () => {},
-});
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+const ACCENT_COLORS: Record<AccentColor, { primary: string; primaryFg: string; ring: string }> = {
+  red:    { primary: 'oklch(0.55 0.22 25)',   primaryFg: 'oklch(1 0 0)',    ring: 'oklch(0.55 0.22 25)' },
+  green:  { primary: 'oklch(0.52 0.18 145)',  primaryFg: 'oklch(1 0 0)',    ring: 'oklch(0.52 0.18 145)' },
+  dark:   { primary: 'oklch(0.30 0.02 260)',  primaryFg: 'oklch(0.95 0 0)', ring: 'oklch(0.30 0.02 260)' },
+  blue:   { primary: 'oklch(0.52 0.20 250)',  primaryFg: 'oklch(1 0 0)',    ring: 'oklch(0.52 0.20 250)' },
+  yellow: { primary: 'oklch(0.75 0.18 85)',   primaryFg: 'oklch(0.15 0 0)', ring: 'oklch(0.75 0.18 85)' },
+  orange: { primary: 'oklch(0.65 0.20 50)',   primaryFg: 'oklch(1 0 0)',    ring: 'oklch(0.65 0.20 50)' },
+};
+
+function applyTheme(mode: ThemeMode, accent: AccentColor) {
+  const root = document.documentElement;
+  const colors = ACCENT_COLORS[accent];
+
+  // Remove old classes
+  root.classList.remove('light', 'dark');
+  root.classList.add(mode);
+
+  // Apply accent color CSS variables
+  root.style.setProperty('--accent-primary', colors.primary);
+  root.style.setProperty('--accent-primary-fg', colors.primaryFg);
+  root.style.setProperty('--accent-ring', colors.ring);
+
+  if (mode === 'light') {
+    root.style.setProperty('--background', 'oklch(0.98 0.005 240)');
+    root.style.setProperty('--foreground', 'oklch(0.12 0.02 240)');
+    root.style.setProperty('--card', 'oklch(1 0 0)');
+    root.style.setProperty('--card-foreground', 'oklch(0.12 0.02 240)');
+    root.style.setProperty('--popover', 'oklch(1 0 0)');
+    root.style.setProperty('--popover-foreground', 'oklch(0.12 0.02 240)');
+    root.style.setProperty('--primary', colors.primary);
+    root.style.setProperty('--primary-foreground', colors.primaryFg);
+    root.style.setProperty('--secondary', 'oklch(0.93 0.01 240)');
+    root.style.setProperty('--secondary-foreground', 'oklch(0.20 0.02 240)');
+    root.style.setProperty('--muted', 'oklch(0.93 0.01 240)');
+    root.style.setProperty('--muted-foreground', 'oklch(0.45 0.02 240)');
+    root.style.setProperty('--accent', 'oklch(0.93 0.01 240)');
+    root.style.setProperty('--accent-foreground', 'oklch(0.20 0.02 240)');
+    root.style.setProperty('--destructive', 'oklch(0.55 0.22 25)');
+    root.style.setProperty('--destructive-foreground', 'oklch(1 0 0)');
+    root.style.setProperty('--border', 'oklch(0.88 0.01 240)');
+    root.style.setProperty('--input', 'oklch(0.88 0.01 240)');
+    root.style.setProperty('--ring', colors.ring);
+    root.style.setProperty('--nav-bg', 'oklch(1 0 0)');
+    root.style.setProperty('--nav-border', 'oklch(0.88 0.01 240)');
+    root.style.setProperty('--header-bg', 'oklch(0.15 0.03 240)');
+    root.style.setProperty('--stat-card-bg', 'oklch(0.95 0.01 240)');
+    root.style.setProperty('--stat-card-fg', 'oklch(0.12 0.02 240)');
+    root.style.setProperty('--section-bg', 'oklch(1 0 0)');
+    root.style.setProperty('--input-bg', 'oklch(0.95 0.01 240)');
+  } else {
+    root.style.setProperty('--background', 'oklch(0.12 0.02 240)');
+    root.style.setProperty('--foreground', 'oklch(0.95 0.01 240)');
+    root.style.setProperty('--card', 'oklch(0.18 0.02 240)');
+    root.style.setProperty('--card-foreground', 'oklch(0.95 0.01 240)');
+    root.style.setProperty('--popover', 'oklch(0.18 0.02 240)');
+    root.style.setProperty('--popover-foreground', 'oklch(0.95 0.01 240)');
+    root.style.setProperty('--primary', colors.primary);
+    root.style.setProperty('--primary-foreground', colors.primaryFg);
+    root.style.setProperty('--secondary', 'oklch(0.22 0.02 240)');
+    root.style.setProperty('--secondary-foreground', 'oklch(0.90 0.01 240)');
+    root.style.setProperty('--muted', 'oklch(0.22 0.02 240)');
+    root.style.setProperty('--muted-foreground', 'oklch(0.65 0.02 240)');
+    root.style.setProperty('--accent', 'oklch(0.22 0.02 240)');
+    root.style.setProperty('--accent-foreground', 'oklch(0.90 0.01 240)');
+    root.style.setProperty('--destructive', 'oklch(0.55 0.22 25)');
+    root.style.setProperty('--destructive-foreground', 'oklch(1 0 0)');
+    root.style.setProperty('--border', 'oklch(0.28 0.02 240)');
+    root.style.setProperty('--input', 'oklch(0.28 0.02 240)');
+    root.style.setProperty('--ring', colors.ring);
+    root.style.setProperty('--nav-bg', 'oklch(0.15 0.02 240)');
+    root.style.setProperty('--nav-border', 'oklch(0.25 0.02 240)');
+    root.style.setProperty('--header-bg', 'oklch(0.15 0.03 240)');
+    root.style.setProperty('--stat-card-bg', 'oklch(0.20 0.02 240)');
+    root.style.setProperty('--stat-card-fg', 'oklch(0.95 0.01 240)');
+    root.style.setProperty('--section-bg', 'oklch(0.18 0.02 240)');
+    root.style.setProperty('--input-bg', 'oklch(0.22 0.02 240)');
+  }
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>(() => {
+  const [mode, setModeState] = useState<ThemeMode>(() => {
     try {
-      const saved = localStorage.getItem('darkMode');
-      if (saved === 'true') return 'dark';
-      if (saved === 'false') return 'light';
-    } catch {}
-    return 'light';
+      return (localStorage.getItem('themeMode') as ThemeMode) || 'dark';
+    } catch { return 'dark'; }
   });
 
-  const [color, setColorState] = useState<ThemeColor>(() => {
+  const [accentColor, setAccentColorState] = useState<AccentColor>(() => {
     try {
-      const saved = localStorage.getItem('themeColor');
-      if (saved && ['red', 'green', 'black', 'purple', 'orange', 'teal'].includes(saved)) {
-        return saved as ThemeColor;
-      }
-    } catch {}
-    return 'green';
+      return (localStorage.getItem('accentColor') as AccentColor) || 'green';
+    } catch { return 'green'; }
   });
 
-  const isDark = mode === 'dark';
-
   useEffect(() => {
-    try {
-      localStorage.setItem('darkMode', isDark ? 'true' : 'false');
-    } catch {}
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDark]);
+    applyTheme(mode, accentColor);
+  }, [mode, accentColor]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('themeColor', color);
-    } catch {}
-    applyThemeColor(color, isDark);
-  }, [color, isDark]);
-
-  const toggleMode = () => {
-    setMode(prev => {
-      const next = prev === 'light' ? 'dark' : 'light';
-      try {
-        localStorage.setItem('darkMode', next === 'dark' ? 'true' : 'false');
-      } catch {}
-      return next;
-    });
+  const setMode = (newMode: ThemeMode) => {
+    setModeState(newMode);
+    try { localStorage.setItem('themeMode', newMode); } catch {}
   };
 
-  const setColor = (newColor: ThemeColor) => {
-    setColorState(newColor);
-    try {
-      localStorage.setItem('themeColor', newColor);
-    } catch {}
+  const toggleMode = () => setMode(mode === 'dark' ? 'light' : 'dark');
+
+  const setAccentColor = (color: AccentColor) => {
+    setAccentColorState(color);
+    try { localStorage.setItem('accentColor', color); } catch {}
   };
 
   return (
-    <ThemeContext.Provider value={{ mode, color, isDark, toggleMode, setColor }}>
+    <ThemeContext.Provider value={{ mode, accentColor, setMode, setAccentColor, toggleMode }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
-function applyThemeColor(color: ThemeColor, isDark: boolean) {
-  const root = document.documentElement;
-  const themes: Record<ThemeColor, { primary: string; secondary: string; accent: string }> = {
-    green: {
-      primary: isDark ? 'oklch(0.75 0.18 145)' : 'oklch(0.45 0.18 145)',
-      secondary: isDark ? 'oklch(0.35 0.08 145)' : 'oklch(0.92 0.05 145)',
-      accent: isDark ? 'oklch(0.65 0.15 145)' : 'oklch(0.55 0.15 145)',
-    },
-    red: {
-      primary: isDark ? 'oklch(0.70 0.20 25)' : 'oklch(0.50 0.22 25)',
-      secondary: isDark ? 'oklch(0.30 0.08 25)' : 'oklch(0.93 0.04 25)',
-      accent: isDark ? 'oklch(0.60 0.18 25)' : 'oklch(0.55 0.18 25)',
-    },
-    black: {
-      primary: isDark ? 'oklch(0.80 0.00 0)' : 'oklch(0.20 0.00 0)',
-      secondary: isDark ? 'oklch(0.25 0.00 0)' : 'oklch(0.90 0.00 0)',
-      accent: isDark ? 'oklch(0.60 0.00 0)' : 'oklch(0.40 0.00 0)',
-    },
-    purple: {
-      primary: isDark ? 'oklch(0.72 0.20 290)' : 'oklch(0.50 0.22 290)',
-      secondary: isDark ? 'oklch(0.30 0.08 290)' : 'oklch(0.93 0.04 290)',
-      accent: isDark ? 'oklch(0.62 0.18 290)' : 'oklch(0.55 0.18 290)',
-    },
-    orange: {
-      primary: isDark ? 'oklch(0.75 0.18 55)' : 'oklch(0.55 0.20 55)',
-      secondary: isDark ? 'oklch(0.32 0.08 55)' : 'oklch(0.93 0.04 55)',
-      accent: isDark ? 'oklch(0.65 0.16 55)' : 'oklch(0.58 0.16 55)',
-    },
-    teal: {
-      primary: isDark ? 'oklch(0.72 0.16 185)' : 'oklch(0.48 0.18 185)',
-      secondary: isDark ? 'oklch(0.30 0.07 185)' : 'oklch(0.92 0.04 185)',
-      accent: isDark ? 'oklch(0.62 0.14 185)' : 'oklch(0.52 0.14 185)',
-    },
-  };
-
-  const t = themes[color] || themes.green;
-  root.style.setProperty('--theme-primary', t.primary);
-  root.style.setProperty('--theme-secondary', t.secondary);
-  root.style.setProperty('--theme-accent', t.accent);
-}
-
 export function useTheme() {
-  return useContext(ThemeContext);
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
+  return ctx;
 }
-
-export default ThemeContext;

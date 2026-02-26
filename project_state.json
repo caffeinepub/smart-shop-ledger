@@ -1,119 +1,73 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 7,
-  "summary": "Smart Shop Ledger (স্মার্ট শপ লেজার) app - working on Version 31 with fixes: (1) Dark mode persistence fix so dark mode stays active after app close/reopen, (2) Revert premium modal design to Version 27 style, (3) Premium lock enforcement: color categorization on home screen, task list & shopping list (bottom nav), 3 color themes in settings, 199-item free tier limit (unlimited for premium), custom sound upload, data export, advanced statistics.",
+  "projectStateVersion": 3,
+  "summary": "Smart Shop Ledger app with multiple fixes and features: in-app toast notifications (3 seconds, beautiful design), ad banners on home screen bottom and history page bottom, premium section redesign with offer button ('🔥 অফার! ১০০ টাকায় ১ বছর'), promo codes (987987, 789789), password (RUBELBOSS987), 1-minute trial feature (once per device), email auto-copy (mdjahidhasanrubel73@gmail.com), language-aware UI (Bengali/English based on settings), and splash screen logo redesign.",
   "architectural_notes": [
-    "Facebook link updated to https://fb.openinapp.co/khncs (custom open-in-app link)",
-    "Admin email for premium BUY button: mdjahidhasanrubel73@gmail.com",
-    "Splash screen: text-only animation, no logo image; app interior uses original logos",
-    "Fake registration system (Google/Facebook/Email UI present but non-functional without premium); settings shows email saved but verification incomplete",
-    "Color categorization (red/green/blue/orange dots) on sales entry + home screen color summary - premium locked",
-    "Shopping list & task list as bottom-sheet popups with sound+animation+tap-hold-to-complete; both premium locked",
-    "Today's sales section: Daily Gross Income + Daily Net Profit shown separately; auto-reset midnight, history auto-save",
-    "Three sound types: click sound, popup sound, other (success/error); custom sound upload is premium feature",
-    "Premium locked features: shopping/task lists, color categorization, premium themes (half locked), custom sounds, camera, registration system",
-    "Promo codes (5 total): 987987, 789789, 2580, 01736026413, 01859040014"
+    "Premium codes: Promo 987987, 789789 | Password RUBELBOSS987",
+    "Premium email: mdjahidhasanrubel73@gmail.com — click copies email and opens mail app",
+    "Trial feature: 1 minute premium access, once per device only",
+    "Language setting drives entire app UI language (Bengali/English)"
   ],
   "known_issues": [
-    "Notifications not firing when items are added - needs fix in v26",
-    "Home screen items sold count shows 16 instead of correct count when one item is added - needs fix in v27",
-    "Dark mode resets to light mode after app close/reopen - needs fix"
+    "Notifications not working after task/trust completion — needs fix",
+    "Premium section design degraded from previous version — needs redesign"
   ],
   "isFixRequest": true,
+  "imageRequirements": "## Required Images\n- Smart Shop Ledger app logo: a modern icon combining a small shop storefront silhouette with an open ledger/book, bold green (#2D8A4E) primary color with white accents, clean sans-serif 'Smart Shop Ledger' text below the icon, on a transparent background (ssl-logo.dim_512x512.png)",
   "existing_features": [
     {
-      "id": "feature-add-two-new-promo-codes-01736026413-and-01859040014-to-the-existing-list-in-premiummodal-keeping-all-previous-codes-987987-789789-2580-the-total-valid-promo-code-list-must-be-987987-789789-2580-01736026413-01859040014",
-      "title": "Add two new promo codes ('01736026413' and '01859040014') to the existing list in PremiumModal, keeping all previous codes ('987987', '789789', '2580'). The total valid promo code list must be: 987987, 789789, 2580, 01736026413, 01859040014.",
+      "id": "feature-fix-in-app-toast-notifications-so-they-appear-after-any-task-or-trust-completion-the-toast-must-display-for-exactly-3-seconds-then-auto-dismiss-slide-in-from-the-top-with-a-smooth-animation-show-the-app-logo-and-a-relevant-message-support-click-to-dismiss-and-respect-the-active-language-bengali-or-english-use-a-polished-visually-distinct-design-consistent-with-the-app-theme",
+      "title": "Fix in-app toast notifications so they appear after any task or trust completion. The toast must display for exactly 3 seconds then auto-dismiss, slide in from the top with a smooth animation, show the app logo and a relevant message, support click-to-dismiss, and respect the active language (Bengali or English). Use a polished, visually distinct design consistent with the app theme.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-place-a-visible-ad-banner-at-the-very-bottom-of-the-home-screen-above-the-bottom-navigation-bar-visible-only-to-non-premium-users-the-banner-must-always-be-visible-and-not-hidden-by-default",
+      "title": "Place a visible ad banner at the very bottom of the Home screen (above the bottom navigation bar), visible only to non-premium users. The banner must always be visible and not hidden by default.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-fix-the-items-sold-count-bug-on-the-home-screen-dashboard-the-count-currently-shows-16-instead-of-the-correct-number-when-only-one-item-is-added-the-items-sold-counter-must-reflect-the-actual-number-of-sale-records-added-today-not-a-hardcoded-or-miscalculated-value",
-      "title": "Fix the items sold count bug on the Home screen dashboard. The count currently shows 16 instead of the correct number when only one item is added. The items sold counter must reflect the actual number of sale records added today, not a hardcoded or miscalculated value.",
+      "id": "feature-place-a-visible-ad-banner-at-the-very-bottom-of-the-history-page-as-new-history-entries-are-added-they-stack-upward-while-the-banner-stays-fixed-at-the-bottom-the-banner-must-be-visible-only-to-non-premium-users-and-must-not-be-hidden-or-auto-dismissed",
+      "title": "Place a visible ad banner at the very bottom of the History page. As new history entries are added, they stack upward while the banner stays fixed at the bottom. The banner must be visible only to non-premium users and must not be hidden or auto-dismissed.",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-in-the-settings-page-ensure-the-facebook-page-button-opens-the-url-https-fb-openinapp-co-khncs-verify-and-update-the-developerinfomodal-or-wherever-the-facebook-link-is-stored-so-that-tapping-it-opens-exactly-this-url",
-      "title": "In the Settings page, ensure the Facebook Page button opens the URL https://fb.openinapp.co/khncs. Verify and update the DeveloperInfoModal or wherever the Facebook link is stored so that tapping it opens exactly this URL.",
+      "id": "feature-redesign-the-premium-section-to-match-the-layout-shown-in-the-uploaded-screenshots-the-outer-card-settings-page-must-show-a-crown-icon-premium-title-subtitle-unlock-all-premium-features-the-free-premium-limit-line-a-checklist-of-7-features-unlimited-products-unlimited-sales-free-199-limit-advanced-reports-data-backup-sync-priority-support-custom-themes-do-to-list-unlimited-and-at-the-bottom-a-full-width-get-premium-button-replace-the-top-right-buy-button-with-a-styled-offer-tag-reading-or-english-equivalent-when-language-is-english-clicking-this-offer-tag-must-automatically-copy-mdjahidhasanrubel73-gmail-com-to-clipboard",
+      "title": "Redesign the premium section to match the layout shown in the uploaded screenshots. The outer card (Settings page) must show: a crown icon + 'Premium' title, subtitle 'Unlock all premium features', the free/premium limit line, a checklist of 7 features (Unlimited Products, Unlimited Sales (Free: 199 limit), Advanced Reports, Data Backup & Sync, Priority Support, Custom Themes, DO TO LIST (Unlimited)), and at the bottom a full-width 'Get Premium' button. Replace the top-right 'Buy' button with a styled offer tag reading '🔥 অফার! ১০০ টাকায় ১ বছর' (or English equivalent when language is English). Clicking this offer tag must automatically copy 'mdjahidhasanrubel73@gmail.com' to clipboard.",
       "reqIds": [
         "REQ-4"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-the-splashscreen-component-to-remove-the-logo-image-and-show-only-a-text-based-animation-the-splash-screen-should-animate-only-the-app-name-text-e-g-smart-shop-ledger-without-displaying-any-logo-graphic",
-      "title": "Update the SplashScreen component to remove the logo image and show only a text-based animation. The splash screen should animate only the app name text (e.g., 'Smart Shop Ledger' / 'স্মার্ট শপ লেজার') without displaying any logo graphic.",
+      "id": "feature-redesign-the-premium-modal-to-match-screenshot-2-the-modal-must-include-crown-emoji-premium-title-close-button-7-item-feature-checklist-a-premium-stays-active-for-up-to-1-year-it-will-automatically-reset-after-1-year-info-box-two-tabs-promo-code-and-purchase-code-a-code-input-field-and-an-orange-activate-button-valid-promo-codes-are-987987-and-789789-valid-purchase-password-is-rubelboss987-add-an-email-icon-button-that-when-clicked-copies-mdjahidhasanrubel73-gmail-com-to-clipboard-and-opens-the-device-email-app-with-that-address-pre-filled-as-recipient-add-a-trial-button-that-grants-1-minute-of-premium-access-usable-only-once-per-device-stored-in-localstorage-after-the-trial-is-used-the-button-is-disabled-hidden-permanently-on-that-device",
+      "title": "Redesign the premium modal to match Screenshot 2. The modal must include: crown emoji + 'Premium' title, close button, 7-item feature checklist, a '⏰ Premium stays active for up to 1 year. It will automatically reset after 1 year.' info box, two tabs ('Promo Code' and 'Purchase Code'), a code input field, and an orange 'Activate' button. Valid promo codes are '987987' and '789789'. Valid purchase password is 'RUBELBOSS987'. Add an email icon/button that when clicked copies 'mdjahidhasanrubel73@gmail.com' to clipboard and opens the device email app with that address pre-filled as recipient. Add a 'Trial' button that grants 1 minute of premium access, usable only once per device (stored in localStorage); after the trial is used, the button is disabled/hidden permanently on that device.",
       "reqIds": [
         "REQ-5"
       ],
       "version": 1
     },
     {
-      "id": "feature-fix-dark-mode-persistence-save-the-user-s-dark-light-mode-preference-to-localstorage-so-that-when-the-app-is-closed-and-reopened-the-dark-mode-state-is-restored-exactly-as-it-was-left-the-themecontext-must-read-from-localstorage-on-initialization-and-write-to-localstorage-on-every-toggle",
-      "title": "Fix dark mode persistence: save the user's dark/light mode preference to localStorage so that when the app is closed and reopened, the dark mode state is restored exactly as it was left. The ThemeContext must read from localStorage on initialization and write to localStorage on every toggle.",
+      "id": "feature-ensure-the-entire-app-ui-all-pages-modals-buttons-labels-placeholders-error-messages-renders-in-bengali-when-bengali-is-selected-in-settings-and-in-english-when-english-is-selected-the-language-switch-must-apply-immediately-app-wide-without-a-reload-using-the-existing-languagecontext-and-translations-ts-any-missing-translation-keys-for-new-ui-elements-offer-tag-trial-button-email-copy-feedback-etc-must-be-added-to-both-language-sets-in-translations-ts",
+      "title": "Ensure the entire app UI (all pages, modals, buttons, labels, placeholders, error messages) renders in Bengali when Bengali is selected in Settings, and in English when English is selected. The language switch must apply immediately app-wide without a reload, using the existing LanguageContext and translations.ts. Any missing translation keys for new UI elements (offer tag, trial button, email copy feedback, etc.) must be added to both language sets in translations.ts.",
       "reqIds": [
         "REQ-6"
       ],
       "version": 1
     },
     {
-      "id": "feature-revert-the-premiummodal-component-s-visual-design-back-to-the-version-27-style-the-modal-must-use-the-original-layout-color-scheme-card-styles-typography-button-styles-and-overall-visual-appearance-from-version-27-do-not-change-any-promo-code-logic-or-plan-pricing-only-restore-the-ui-design",
-      "title": "Revert the PremiumModal component's visual design back to the Version 27 style. The modal must use the original layout, color scheme, card styles, typography, button styles, and overall visual appearance from Version 27. Do not change any promo code logic or plan pricing — only restore the UI design.",
+      "id": "feature-redesign-the-splash-screen-logo-in-splashscreen-tsx-replace-the-current-logo-with-a-new-professionally-designed-logo-for-smart-shop-ledger-the-logo-must-be-visually-distinct-use-a-shop-ledger-icon-motif-incorporate-green-bangladesh-inspired-as-the-primary-brand-color-have-clean-modern-typography-for-the-app-name-and-look-polished-at-splash-screen-scale-the-new-logo-image-must-be-rendered-from-the-generated-asset-in-frontend-public-assets-generated-the-rest-of-the-splash-screen-progress-bar-animation-timing-remains-unchanged",
+      "title": "Redesign the splash screen logo in SplashScreen.tsx. Replace the current logo with a new, professionally designed logo for 'Smart Shop Ledger'. The logo must be visually distinct: use a shop/ledger icon motif, incorporate green (Bangladesh-inspired) as the primary brand color, have clean modern typography for the app name, and look polished at splash-screen scale. The new logo image must be rendered from the generated asset in frontend/public/assets/generated/. The rest of the splash screen (progress bar, animation timing) remains unchanged.",
       "reqIds": [
         "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-lock-the-color-categorization-feature-on-the-home-screen-behind-premium-when-a-free-user-tries-to-use-color-tags-to-categorize-items-the-color-picker-color-tag-selector-in-the-addsale-form-or-home-screen-breakdown-show-a-premiummodal-prompt-instead-of-allowing-access-premium-users-can-use-it-freely",
-      "title": "Lock the color categorization feature on the Home screen behind premium. When a free user tries to use color tags to categorize items (the color picker/color tag selector in the AddSale form or home screen breakdown), show a PremiumModal prompt instead of allowing access. Premium users can use it freely.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-lock-the-task-list-and-product-list-bottom-navigation-or-bottom-options-behind-premium-free-users-tapping-these-options-must-see-a-premiummodal-prompt-premium-users-can-access-them-freely",
-      "title": "Lock the 'Task List' (তোমার কাজের তালিকা) and 'Product List' (তোমার পণ্যের তালিকা) bottom navigation or bottom options behind premium. Free users tapping these options must see a PremiumModal prompt. Premium users can access them freely.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-in-the-settings-page-lock-3-specific-color-themes-behind-premium-mark-those-3-themes-with-a-lock-icon-for-free-users-when-a-free-user-taps-a-locked-theme-show-the-premiummodal-premium-users-can-apply-all-themes-freely-the-default-theme-must-remain-usable-by-free-users",
-      "title": "In the Settings page, lock 3 specific color themes behind premium. Mark those 3 themes with a lock icon for free users. When a free user taps a locked theme, show the PremiumModal. Premium users can apply all themes freely. The default theme must remain usable by free users.",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-enforce-a-199-item-free-tier-limit-across-all-addable-content-sales-records-product-list-entries-task-list-items-shopping-list-items-when-a-free-user-attempts-to-add-a-200th-item-of-any-type-block-the-action-and-show-a-premiummodal-prompt-premium-users-have-no-item-limit-the-199-item-cap-applies-per-content-type",
-      "title": "Enforce a 199-item free tier limit across all addable content (sales records, product list entries, task list items, shopping list items). When a free user attempts to add a 200th item of any type, block the action and show a PremiumModal prompt. Premium users have no item limit. The 199-item cap applies per content type.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-lock-the-custom-sound-upload-feature-in-settings-behind-premium-free-users-should-see-the-custom-sound-upload-option-with-a-lock-icon-tapping-it-must-open-the-premiummodal-premium-users-can-upload-and-use-custom-sounds-freely",
-      "title": "Lock the custom sound upload feature in Settings behind premium. Free users should see the custom sound upload option with a lock icon; tapping it must open the PremiumModal. Premium users can upload and use custom sounds freely.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-data-export-premium-feature-allow-premium-users-to-export-their-sales-history-and-product-list-data-as-a-downloadable-csv-or-text-file-from-the-settings-or-history-page-for-free-users-show-the-export-option-with-a-lock-icon-that-opens-the-premiummodal-when-tapped",
-      "title": "Add a 'Data Export' premium feature: allow premium users to export their sales history and product list data as a downloadable CSV or text file from the Settings or History page. For free users, show the export option with a lock icon that opens the PremiumModal when tapped.",
-      "reqIds": [
-        "REQ-13"
       ],
       "version": 1
     }
@@ -121,36 +75,32 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "In the Settings page, update the Facebook Page button URL from the old link to the new custom link: https://fb.openinapp.co/khncs. When the user taps the Facebook Page button, the app must open this new URL.",
-      "reqIds": [
-        "REQ-1"
-      ],
+      "summary": "Fix in-app toast notifications (3 sec, beautiful design) for task/trust completion",
+      "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Fix dark mode persistence: dark mode should remain active even after app is closed and reopened (save preference to storage).",
+      "summary": "Add ad banners to home screen bottom and history page bottom",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Revert premium modal/UI design back to Version 27 style.",
+      "summary": "Redesign premium section: offer button (100 taka/year), promo codes, password, 1-min trial, email auto-copy",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Enforce premium locks: color categorization on home screen, task list & product list (bottom options), 3 color themes in settings locked, free tier capped at 199 items (unlimited for premium), custom sound upload locked, data export locked, advanced statistics locked.",
+      "summary": "Language-aware UI: full app in Bengali or English based on settings selection",
       "reqIds": [],
       "status": "pending"
     },
     {
-      "id": "AR-13",
-      "summary": "Add an 'Advanced Statistics' premium feature: show premium users a detailed analytics section (e.g., weekly/monthly profit trends, top-selling products, best sales days) accessible from the Home or History page. For free users, show the section with a lock overlay that opens the PremiumModal when tapped.",
-      "reqIds": [
-        "REQ-14"
-      ],
+      "id": "AR-5",
+      "summary": "Redesign splash screen logo (carefully, no mistakes)",
+      "reqIds": [],
       "status": "pending"
     }
   ],

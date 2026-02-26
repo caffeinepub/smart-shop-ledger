@@ -2,10 +2,118 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-dark-mode-persistence-save-the-user-s-dark-light-mode-preference-to-localstorage-so-that-when-the-app-is-closed-and-reopened-the-dark-mode-state-is-restored-exactly-as-it-was-left-the-themecontext-must-read-from-localstorage-on-initialization-and-write-to-localstorage-on-every-toggle",
-      "featureTitle": "Fix dark mode persistence: save the user's dark/light mode preference to localStorage so that when the app is closed and reopened, the dark mode state is restored exactly as it was left. The ThemeContext must read from localStorage on initialization and write to localStorage on every toggle.",
+      "featureId": "feature-fix-in-app-toast-notifications-so-they-appear-after-any-task-or-trust-completion-the-toast-must-display-for-exactly-3-seconds-then-auto-dismiss-slide-in-from-the-top-with-a-smooth-animation-show-the-app-logo-and-a-relevant-message-support-click-to-dismiss-and-respect-the-active-language-bengali-or-english-use-a-polished-visually-distinct-design-consistent-with-the-app-theme",
+      "featureTitle": "Fix in-app toast notifications so they appear after any task or trust completion. The toast must display for exactly 3 seconds then auto-dismiss, slide in from the top with a smooth animation, show the app logo and a relevant message, support click-to-dismiss, and respect the active language (Bengali or English). Use a polished, visually distinct design consistent with the app theme.",
       "files": [
-        "frontend/src/contexts/ThemeContext.tsx"
+        "frontend/src/components/NotificationToast.tsx",
+        "frontend/src/components/TaskListPopup.tsx",
+        "frontend/src/hooks/useNotification.ts",
+        "frontend/src/locales/translations.ts"
+      ],
+      "components": [
+        "camera@1.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-place-a-visible-ad-banner-at-the-very-bottom-of-the-home-screen-above-the-bottom-navigation-bar-visible-only-to-non-premium-users-the-banner-must-always-be-visible-and-not-hidden-by-default",
+      "featureTitle": "Place a visible ad banner at the very bottom of the Home screen (above the bottom navigation bar), visible only to non-premium users. The banner must always be visible and not hidden by default.",
+      "files": [
+        "frontend/src/pages/Home.tsx"
+      ],
+      "components": [
+        "camera@1.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-place-a-visible-ad-banner-at-the-very-bottom-of-the-history-page-as-new-history-entries-are-added-they-stack-upward-while-the-banner-stays-fixed-at-the-bottom-the-banner-must-be-visible-only-to-non-premium-users-and-must-not-be-hidden-or-auto-dismissed",
+      "featureTitle": "Place a visible ad banner at the very bottom of the History page. As new history entries are added, they stack upward while the banner stays fixed at the bottom. The banner must be visible only to non-premium users and must not be hidden or auto-dismissed.",
+      "files": [
+        "frontend/src/pages/History.tsx"
+      ],
+      "components": [
+        "camera@1.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-redesign-the-premium-section-to-match-the-layout-shown-in-the-uploaded-screenshots-the-outer-card-settings-page-must-show-a-crown-icon-premium-title-subtitle-unlock-all-premium-features-the-free-premium-limit-line-a-checklist-of-7-features-unlimited-products-unlimited-sales-free-199-limit-advanced-reports-data-backup-sync-priority-support-custom-themes-do-to-list-unlimited-and-at-the-bottom-a-full-width-get-premium-button-replace-the-top-right-buy-button-with-a-styled-offer-tag-reading-or-english-equivalent-when-language-is-english-clicking-this-offer-tag-must-automatically-copy-mdjahidhasanrubel73-gmail-com-to-clipboard",
+      "featureTitle": "Redesign the premium section to match the layout shown in the uploaded screenshots. The outer card (Settings page) must show: a crown icon + 'Premium' title, subtitle 'Unlock all premium features', the free/premium limit line, a checklist of 7 features (Unlimited Products, Unlimited Sales (Free: 199 limit), Advanced Reports, Data Backup & Sync, Priority Support, Custom Themes, DO TO LIST (Unlimited)), and at the bottom a full-width 'Get Premium' button. Replace the top-right 'Buy' button with a styled offer tag reading '🔥 অফার! ১০০ টাকায় ১ বছর' (or English equivalent when language is English). Clicking this offer tag must automatically copy 'mdjahidhasanrubel73@gmail.com' to clipboard.",
+      "files": [
+        "frontend/src/locales/translations.ts",
+        "frontend/src/pages/Settings.tsx"
+      ],
+      "components": [
+        "camera@1.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-redesign-the-premium-modal-to-match-screenshot-2-the-modal-must-include-crown-emoji-premium-title-close-button-7-item-feature-checklist-a-premium-stays-active-for-up-to-1-year-it-will-automatically-reset-after-1-year-info-box-two-tabs-promo-code-and-purchase-code-a-code-input-field-and-an-orange-activate-button-valid-promo-codes-are-987987-and-789789-valid-purchase-password-is-rubelboss987-add-an-email-icon-button-that-when-clicked-copies-mdjahidhasanrubel73-gmail-com-to-clipboard-and-opens-the-device-email-app-with-that-address-pre-filled-as-recipient-add-a-trial-button-that-grants-1-minute-of-premium-access-usable-only-once-per-device-stored-in-localstorage-after-the-trial-is-used-the-button-is-disabled-hidden-permanently-on-that-device",
+      "featureTitle": "Redesign the premium modal to match Screenshot 2. The modal must include: crown emoji + 'Premium' title, close button, 7-item feature checklist, a '⏰ Premium stays active for up to 1 year. It will automatically reset after 1 year.' info box, two tabs ('Promo Code' and 'Purchase Code'), a code input field, and an orange 'Activate' button. Valid promo codes are '987987' and '789789'. Valid purchase password is 'RUBELBOSS987'. Add an email icon/button that when clicked copies 'mdjahidhasanrubel73@gmail.com' to clipboard and opens the device email app with that address pre-filled as recipient. Add a 'Trial' button that grants 1 minute of premium access, usable only once per device (stored in localStorage); after the trial is used, the button is disabled/hidden permanently on that device.",
+      "files": [
+        "frontend/src/components/PremiumModal.tsx",
+        "frontend/src/locales/translations.ts"
+      ],
+      "components": [
+        "camera@1.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-entire-app-ui-all-pages-modals-buttons-labels-placeholders-error-messages-renders-in-bengali-when-bengali-is-selected-in-settings-and-in-english-when-english-is-selected-the-language-switch-must-apply-immediately-app-wide-without-a-reload-using-the-existing-languagecontext-and-translations-ts-any-missing-translation-keys-for-new-ui-elements-offer-tag-trial-button-email-copy-feedback-etc-must-be-added-to-both-language-sets-in-translations-ts",
+      "featureTitle": "Ensure the entire app UI (all pages, modals, buttons, labels, placeholders, error messages) renders in Bengali when Bengali is selected in Settings, and in English when English is selected. The language switch must apply immediately app-wide without a reload, using the existing LanguageContext and translations.ts. Any missing translation keys for new UI elements (offer tag, trial button, email copy feedback, etc.) must be added to both language sets in translations.ts.",
+      "files": [
+        "frontend/src/components/NotificationToast.tsx",
+        "frontend/src/components/PremiumModal.tsx",
+        "frontend/src/locales/translations.ts",
+        "frontend/src/pages/Settings.tsx"
       ],
       "components": [
         "camera@1.0.0",
@@ -22,10 +130,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-revert-the-premiummodal-component-s-visual-design-back-to-the-version-27-style-the-modal-must-use-the-original-layout-color-scheme-card-styles-typography-button-styles-and-overall-visual-appearance-from-version-27-do-not-change-any-promo-code-logic-or-plan-pricing-only-restore-the-ui-design",
-      "featureTitle": "Revert the PremiumModal component's visual design back to the Version 27 style. The modal must use the original layout, color scheme, card styles, typography, button styles, and overall visual appearance from Version 27. Do not change any promo code logic or plan pricing — only restore the UI design.",
+      "featureId": "feature-redesign-the-splash-screen-logo-in-splashscreen-tsx-replace-the-current-logo-with-a-new-professionally-designed-logo-for-smart-shop-ledger-the-logo-must-be-visually-distinct-use-a-shop-ledger-icon-motif-incorporate-green-bangladesh-inspired-as-the-primary-brand-color-have-clean-modern-typography-for-the-app-name-and-look-polished-at-splash-screen-scale-the-new-logo-image-must-be-rendered-from-the-generated-asset-in-frontend-public-assets-generated-the-rest-of-the-splash-screen-progress-bar-animation-timing-remains-unchanged",
+      "featureTitle": "Redesign the splash screen logo in SplashScreen.tsx. Replace the current logo with a new, professionally designed logo for 'Smart Shop Ledger'. The logo must be visually distinct: use a shop/ledger icon motif, incorporate green (Bangladesh-inspired) as the primary brand color, have clean modern typography for the app name, and look polished at splash-screen scale. The new logo image must be rendered from the generated asset in frontend/public/assets/generated/. The rest of the splash screen (progress bar, animation timing) remains unchanged.",
       "files": [
-        "frontend/src/components/PremiumModal.tsx"
+        "frontend/src/components/SplashScreen.tsx"
       ],
       "components": [
         "camera@1.0.0",
@@ -38,131 +146,6 @@
       ],
       "testIds": [
         "REQ-7"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-lock-the-color-categorization-feature-on-the-home-screen-behind-premium-when-a-free-user-tries-to-use-color-tags-to-categorize-items-the-color-picker-color-tag-selector-in-the-addsale-form-or-home-screen-breakdown-show-a-premiummodal-prompt-instead-of-allowing-access-premium-users-can-use-it-freely",
-      "featureTitle": "Lock the color categorization feature on the Home screen behind premium. When a free user tries to use color tags to categorize items (the color picker/color tag selector in the AddSale form or home screen breakdown), show a PremiumModal prompt instead of allowing access. Premium users can use it freely.",
-      "files": [
-        "frontend/src/pages/AddSale.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-8"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-lock-the-task-list-and-product-list-bottom-navigation-or-bottom-options-behind-premium-free-users-tapping-these-options-must-see-a-premiummodal-prompt-premium-users-can-access-them-freely",
-      "featureTitle": "Lock the 'Task List' (তোমার কাজের তালিকা) and 'Product List' (তোমার পণ্যের তালিকা) bottom navigation or bottom options behind premium. Free users tapping these options must see a PremiumModal prompt. Premium users can access them freely.",
-      "files": [
-        "frontend/src/components/Layout.tsx",
-        "frontend/src/pages/Lists.tsx",
-        "frontend/src/pages/ProductList.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-9"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-in-the-settings-page-lock-3-specific-color-themes-behind-premium-mark-those-3-themes-with-a-lock-icon-for-free-users-when-a-free-user-taps-a-locked-theme-show-the-premiummodal-premium-users-can-apply-all-themes-freely-the-default-theme-must-remain-usable-by-free-users",
-      "featureTitle": "In the Settings page, lock 3 specific color themes behind premium. Mark those 3 themes with a lock icon for free users. When a free user taps a locked theme, show the PremiumModal. Premium users can apply all themes freely. The default theme must remain usable by free users.",
-      "files": [
-        "frontend/src/pages/Settings.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-10"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-enforce-a-199-item-free-tier-limit-across-all-addable-content-sales-records-product-list-entries-task-list-items-shopping-list-items-when-a-free-user-attempts-to-add-a-200th-item-of-any-type-block-the-action-and-show-a-premiummodal-prompt-premium-users-have-no-item-limit-the-199-item-cap-applies-per-content-type",
-      "featureTitle": "Enforce a 199-item free tier limit across all addable content (sales records, product list entries, task list items, shopping list items). When a free user attempts to add a 200th item of any type, block the action and show a PremiumModal prompt. Premium users have no item limit. The 199-item cap applies per content type.",
-      "files": [
-        "frontend/src/components/ShoppingListPopup.tsx",
-        "frontend/src/components/TaskListPopup.tsx",
-        "frontend/src/pages/AddSale.tsx",
-        "frontend/src/pages/ProductList.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-11"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-lock-the-custom-sound-upload-feature-in-settings-behind-premium-free-users-should-see-the-custom-sound-upload-option-with-a-lock-icon-tapping-it-must-open-the-premiummodal-premium-users-can-upload-and-use-custom-sounds-freely",
-      "featureTitle": "Lock the custom sound upload feature in Settings behind premium. Free users should see the custom sound upload option with a lock icon; tapping it must open the PremiumModal. Premium users can upload and use custom sounds freely.",
-      "files": [
-        "frontend/src/pages/Settings.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-12"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-a-data-export-premium-feature-allow-premium-users-to-export-their-sales-history-and-product-list-data-as-a-downloadable-csv-or-text-file-from-the-settings-or-history-page-for-free-users-show-the-export-option-with-a-lock-icon-that-opens-the-premiummodal-when-tapped",
-      "featureTitle": "Add a 'Data Export' premium feature: allow premium users to export their sales history and product list data as a downloadable CSV or text file from the Settings or History page. For free users, show the export option with a lock icon that opens the PremiumModal when tapped.",
-      "files": [
-        "frontend/src/pages/Settings.tsx"
-      ],
-      "components": [
-        "camera@1.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-13"
       ],
       "confidence": "high"
     }

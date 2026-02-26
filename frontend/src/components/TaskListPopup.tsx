@@ -1,17 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { usePremiumStatus } from '../hooks/usePremiumStatus';
-import { Plus, Check, Trash2, AlertCircle } from 'lucide-react';
+import { useNotificationContext } from '../contexts/NotificationContext';
 import BottomSheet from './BottomSheet';
-import PremiumModal from './PremiumModal';
+import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
 import { playBell } from '../utils/sounds';
 
 interface Task {
   id: string;
   text: string;
   completed: boolean;
-  createdAt: string;
 }
 
 interface TaskListPopupProps {
@@ -19,175 +17,172 @@ interface TaskListPopupProps {
   onClose: () => void;
 }
 
-const FREE_ITEM_LIMIT = 199;
-
 export default function TaskListPopup({ open, onClose }: TaskListPopupProps) {
-  const { language } = useLanguage();
-  const { isDark } = useTheme();
-  const { isActive: isPremium } = usePremiumStatus();
-  const isBn = language === 'bn';
+  const { t } = useLanguage();
+  const { mode } = useTheme();
+  const { showNotification } = useNotificationContext();
+  const isDark = mode === 'dark';
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState('');
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const holdTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const holdIntervals = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+  const [progressMap, setProgressMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (open) loadTasks();
+    if (open) {
+      const stored = localStorage.getItem('taskList');
+      if (stored) { try { setTasks(JSON.parse(stored)); } catch { /* ignore */ } }
+    }
   }, [open]);
 
-  const loadTasks = () => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('tasks') || '[]');
-      setTasks(Array.isArray(saved) ? saved : []);
-    } catch {
-      setTasks([]);
-    }
-  };
-
-  const saveTasks = (newTasks: Task[]) => {
-    try {
-      localStorage.setItem('tasks', JSON.stringify(newTasks));
-    } catch {}
-  };
-
-  const handleAdd = () => {
-    if (!newTask.trim()) return;
-
-    if (!isPremium && tasks.length >= FREE_ITEM_LIMIT) {
-      setShowPremiumModal(true);
-      return;
-    }
-
-    const task: Task = {
-      id: Date.now().toString(),
-      text: newTask.trim(),
-      completed: false,
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [task, ...tasks];
+  const saveTasks = (updated: Task[]) => {
     setTasks(updated);
+    localStorage.setItem('taskList', JSON.stringify(updated));
+  };
+
+  const addTask = () => {
+    if (!newTask.trim()) return;
+    const updated = [...tasks, { id: Date.now().toString(), text: newTask.trim(), completed: false }];
     saveTasks(updated);
     setNewTask('');
   };
 
-  const handleHoldStart = (id: string) => {
-    holdTimers.current[id] = setTimeout(() => {
-      const updated = tasks.map(t => t.id === id ? { ...t, completed: true } : t);
-      setTasks(updated);
-      saveTasks(updated);
-      playBell();
-      if (navigator.vibrate) navigator.vibrate(200);
-    }, 2000);
+  const deleteTask = (id: string) => {
+    saveTasks(tasks.filter(t => t.id !== id));
   };
 
-  const handleHoldEnd = (id: string) => {
-    if (holdTimers.current[id]) {
-      clearTimeout(holdTimers.current[id]);
-      delete holdTimers.current[id];
+  const startHold = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task || task.completed) return;
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 5;
+      setProgressMap(prev => ({ ...prev, [id]: progress }));
+      if (progress >= 100) {
+        clearInterval(interval);
+        delete holdIntervals.current[id];
+        completeTask(id);
+      }
+    }, 100);
+    holdIntervals.current[id] = interval;
+  };
+
+  const endHold = (id: string) => {
+    if (holdIntervals.current[id]) {
+      clearInterval(holdIntervals.current[id]);
+      delete holdIntervals.current[id];
     }
+    setProgressMap(prev => ({ ...prev, [id]: 0 }));
   };
 
-  const handleDelete = (id: string) => {
-    const updated = tasks.filter(t => t.id !== id);
-    setTasks(updated);
+  const completeTask = (id: string) => {
+    const updated = tasks.map(t => t.id === id ? { ...t, completed: true } : t);
     saveTasks(updated);
+    playBell();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    showNotification(t('taskCompleted'));
   };
 
-  const nearLimit = !isPremium && tasks.length >= 190 && tasks.length < FREE_ITEM_LIMIT;
-  const atLimit = !isPremium && tasks.length >= FREE_ITEM_LIMIT;
+  const textPrimary = isDark ? '#ffffff' : '#1a1a1a';
+  const textSecondary = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
+  const inputBg = isDark ? 'rgba(255,255,255,0.08)' : '#f8f9fa';
+  const cardBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)';
 
   return (
-    <>
-      <BottomSheet open={open} onClose={onClose} title={isBn ? 'কাজের তালিকা' : 'Task List'}>
-        <div className="flex flex-col h-full px-4 py-3">
-          {/* Near limit warning */}
-          {nearLimit && (
-            <div className="flex items-center gap-2 p-3 mb-3 rounded-xl bg-amber-50 border border-amber-200">
-              <AlertCircle size={14} className="text-amber-500 flex-shrink-0" />
-              <p className="text-amber-700 text-xs">
-                {isBn ? `${FREE_ITEM_LIMIT - tasks.length}টি কাজ আর যোগ করতে পারবেন` : `${FREE_ITEM_LIMIT - tasks.length} tasks remaining`}
-              </p>
-            </div>
-          )}
+    <BottomSheet open={open} onClose={onClose} title={t('taskList')}>
+      <div className="px-4 pb-6">
+        {/* Add task input */}
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            value={newTask}
+            onChange={e => setNewTask(e.target.value)}
+            placeholder={`${t('addItem')}...`}
+            className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
+            style={{ background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }}
+            onKeyDown={e => e.key === 'Enter' && addTask()}
+          />
+          <button
+            onClick={addTask}
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: '#22c55e' }}
+          >
+            <Plus size={18} color="#fff" />
+          </button>
+        </div>
 
-          {/* Add input */}
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={newTask}
-              onChange={e => setNewTask(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAdd()}
-              placeholder={isBn ? 'নতুন কাজ লিখুন...' : 'Add new task...'}
-              className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm ${
-                isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
-              } focus:border-amber-500`}
-            />
-            <button
-              onClick={handleAdd}
-              disabled={atLimit}
-              className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center disabled:opacity-50"
-            >
-              <Plus size={18} className="text-white" />
-            </button>
-          </div>
+        {/* Hint */}
+        <p className="text-xs mb-3 text-center" style={{ color: textSecondary }}>
+          ২ সেকেন্ড ধরে রাখুন কাজ সম্পন্ন করতে
+        </p>
 
-          {/* Tasks */}
-          <div className="flex-1 overflow-y-auto space-y-2">
-            {tasks.length === 0 ? (
-              <p className={`text-center py-8 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                {isBn ? 'কোনো কাজ নেই' : 'No tasks yet'}
-              </p>
-            ) : (
-              tasks.map(task => (
+        {/* Task list */}
+        {tasks.length === 0 ? (
+          <p className="text-sm text-center py-8" style={{ color: textSecondary }}>
+            কোনো কাজ নেই। নতুন কাজ যোগ করুন!
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {tasks.map(task => {
+              const progress = progressMap[task.id] || 0;
+              return (
                 <div
                   key={task.id}
-                  onMouseDown={() => handleHoldStart(task.id)}
-                  onMouseUp={() => handleHoldEnd(task.id)}
-                  onTouchStart={() => handleHoldStart(task.id)}
-                  onTouchEnd={() => handleHoldEnd(task.id)}
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all select-none ${
-                    task.completed
-                      ? isDark ? 'bg-green-900/30 border-green-700' : 'bg-green-50 border-green-200'
-                      : isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'
-                  }`}
+                  className="relative rounded-xl px-4 py-3 flex items-center gap-3 overflow-hidden select-none"
+                  style={{
+                    background: task.completed
+                      ? (isDark ? 'rgba(34,197,94,0.1)' : 'rgba(34,197,94,0.08)')
+                      : (isDark ? 'rgba(255,255,255,0.05)' : '#ffffff'),
+                    border: `1px solid ${task.completed ? 'rgba(34,197,94,0.3)' : cardBorder}`,
+                    cursor: task.completed ? 'default' : 'pointer',
+                  }}
+                  onMouseDown={() => startHold(task.id)}
+                  onMouseUp={() => endHold(task.id)}
+                  onMouseLeave={() => endHold(task.id)}
+                  onTouchStart={() => startHold(task.id)}
+                  onTouchEnd={() => endHold(task.id)}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    task.completed ? 'bg-green-500 border-green-500' : isDark ? 'border-gray-500' : 'border-gray-300'
-                  }`}>
-                    {task.completed && <Check size={12} className="text-white" />}
-                  </div>
-                  <span className={`flex-1 text-sm ${
-                    task.completed
-                      ? isDark ? 'text-gray-500 line-through' : 'text-gray-400 line-through'
-                      : isDark ? 'text-white' : 'text-gray-900'
-                  }`}>
+                  {/* Progress fill */}
+                  {progress > 0 && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'rgba(34,197,94,0.15)',
+                        width: `${progress}%`,
+                        transition: 'width 0.1s linear',
+                      }}
+                    />
+                  )}
+
+                  <CheckCircle2
+                    size={20}
+                    color={task.completed ? '#22c55e' : textSecondary}
+                    fill={task.completed ? 'rgba(34,197,94,0.2)' : 'none'}
+                  />
+                  <span
+                    className="flex-1 text-sm"
+                    style={{
+                      color: task.completed ? '#22c55e' : textPrimary,
+                      textDecoration: task.completed ? 'line-through' : 'none',
+                      opacity: task.completed ? 0.7 : 1,
+                    }}
+                  >
                     {task.text}
                   </span>
                   <button
-                    onMouseDown={e => e.stopPropagation()}
-                    onTouchStart={e => e.stopPropagation()}
-                    onClick={() => handleDelete(task.id)}
-                    className="p-1 text-red-400"
+                    onClick={e => { e.stopPropagation(); deleteTask(task.id); }}
+                    className="p-1.5 rounded-lg"
+                    style={{ background: 'rgba(239,68,68,0.1)' }}
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={14} color="#ef4444" />
                   </button>
                 </div>
-              ))
-            )}
+              );
+            })}
           </div>
-
-          <p className={`text-xs text-center mt-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-            {isBn ? '২ সেকেন্ড ধরে রাখুন সম্পন্ন করতে' : 'Hold 2 seconds to complete'}
-          </p>
-        </div>
-      </BottomSheet>
-
-      <PremiumModal
-        isOpen={showPremiumModal}
-        onClose={() => setShowPremiumModal(false)}
-        onActivate={() => setShowPremiumModal(false)}
-      />
-    </>
+        )}
+      </div>
+    </BottomSheet>
   );
 }

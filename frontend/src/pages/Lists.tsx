@@ -1,261 +1,452 @@
 import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { usePremiumStatus } from '../hooks/usePremiumStatus';
-import { Plus, Trash2, Crown, AlertCircle, ListChecks } from 'lucide-react';
+import { useNotificationContext } from '../contexts/NotificationContext';
 import PremiumModal from '../components/PremiumModal';
-import { useNotification } from '../hooks/useNotification';
 
 interface ListItem {
   id: string;
-  name: string;
-  retailPrice: string;
-  wholesalePrice: string;
-  note: string;
-  createdAt: string;
+  text: string;
+  price?: string;
+  wholesalePrice?: string;
+  note?: string;
+  completed: boolean;
+  createdAt: number;
 }
 
-const FREE_ITEM_LIMIT = 199;
-
-export default function Lists() {
-  const { language } = useLanguage();
-  const { isDark } = useTheme();
-  const { isActive: isPremium } = usePremiumStatus();
-  const { showNotification } = useNotification();
+const Lists: React.FC = () => {
+  const { mode, accentColor } = useTheme();
+  const { t, language } = useLanguage();
+  const { isActive: isPremium, checkAndEnforceExpiry } = usePremiumStatus();
+  const { showNotification } = useNotificationContext();
   const isBn = language === 'bn';
 
+  const isDark = mode === 'dark';
+
   const [items, setItems] = useState<ListItem[]>([]);
+  const [newItemText, setNewItemText] = useState('');
+  const [newItemPrice, setNewItemPrice] = useState('');
+  const [newItemWholesale, setNewItemWholesale] = useState('');
+  const [newItemNote, setNewItemNote] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [name, setName] = useState('');
-  const [retailPrice, setRetailPrice] = useState('');
-  const [wholesalePrice, setWholesalePrice] = useState('');
-  const [note, setNote] = useState('');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const accent = accentColor || '#FFA500';
 
   useEffect(() => {
+    checkAndEnforceExpiry();
+    const saved = localStorage.getItem('doToListItems');
+    if (saved) {
+      try { setItems(JSON.parse(saved)); } catch { setItems([]); }
+    }
+  }, [checkAndEnforceExpiry]);
+
+  const saveItems = (updated: ListItem[]) => {
+    setItems(updated);
+    localStorage.setItem('doToListItems', JSON.stringify(updated));
+  };
+
+  const handleAddClick = () => {
     if (!isPremium) {
       setShowPremiumModal(true);
       return;
     }
-    loadItems();
-  }, [isPremium]);
-
-  const loadItems = () => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('taskList') || '[]');
-      setItems(Array.isArray(saved) ? saved : []);
-    } catch {
-      setItems([]);
-    }
+    setShowAddForm(true);
   };
 
-  const saveItems = (newItems: ListItem[]) => {
-    try {
-      localStorage.setItem('taskList', JSON.stringify(newItems));
-    } catch {}
-  };
-
-  const handleAdd = () => {
-    if (!isPremium) {
-      setShowPremiumModal(true);
-      return;
-    }
-
-    if (!isPremium && items.length >= FREE_ITEM_LIMIT) {
-      setShowPremiumModal(true);
-      return;
-    }
-
-    if (!name.trim()) return;
-
+  const handleAddItem = () => {
+    if (!newItemText.trim()) return;
     const newItem: ListItem = {
       id: Date.now().toString(),
-      name: name.trim(),
-      retailPrice,
-      wholesalePrice,
-      note,
-      createdAt: new Date().toISOString(),
+      text: newItemText.trim(),
+      price: newItemPrice.trim() || undefined,
+      wholesalePrice: newItemWholesale.trim() || undefined,
+      note: newItemNote.trim() || undefined,
+      completed: false,
+      createdAt: Date.now(),
     };
-
     const updated = [newItem, ...items];
-    setItems(updated);
     saveItems(updated);
-    setName('');
-    setRetailPrice('');
-    setWholesalePrice('');
-    setNote('');
+    showNotification(`${isBn ? 'নতুন আইটেম যোগ হয়েছে' : 'New item added'}: ${newItem.text}`);
+    setNewItemText('');
+    setNewItemPrice('');
+    setNewItemWholesale('');
+    setNewItemNote('');
     setShowAddForm(false);
-    showNotification(isBn ? 'আইটেম যোগ হয়েছে!' : 'Item added!');
   };
 
-  const handleDelete = (id: string) => {
-    const updated = items.filter(i => i.id !== id);
-    setItems(updated);
-    saveItems(updated);
+  const toggleItem = (id: string) => {
+    saveItems(items.map(item => item.id === id ? { ...item, completed: !item.completed } : item));
   };
 
-  if (!isPremium) {
-    return (
-      <div className={`min-h-screen flex flex-col items-center justify-center px-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className={`w-full max-w-sm rounded-3xl p-8 text-center shadow-xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-            <Crown size={36} className="text-amber-500" />
-          </div>
-          <h2 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {isBn ? 'প্রিমিয়াম ফিচার' : 'Premium Feature'}
-          </h2>
-          <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            {isBn ? 'কাজের তালিকা ব্যবহার করতে প্রিমিয়াম সাবস্ক্রিপশন প্রয়োজন।' : 'Task List requires a Premium subscription.'}
-          </p>
-          <button
-            onClick={() => setShowPremiumModal(true)}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold"
-          >
-            👑 {isBn ? 'প্রিমিয়াম নিন' : 'Get Premium'}
-          </button>
-        </div>
+  const deleteItem = (id: string) => {
+    saveItems(items.filter(item => item.id !== id));
+  };
 
-        <PremiumModal
-          isOpen={showPremiumModal}
-          onClose={() => setShowPremiumModal(false)}
-          onActivate={() => {
-            setShowPremiumModal(false);
-            loadItems();
-          }}
-        />
-      </div>
-    );
-  }
+  const clearAll = () => {
+    saveItems([]);
+    setShowClearConfirm(false);
+  };
+
+  const bg = isDark ? '#0f0f1a' : '#f5f5f5';
+  const cardBg = isDark ? '#1a1a2e' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#1a1a2e';
+  const subText = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
+  const inputBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+  const borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+  const accentColorMap: Record<string, string> = {
+    green: '#22c55e', red: '#ef4444', blue: '#3b82f6',
+    yellow: '#eab308', orange: '#f97316', dark: '#6b7280',
+  };
+  const accentHex = accentColorMap[accentColor] || '#22c55e';
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header */}
-      <div className={`px-4 py-4 flex items-center justify-between border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-        <div>
-          <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {isBn ? 'তোমার কাজের তালিকা' : 'Your Task List'}
-          </h1>
-          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            {items.length} {isBn ? 'টি আইটেম' : 'items'}
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center shadow-lg"
-        >
-          <Plus size={20} className="text-white" />
-        </button>
+    <div style={{ minHeight: '100vh', background: bg, padding: '16px', paddingBottom: '100px' }}>
+      {/* Page Title */}
+      <h1 style={{ color: textColor, fontSize: '26px', fontWeight: '800', marginBottom: '20px', margin: '0 0 20px 0' }}>
+        {isBn ? 'আমার তালিকা' : 'My Lists'}
+      </h1>
+
+      {/* Premium Option Badge */}
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        background: `${accentHex}22`,
+        border: `1px solid ${accentHex}44`,
+        borderRadius: '20px',
+        padding: '6px 14px',
+        marginBottom: '16px',
+      }}>
+        <span style={{ fontSize: '14px' }}>👑</span>
+        <span style={{ color: accentHex, fontWeight: '700', fontSize: '13px' }}>
+          {isBn ? 'প্রিমিয়াম অপশন' : 'Premium Option'}
+        </span>
       </div>
 
-      {/* Add Form */}
-      {showAddForm && (
-        <div className={`mx-4 mt-4 rounded-2xl p-4 border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
-          <h3 className={`font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {isBn ? 'নতুন আইটেম' : 'New Item'}
-          </h3>
-          <div className="space-y-3">
+      {/* DO TO LIST Card */}
+      <div style={{
+        background: cardBg,
+        borderRadius: '20px',
+        overflow: 'hidden',
+        border: `1px solid ${borderColor}`,
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)',
+      }}>
+        {/* Card Header */}
+        <div style={{
+          background: `linear-gradient(135deg, ${accentHex}, ${accentHex}cc)`,
+          padding: '14px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>📋</span>
+            <div>
+              <div style={{ color: '#fff', fontWeight: '800', fontSize: '16px', letterSpacing: '0.05em' }}>
+                DO TO LIST
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px' }}>
+                {isBn ? 'কাজের তালিকা' : 'Task List'}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {items.length > 0 && (
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '6px 10px',
+                  color: '#fff',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                {isBn ? 'সব মুছুন' : 'Clear All'}
+              </button>
+            )}
+            <button
+              onClick={handleAddClick}
+              style={{
+                background: 'rgba(255,255,255,0.25)',
+                border: 'none',
+                borderRadius: '10px',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '22px',
+                color: '#fff',
+                fontWeight: 'bold',
+              }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Add Form */}
+        {showAddForm && (
+          <div style={{ padding: '16px', borderBottom: `1px solid ${borderColor}`, background: inputBg }}>
             <input
               type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder={isBn ? 'নাম *' : 'Name *'}
-              className={`w-full px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
+              value={newItemText}
+              onChange={e => setNewItemText(e.target.value)}
+              placeholder={isBn ? 'আইটেমের নাম *' : 'Item name *'}
+              style={{
+                width: '100%',
+                background: cardBg,
+                border: `1px solid ${borderColor}`,
+                borderRadius: '10px',
+                padding: '10px 14px',
+                color: textColor,
+                fontSize: '14px',
+                marginBottom: '8px',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
             />
-            <div className="flex gap-2">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
               <input
-                type="text"
-                value={retailPrice}
-                onChange={e => setRetailPrice(e.target.value)}
-                placeholder={isBn ? 'খুচরা মূল্য' : 'Retail Price'}
-                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
+                type="number"
+                value={newItemPrice}
+                onChange={e => setNewItemPrice(e.target.value)}
+                placeholder={isBn ? 'খুচরা মূল্য ৳' : 'Retail price ৳'}
+                style={{
+                  background: cardBg,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  color: textColor,
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
               />
               <input
-                type="text"
-                value={wholesalePrice}
-                onChange={e => setWholesalePrice(e.target.value)}
-                placeholder={isBn ? 'পাইকারি মূল্য' : 'Wholesale Price'}
-                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
+                type="number"
+                value={newItemWholesale}
+                onChange={e => setNewItemWholesale(e.target.value)}
+                placeholder={isBn ? 'পাইকারি মূল্য ৳' : 'Wholesale ৳'}
+                style={{
+                  background: cardBg,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  color: textColor,
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
               />
             </div>
             <input
               type="text"
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              placeholder={isBn ? 'নোট' : 'Note'}
-              className={`w-full px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
+              value={newItemNote}
+              onChange={e => setNewItemNote(e.target.value)}
+              placeholder={isBn ? 'নোট (ঐচ্ছিক)' : 'Note (optional)'}
+              style={{
+                width: '100%',
+                background: cardBg,
+                border: `1px solid ${borderColor}`,
+                borderRadius: '10px',
+                padding: '10px 14px',
+                color: textColor,
+                fontSize: '14px',
+                marginBottom: '10px',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
             />
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={handleAddItem}
+                style={{
+                  flex: 1,
+                  background: accentHex,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '10px',
+                  fontWeight: '700',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                {isBn ? 'যোগ করুন' : 'Add'}
+              </button>
               <button
                 onClick={() => setShowAddForm(false)}
-                className={`flex-1 py-2 rounded-xl border text-sm font-semibold ${isDark ? 'border-gray-600 text-gray-300' : 'border-gray-300 text-gray-600'}`}
+                style={{
+                  flex: 1,
+                  background: borderColor,
+                  color: textColor,
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '10px',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                {isBn ? 'বাতিল' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Items */}
+        <div style={{ padding: '8px' }}>
+          {items.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: subText }}>
+              <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
+              <p style={{ fontSize: '14px' }}>
+                {isBn ? 'কোনো আইটেম নেই। + বাটন চাপুন যোগ করতে' : 'No items yet. Tap + to add'}
+              </p>
+              {!isPremium && (
+                <p style={{ fontSize: '12px', marginTop: '8px', color: accentHex }}>
+                  {isBn ? '⚠️ প্রিমিয়াম প্রয়োজন' : '⚠️ Premium required'}
+                </p>
+              )}
+            </div>
+          ) : (
+            items.map(item => (
+              <div
+                key={item.id}
+                style={{
+                  background: item.completed
+                    ? (isDark ? 'rgba(34,197,94,0.08)' : 'rgba(34,197,94,0.05)')
+                    : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'),
+                  borderRadius: '14px',
+                  padding: '12px 14px',
+                  marginBottom: '8px',
+                  border: `1px solid ${item.completed ? 'rgba(34,197,94,0.2)' : borderColor}`,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                }}
+              >
+                <button
+                  onClick={() => toggleItem(item.id)}
+                  style={{
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    border: `2px solid ${item.completed ? '#22c55e' : borderColor}`,
+                    background: item.completed ? '#22c55e' : 'transparent',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    marginTop: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontSize: '12px',
+                  }}
+                >
+                  {item.completed ? '✓' : ''}
+                </button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    color: item.completed ? subText : textColor,
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    textDecoration: item.completed ? 'line-through' : 'none',
+                    marginBottom: '4px',
+                  }}>
+                    {item.text}
+                  </p>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    {item.price && (
+                      <span style={{ color: accentHex, fontSize: '12px', fontWeight: '600' }}>
+                        {isBn ? 'খুচরা:' : 'Retail:'} ৳{item.price}
+                      </span>
+                    )}
+                    {item.wholesalePrice && (
+                      <span style={{ color: subText, fontSize: '12px' }}>
+                        {isBn ? 'পাইকারি:' : 'Wholesale:'} ৳{item.wholesalePrice}
+                      </span>
+                    )}
+                    {item.note && (
+                      <span style={{ color: subText, fontSize: '12px', fontStyle: 'italic' }}>
+                        {item.note}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => deleteItem(item.id)}
+                  style={{
+                    background: 'rgba(239,68,68,0.1)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '6px',
+                    cursor: 'pointer',
+                    color: '#ef4444',
+                    flexShrink: 0,
+                  }}
+                >
+                  🗑️
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Clear Confirm Dialog */}
+      {showClearConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 100, padding: '16px',
+        }}>
+          <div style={{
+            background: cardBg, borderRadius: '20px', padding: '24px',
+            width: '100%', maxWidth: '320px', border: `1px solid ${borderColor}`,
+          }}>
+            <h3 style={{ color: textColor, fontWeight: '700', marginBottom: '8px' }}>
+              {isBn ? 'সব মুছবেন?' : 'Clear all items?'}
+            </h3>
+            <p style={{ color: subText, fontSize: '14px', marginBottom: '20px' }}>
+              {isBn ? 'এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।' : 'This action cannot be undone.'}
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '12px',
+                  background: borderColor, border: 'none', color: textColor,
+                  fontWeight: '600', cursor: 'pointer',
+                }}
               >
                 {isBn ? 'বাতিল' : 'Cancel'}
               </button>
               <button
-                onClick={handleAdd}
-                className="flex-1 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold"
+                onClick={clearAll}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '12px',
+                  background: '#ef4444', border: 'none', color: '#fff',
+                  fontWeight: '700', cursor: 'pointer',
+                }}
               >
-                {isBn ? 'যোগ করুন' : 'Add'}
+                {isBn ? 'মুছুন' : 'Clear'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Items */}
-      <div className="px-4 py-4 space-y-3">
-        {items.length === 0 ? (
-          <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            <ListChecks size={40} className="mx-auto mb-3 opacity-50" />
-            <p>{isBn ? 'কোনো আইটেম নেই' : 'No items yet'}</p>
-          </div>
-        ) : (
-          items.map(item => (
-            <div
-              key={item.id}
-              className={`rounded-2xl p-4 border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
-                  {(item.retailPrice || item.wholesalePrice) && (
-                    <div className="flex gap-3 mt-1">
-                      {item.retailPrice && (
-                        <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {isBn ? 'খুচরা:' : 'Retail:'} ৳{item.retailPrice}
-                        </span>
-                      )}
-                      {item.wholesalePrice && (
-                        <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {isBn ? 'পাইকারি:' : 'Wholesale:'} ৳{item.wholesalePrice}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {item.note && (
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.note}</p>
-                  )}
-                </div>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="p-2 rounded-lg text-red-400 hover:bg-red-50"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <PremiumModal
-        isOpen={showPremiumModal}
-        onClose={() => setShowPremiumModal(false)}
-        onActivate={() => {
-          setShowPremiumModal(false);
-          loadItems();
-        }}
-      />
+      {/* Premium Modal */}
+      <PremiumModal isOpen={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
     </div>
   );
-}
+};
+
+export default Lists;

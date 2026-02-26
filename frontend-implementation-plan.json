@@ -1,183 +1,172 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Dark Mode Persistence, Revert Premium Modal Design, and Enforce Premium Locks",
+  "title": "Full rebuild: notifications, ads, premium redesign, language-aware UI, and new splash logo",
   "requirements": [
     {
-      "id": "REQ-6",
-      "summary": "Fix dark mode persistence using localStorage so the theme state is restored on app reopening",
+      "id": "REQ-1",
+      "summary": "Fix in-app toast notifications to appear after task/trust completion with 3-second auto-dismiss, slide-in animation, app logo, language-aware messages, and click-to-dismiss support",
       "acceptanceCriteria": [
-        "When user enables dark mode and closes/reopens the app, dark mode is still active",
-        "When user disables dark mode and closes/reopens the app, light mode is still active",
-        "ThemeContext initializes dark mode state from localStorage key (e.g., 'darkMode') on mount",
-        "Every dark mode toggle writes the new value to localStorage immediately"
+        "Toast appears every time a task or trust item is completed",
+        "Toast auto-dismisses after exactly 3 seconds",
+        "Toast slides in from the top with animation and slides out on dismiss",
+        "Message text is in Bengali when Bengali is selected, English when English is selected",
+        "Clicking the toast dismisses it immediately"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/contexts/ThemeContext.tsx",
+          "path": "frontend/src/components/NotificationToast.tsx",
           "operation": "modify",
-          "description": "Modify ThemeContext to read dark mode state from localStorage on initialization (using key 'darkMode') and write the new dark mode value to localStorage immediately on every toggle. Ensure the isDarkMode state is synchronized with localStorage throughout the component lifecycle."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Revert PremiumModal visual design back to Version 27 style while preserving all promo code logic and pricing",
-      "acceptanceCriteria": [
-        "PremiumModal visually matches the Version 27 design (original color scheme, layout, card styling)",
-        "All existing promo codes (987987, 789789, 2580, 01736026413, 01859040014) still work",
-        "Monthly, yearly, and lifetime plan options are still displayed",
-        "The promo code activation flow still functions correctly"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/PremiumModal.tsx",
-          "operation": "modify",
-          "description": "Revert the PremiumModal component's visual design (color scheme, layout, card styles, typography, button styles) back to Version 27 appearance. Do not modify promo code validation logic, pricing values, plan options, or the activation flow. Focus only on restoring the original UI styling and structure."
-        }
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "summary": "Lock color categorization feature behind premium; show PremiumModal when free users attempt to use color tags",
-      "acceptanceCriteria": [
-        "Free users cannot use the color tag/color categorization feature when adding a sale",
-        "Tapping the color tag option as a free user opens the PremiumModal",
-        "Premium users can use color categorization without any restriction",
-        "The home screen color breakdown section is visible to all users but color tagging during add is locked for free users"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AddSale.tsx",
-          "operation": "modify",
-          "description": "Add a premium check using usePremiumStatus hook before allowing color tag selection in the AddSale form. When a free user taps the color tag picker, open the PremiumModal instead of allowing selection. Premium users can use the color picker without restriction. Keep the color breakdown display on the Home screen visible to all users."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Lock 'Task List' and 'Product List' navigation behind premium with PremiumModal prompts for free users",
-      "acceptanceCriteria": [
-        "Free users tapping 'Task List' or 'Product List' see the PremiumModal instead of the content",
-        "Premium users can access both Task List and Product List without restriction",
-        "The lock is enforced both in the bottom navigation and any other entry points to these pages",
-        "A premium lock icon or visual indicator is shown on these options for free users"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Add premium checks using usePremiumStatus hook to the bottom navigation entries for 'Task List' (Lists page) and 'Product List'. When a free user taps these nav items, prevent navigation and show the PremiumModal. Add a lock icon overlay on these nav items for free users. Premium users navigate freely."
+          "description": "Update the NotificationToast component to enforce exactly 3-second auto-dismiss timing (currently 3.5s), ensure slide-in/slide-out animations work correctly, display the app logo, accept language-aware message text, and support immediate dismissal on click. Verify that CSS keyframes in index.css support the animation requirements."
         },
         {
-          "path": "frontend/src/pages/Lists.tsx",
+          "path": "frontend/src/hooks/useNotification.ts",
           "operation": "modify",
-          "description": "Add a premium gate at the page entry level using usePremiumStatus. If a free user accesses this page directly (e.g., via URL), show the PremiumModal and prevent content display. Premium users see the full task list functionality."
-        },
-        {
-          "path": "frontend/src/pages/ProductList.tsx",
-          "operation": "modify",
-          "description": "Add a premium gate at the page entry level using usePremiumStatus. If a free user accesses this page directly (e.g., via URL), show the PremiumModal and prevent content display. Premium users see the full product list functionality. Note: This page already has a 10-item free limit; this change replaces that with a full premium lock."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Lock 3 specific color themes in Settings behind premium with lock icons and PremiumModal for free users",
-      "acceptanceCriteria": [
-        "Exactly 3 color themes in Settings are marked as premium-only with a lock icon",
-        "Free users tapping a locked theme see the PremiumModal",
-        "Premium users can apply all themes including the 3 locked ones",
-        "The default/base theme remains accessible to free users without restriction"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Settings.tsx",
-          "operation": "modify",
-          "description": "Identify 3 color theme options to mark as premium-only (e.g., purple, orange, teal or other visually distinct themes). Add a lock icon to those 3 theme options for free users using usePremiumStatus. When a free user taps a locked theme, open the PremiumModal instead of applying the theme. Premium users can apply all themes. Ensure the default theme remains unlocked and usable by free users."
-        }
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "summary": "Enforce a 199-item free tier limit per content type; block 200th add attempt and show PremiumModal",
-      "acceptanceCriteria": [
-        "Free users can add up to 199 items per content type (sales, products, tasks, shopping list)",
-        "The 200th add attempt by a free user is blocked and PremiumModal is shown",
-        "Premium users can add unlimited items with no cap",
-        "A counter or subtle indicator shows remaining free slots when approaching the limit (e.g., at 190+)"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AddSale.tsx",
-          "operation": "modify",
-          "description": "Add a free-tier item count check using usePremiumStatus before allowing a new sale to be added. Read the current sales array from localStorage and check its length. If a free user has 199+ sales, block the add and show PremiumModal. Premium users can add unlimited sales. Optionally show a counter badge when approaching the limit (e.g., at 190+ sales)."
-        },
-        {
-          "path": "frontend/src/pages/ProductList.tsx",
-          "operation": "modify",
-          "description": "Add a 199-item free-tier limit check using usePremiumStatus before allowing a new product to be added. If a free user has 199+ products in localStorage, block the add and show PremiumModal. Premium users can add unlimited products. Optionally show a counter when approaching the limit. Note: This replaces the existing 10-item limit with the new 199-item limit."
+          "description": "Update the useNotification hook to enforce exactly 3-second auto-dismiss timing (adjust from current 3.5s) and ensure it integrates with the LanguageContext to pass language-aware messages to the NotificationToast."
         },
         {
           "path": "frontend/src/components/TaskListPopup.tsx",
           "operation": "modify",
-          "description": "Add a 199-item free-tier limit check using usePremiumStatus before allowing a new task to be added. Read the current tasks array from localStorage and check its length. If a free user has 199+ tasks, block the add and show PremiumModal. Premium users can add unlimited tasks. Optionally show a counter when approaching the limit."
+          "description": "Wire the notification system to trigger a toast when a task is completed via the 2-second press-and-hold gesture. Use the NotificationContext to show a language-aware completion message from translations.ts."
         },
         {
-          "path": "frontend/src/components/ShoppingListPopup.tsx",
+          "path": "frontend/src/locales/translations.ts",
           "operation": "modify",
-          "description": "Add a 199-item free-tier limit check using usePremiumStatus before allowing a new shopping list item to be added. Read the current shopping list array from localStorage and check its length. If a free user has 199+ items, block the add and show PremiumModal. Premium users can add unlimited items. Optionally show a counter when approaching the limit."
+          "description": "Add translation keys for task completion and trust completion toast messages in both English and Bengali. Include keys like 'taskCompleted', 'trustCompleted' with appropriate congratulatory text."
         }
       ]
     },
     {
-      "id": "REQ-12",
-      "summary": "Lock custom sound upload feature in Settings behind premium with a lock icon and PremiumModal",
+      "id": "REQ-2",
+      "summary": "Place a visible ad banner at the very bottom of the Home screen above the bottom navigation bar, visible only to non-premium users",
       "acceptanceCriteria": [
-        "Custom sound upload option in Settings is visible but locked for free users",
-        "A lock icon is displayed next to the custom sound upload option for free users",
-        "Tapping the locked custom sound option opens the PremiumModal",
-        "Premium users can upload custom sounds without any restriction"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Settings.tsx",
-          "operation": "modify",
-          "description": "Add a premium check using usePremiumStatus to the custom sound upload section. Display a lock icon next to the custom sound upload option for free users. When a free user taps the locked option, open the PremiumModal instead of allowing the file input to open. Premium users can upload and use custom sounds freely."
-        }
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "summary": "Add a premium 'Data Export' feature allowing CSV download of sales/product data; lock for free users",
-      "acceptanceCriteria": [
-        "A 'Data Export' option is visible in Settings or History page",
-        "Free users see a lock icon on the Data Export option and tapping it opens PremiumModal",
-        "Premium users can tap Data Export to download their sales/product data as CSV",
-        "Exported file includes date, product name, quantity, price, and profit columns"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Settings.tsx",
-          "operation": "modify",
-          "description": "Add a 'Data Export' button in the Settings page premium features section. Use usePremiumStatus to check premium status. Free users see a lock icon and tapping opens PremiumModal. Premium users can tap to trigger a CSV export function that reads sales and product data from localStorage, formats it as CSV (with columns: date, product name, quantity, price, profit), and downloads it using a blob URL and anchor element click."
-        }
-      ]
-    },
-    {
-      "id": "REQ-14",
-      "summary": "Add a premium 'Advanced Statistics' feature showing detailed analytics; lock with overlay for free users",
-      "acceptanceCriteria": [
-        "An 'Advanced Statistics' section is visible on the Home or History page",
-        "Free users see the section with a premium lock overlay; tapping it opens PremiumModal",
-        "Premium users see weekly/monthly profit trends, top-selling products, and best sales days",
-        "Statistics are calculated from existing localStorage sales data"
+        "Ad banner is rendered at the bottom of the Home page above the nav bar",
+        "Banner is not shown to premium users",
+        "Banner is visible and not auto-dismissed"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/Home.tsx",
           "operation": "modify",
-          "description": "Add an 'Advanced Statistics' section to the Home page below the existing stats summary. Use usePremiumStatus to check premium status. For free users, display a blurred or overlay-locked preview of the statistics section; tapping it opens PremiumModal. For premium users, calculate and display weekly/monthly profit trends, top-selling products, and best sales days using sales data from localStorage. Use simple bar or line indicators for trends."
+          "description": "Add a visible ad banner component (AdMobBanner or AdBanner) at the bottom of the Home page, positioned above the bottom navigation bar. Ensure it is only rendered for non-premium users by checking usePremiumStatus. The banner must be visible by default and not auto-dismissed."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Place a visible ad banner at the very bottom of the History page, fixed below all history entries, visible only to non-premium users",
+      "acceptanceCriteria": [
+        "Ad banner is rendered at the bottom of the History page",
+        "History items grow upward above the banner as more are added",
+        "Banner is not shown to premium users",
+        "Banner is always visible and not auto-dismissed"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/History.tsx",
+          "operation": "modify",
+          "description": "Add a visible ad banner component (AdMobBanner or AdBanner) at the bottom of the History page, ensuring it remains fixed below all history entries. As new entries are added, they should stack upward while the banner stays at the bottom. Only render the banner for non-premium users by checking usePremiumStatus. The banner must be visible by default and not auto-dismissed."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Redesign the premium section card on the Settings page to match the uploaded screenshot layout with crown icon, 7-feature checklist, and offer tag that copies email on click",
+      "acceptanceCriteria": [
+        "Outer premium card matches the layout in Screenshot 1",
+        "Offer tag '🔥 অফার! ১০০ টাকায় ১ বছর' replaces the old 'Buy' button",
+        "Clicking the offer tag copies mdjahidhasanrubel73@gmail.com to clipboard silently",
+        "All 7 feature checklist items are displayed",
+        "'Get Premium' button opens the premium modal"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Settings.tsx",
+          "operation": "modify",
+          "description": "Redesign the premium section card to match the layout shown in Screenshot_20260225_213431_Chrome.jpg. Add a crown icon and 'Premium' title, subtitle 'Unlock all premium features', the free/premium limit line, a 7-item feature checklist (Unlimited Products, Unlimited Sales (Free: 199 limit), Advanced Reports, Data Backup & Sync, Priority Support, Custom Themes, DO TO LIST (Unlimited)), and a full-width 'Get Premium' button. Replace the top-right 'Buy' button with a styled offer tag reading '🔥 অফার! ১০০ টাকায় ১ বছর' (Bengali) or '🔥 Offer! 1 Year for 100 Taka' (English) based on the active language from LanguageContext. Implement click handler on the offer tag to silently copy 'mdjahidhasanrubel73@gmail.com' to the clipboard using navigator.clipboard.writeText."
+        },
+        {
+          "path": "frontend/src/locales/translations.ts",
+          "operation": "modify",
+          "description": "Add translation keys for the offer tag text, premium card subtitle, and all 7 feature checklist items in both English and Bengali. Include keys like 'premiumOfferTag', 'premiumSubtitle', 'featureUnlimitedProducts', 'featureUnlimitedSales', 'featureAdvancedReports', 'featureDataBackup', 'featurePrioritySupport', 'featureCustomThemes', 'featureDoToList'."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Redesign the premium modal to match Screenshot 2 with crown emoji, 7-item checklist, info box, Promo Code/Purchase Code tabs, email icon/button, and Trial button with 1-minute access",
+      "acceptanceCriteria": [
+        "Modal layout matches Screenshot 2 with dark background, gold accents",
+        "Promo Code tab accepts 987987 or 789789 and activates premium on correct code",
+        "Purchase Code tab accepts RUBELBOSS987 and activates premium",
+        "Wrong codes show an error message",
+        "Email icon click copies mdjahidhasanrubel73@gmail.com and opens mailto: link",
+        "Trial button grants 1-minute premium, disabled after first use on the device",
+        "After successful activation, CongratulationsAnimation is shown"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/PremiumModal.tsx",
+          "operation": "modify",
+          "description": "Redesign the modal to match Screenshot_20260225_213446_Chrome.jpg. Add crown emoji + 'Premium' title, close button, 7-item feature checklist, info box with '⏰ Premium stays active for up to 1 year. It will automatically reset after 1 year.', two tabs ('Promo Code' and 'Purchase Code'), code input field, and orange 'Activate' button. Implement promo code validation for '987987' and '789789', purchase code validation for 'RUBELBOSS987', and show error messages for invalid codes. Add an email icon/button that copies 'mdjahidhasanrubel73@gmail.com' to clipboard and opens mailto: link. Add a 'Trial' button that grants 1-minute premium access (stored in localStorage with timestamp), usable only once per device (check localStorage flag 'trialUsed'); after the trial is used, disable/hide the button permanently. On successful activation, show the CongratulationsAnimation component. Use LanguageContext for all text."
+        },
+        {
+          "path": "frontend/src/hooks/usePremiumStatus.ts",
+          "operation": "modify",
+          "description": "Extend the usePremiumStatus hook to support 1-minute trial activation. Add logic to check for a trial timestamp in localStorage and enforce a 1-minute expiry. Ensure the trial flag is cleared after expiry and the 'trialUsed' flag is set permanently after the trial is activated once."
+        },
+        {
+          "path": "frontend/src/locales/translations.ts",
+          "operation": "modify",
+          "description": "Add translation keys for the premium modal: crown title, close button, 7-item checklist, info box text, tab labels ('Promo Code', 'Purchase Code'), input placeholder, activate button, error messages, email button label, trial button text, and trial success/expiry messages in both English and Bengali."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Ensure the entire app UI renders in Bengali or English based on the language selection in Settings, with immediate app-wide updates and all new UI elements translated",
+      "acceptanceCriteria": [
+        "Switching language in Settings immediately updates all visible text",
+        "All new UI elements (offer tag, trial button, email copy feedback) have Bengali and English translations",
+        "No hardcoded UI strings outside translations.ts"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/locales/translations.ts",
+          "operation": "modify",
+          "description": "Review all new UI elements added in REQ-1, REQ-4, and REQ-5 and ensure every string (offer tag, trial button, email copy feedback, toast messages, premium modal text, checklist items, error messages, etc.) has both English and Bengali translations. Add any missing keys for new UI elements introduced in this rebuild."
+        },
+        {
+          "path": "frontend/src/components/NotificationToast.tsx",
+          "operation": "modify",
+          "description": "Ensure the NotificationToast component uses the translate function from LanguageContext to display language-aware messages. Verify no hardcoded strings remain."
+        },
+        {
+          "path": "frontend/src/components/PremiumModal.tsx",
+          "operation": "modify",
+          "description": "Ensure all text in the PremiumModal (title, checklist, tabs, buttons, error messages, info box, email feedback) uses the translate function from LanguageContext. Verify no hardcoded strings remain."
+        },
+        {
+          "path": "frontend/src/pages/Settings.tsx",
+          "operation": "modify",
+          "description": "Ensure the redesigned premium card section uses the translate function from LanguageContext for all text (title, subtitle, checklist, offer tag, button). Verify no hardcoded strings remain."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Redesign the splash screen logo with the new professionally designed 'Smart Shop Ledger' logo asset using green brand color and shop/ledger icon motif",
+      "acceptanceCriteria": [
+        "Old logo is fully replaced by the new logo asset",
+        "New logo displays correctly at splash screen size without distortion",
+        "Logo uses the green brand color scheme",
+        "Splash screen animation timing (2.5 seconds) is unchanged"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/SplashScreen.tsx",
+          "operation": "modify",
+          "description": "Replace the current logo in the splash screen with the new professionally designed logo asset from frontend/public/assets/generated/ssl-logo.dim_512x512.png. Ensure the logo is rendered at the correct size without distortion, uses the green brand color scheme, and maintains the 2.5-second animation timing. Update the img src to reference the exact workspace path: frontend/public/assets/generated/ssl-logo.dim_512x512.png."
         }
       ]
     }
