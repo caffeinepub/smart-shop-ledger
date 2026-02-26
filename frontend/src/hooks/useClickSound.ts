@@ -1,119 +1,132 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+// Click sound hook with Web Audio API tone generation
+// Supports custom sound upload/storage via base64 in localStorage
+// Sound enable/disable toggle with full localStorage persistence
 
-export function useClickSound() {
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const customAudioRef = useRef<HTMLAudioElement | null>(null);
-  const [soundEnabled, setSoundEnabledState] = useState<boolean>(() => {
-    try {
-      const val = localStorage.getItem('soundEnabled');
-      return val === null ? true : val === 'true';
-    } catch {
-      return true;
+let audioContext: AudioContext | null = null;
+
+function getAudioContext(): AudioContext {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+  }
+  return audioContext;
+}
+
+function playBuiltInClick(): void {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
+
+    gainNode.gain.setValueAtTime(0.4, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.1);
+  } catch {
+    // Silently fail if audio context is not available
+  }
+}
+
+function playCustomSound(base64: string): void {
+  try {
+    const ctx = getAudioContext();
+    const binary = atob(base64.split(',')[1] || base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
     }
+    ctx.decodeAudioData(bytes.buffer, (buffer) => {
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    });
+  } catch {
+    playBuiltInClick();
+  }
+}
+
+export function playClickSound(): void {
+  const enabled = localStorage.getItem('clickSoundEnabled');
+  if (enabled === 'false') return;
+
+  const customSound = localStorage.getItem('customClickSound');
+  if (customSound) {
+    playCustomSound(customSound);
+  } else {
+    playBuiltInClick();
+  }
+}
+
+import { useState, useCallback } from 'react';
+
+export interface UseClickSoundReturn {
+  isEnabled: boolean;
+  toggleSound: () => void;
+  playSound: () => void;
+  uploadCustomSound: (file: File) => Promise<void>;
+  removeCustomSound: () => void;
+  hasCustomSound: boolean;
+}
+
+export function useClickSound(): UseClickSoundReturn {
+  const [isEnabled, setIsEnabled] = useState<boolean>(() => {
+    const stored = localStorage.getItem('clickSoundEnabled');
+    return stored !== 'false';
   });
+
   const [hasCustomSound, setHasCustomSound] = useState<boolean>(() => {
-    try {
-      return !!localStorage.getItem('customSound');
-    } catch {
-      return false;
-    }
+    return !!localStorage.getItem('customClickSound');
   });
 
-  // Load custom sound from localStorage on mount
-  useEffect(() => {
-    try {
-      const customSound = localStorage.getItem('customSound');
-      if (customSound) {
-        const audio = new Audio(customSound);
-        customAudioRef.current = audio;
-        setHasCustomSound(true);
-      }
-    } catch {
-      // ignore
-    }
+  const toggleSound = useCallback(() => {
+    setIsEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem('clickSoundEnabled', String(next));
+      return next;
+    });
   }, []);
-
-  const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    }
-    return audioContextRef.current;
-  }, []);
-
-  const playDefaultSound = useCallback(() => {
-    try {
-      const ctx = getAudioContext();
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.06);
-      gainNode.gain.setValueAtTime(0.12, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.08);
-    } catch {
-      // Silently fail
-    }
-  }, [getAudioContext]);
 
   const playSound = useCallback(() => {
-    // Check current localStorage value for real-time accuracy
-    let enabled = true;
-    try {
-      const val = localStorage.getItem('soundEnabled');
-      enabled = val === null ? true : val === 'true';
-    } catch {
-      enabled = true;
-    }
-    if (!enabled) return;
-
-    if (customAudioRef.current) {
-      try {
-        customAudioRef.current.currentTime = 0;
-        customAudioRef.current.play().catch(() => {});
-      } catch {
-        playDefaultSound();
-      }
-    } else {
-      playDefaultSound();
-    }
-  }, [playDefaultSound]);
-
-  const setSoundEnabled = useCallback((enabled: boolean) => {
-    setSoundEnabledState(enabled);
-    try {
-      localStorage.setItem('soundEnabled', enabled.toString());
-    } catch {
-      // ignore
-    }
+    playClickSound();
   }, []);
 
-  const setCustomSound = useCallback((dataUrl: string) => {
-    try {
-      localStorage.setItem('customSound', dataUrl);
-      const audio = new Audio(dataUrl);
-      customAudioRef.current = audio;
-      setHasCustomSound(true);
-    } catch {
-      // ignore
-    }
+  const uploadCustomSound = useCallback(async (file: File): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        if (base64) {
+          localStorage.setItem('customClickSound', base64);
+          setHasCustomSound(true);
+          resolve();
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
   }, []);
 
-  const resetCustomSound = useCallback(() => {
-    try {
-      localStorage.removeItem('customSound');
-      customAudioRef.current = null;
-      setHasCustomSound(false);
-    } catch {
-      // ignore
-    }
+  const removeCustomSound = useCallback(() => {
+    localStorage.removeItem('customClickSound');
+    setHasCustomSound(false);
   }, []);
 
-  return { playSound, soundEnabled, setSoundEnabled, hasCustomSound, setCustomSound, resetCustomSound };
+  return {
+    isEnabled,
+    toggleSound,
+    playSound,
+    uploadCustomSound,
+    removeCustomSound,
+    hasCustomSound,
+  };
 }

@@ -1,164 +1,318 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload } from 'lucide-react';
+import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface RegistrationModalProps {
-  open: boolean;
-  onComplete: () => void;
+  onComplete: (data: {
+    shopName: string;
+    ownerName: string;
+    phone: string;
+    address: string;
+    category: string;
+  }) => void;
   onSkip: () => void;
 }
 
-export default function RegistrationModal({ open, onComplete, onSkip }: RegistrationModalProps) {
-  console.log('[RegistrationModal] Component rendering at', new Date().toISOString(), 'open:', open);
-  
-  const { t } = useLanguage();
-  const [formData, setFormData] = useState({
-    shopName: '',
-    ownerName: '',
-    mobileNumber: '',
-    shopAddress: '',
-    shopType: '',
-    profilePhoto: null as File | null,
-  });
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+const SHOP_CATEGORIES = [
+  { value: 'grocery', labelEn: 'Grocery Store', labelBn: 'মুদি দোকান' },
+  { value: 'pharmacy', labelEn: 'Pharmacy', labelBn: 'ফার্মেসি' },
+  { value: 'clothing', labelEn: 'Clothing', labelBn: 'কাপড়ের দোকান' },
+  { value: 'electronics', labelEn: 'Electronics', labelBn: 'ইলেকট্রনিক্স' },
+  { value: 'restaurant', labelEn: 'Restaurant', labelBn: 'রেস্তোরাঁ' },
+  { value: 'hardware', labelEn: 'Hardware', labelBn: 'হার্ডওয়্যার' },
+  { value: 'stationery', labelEn: 'Stationery', labelBn: 'স্টেশনারি' },
+  { value: 'cosmetics', labelEn: 'Cosmetics', labelBn: 'কসমেটিক্স' },
+  { value: 'furniture', labelEn: 'Furniture', labelBn: 'আসবাবপত্র' },
+  { value: 'mobile', labelEn: 'Mobile Shop', labelBn: 'মোবাইল শপ' },
+  { value: 'other', labelEn: 'Other', labelBn: 'অন্যান্য' },
+];
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData({ ...formData, profilePhoto: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+const RegistrationModal: React.FC<RegistrationModalProps> = ({ onComplete, onSkip }) => {
+  const { language } = useLanguage();
+  const isBn = language === 'bn';
+
+  const [shopName, setShopName] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [category, setCategory] = useState('');
+  const [agreed, setAgreed] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!shopName.trim()) newErrors.shopName = isBn ? 'দোকানের নাম দিন' : 'Shop name is required';
+    if (!ownerName.trim()) newErrors.ownerName = isBn ? 'মালিকের নাম দিন' : 'Owner name is required';
+    if (!phone.trim()) newErrors.phone = isBn ? 'ফোন নম্বর দিন' : 'Phone number is required';
+    if (!agreed) newErrors.agreed = isBn ? 'শর্তাবলী মেনে নিন' : 'Please agree to terms';
+    return newErrors;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[RegistrationModal] Form submitted at', new Date().toISOString());
-    try {
-      localStorage.setItem('shop_profile', JSON.stringify({
-        ...formData,
-        profilePhoto: photoPreview,
-      }));
-      console.log('[RegistrationModal] Shop profile saved to localStorage');
-      onComplete();
-    } catch (error) {
-      console.error('[RegistrationModal] Failed to save shop profile:', error);
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
     }
+    // Save profile to localStorage
+    const profileData = { shopName, ownerName, phone, address, category };
+    try {
+      localStorage.setItem('shopProfile', JSON.stringify(profileData));
+    } catch {}
+    // Mark registration as permanently complete
+    try {
+      localStorage.setItem('registrationComplete', 'true');
+    } catch {}
+    onComplete(profileData);
   };
 
-  const handleSkipClick = () => {
-    console.log('[RegistrationModal] Skip clicked at', new Date().toISOString());
+  const handleSkip = () => {
+    // Mark registration as permanently complete even when skipped
+    try {
+      localStorage.setItem('registrationComplete', 'true');
+    } catch {}
     onSkip();
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '12px 14px',
+    borderRadius: '10px',
+    border: '1.5px solid rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    color: '#ffffff',
+    fontSize: '14px',
+    outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: 600,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: '6px',
+  };
+
+  const errorStyle: React.CSSProperties = {
+    color: '#fca5a5',
+    fontSize: '12px',
+    marginTop: '4px',
+  };
+
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">{t('registration.title')}</DialogTitle>
-          <DialogDescription>{t('registration.description')}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="shopName">{t('registration.shopName')}</Label>
-            <Input
-              id="shopName"
-              value={formData.shopName}
-              onChange={(e) => setFormData({ ...formData, shopName: e.target.value })}
-              placeholder={t('registration.shopNamePlaceholder')}
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Background */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'url(/assets/generated/registration-galaxy-bg.dim_1080x1920.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,20,60,0.85) 100%)',
+        }}
+      />
+
+      {/* Modal Content */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          width: '100%',
+          maxWidth: '420px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          margin: '0 16px',
+          borderRadius: '20px',
+          background: 'rgba(255,255,255,0.07)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          padding: '28px 24px',
+        }}
+      >
+        {/* Logo & Title */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <img
+            src="/assets/generated/app-logo.dim_256x256.png"
+            alt="Logo"
+            style={{ width: '72px', height: '72px', borderRadius: '18px', margin: '0 auto 12px', display: 'block' }}
+          />
+          <h1 style={{ color: '#ffffff', fontWeight: 900, fontSize: '22px', margin: '0 0 4px' }}>
+            {isBn ? 'স্মার্ট শপ লেজার' : 'Smart Shop Ledger'}
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', margin: 0 }}>
+            {isBn ? 'আপনার দোকানের তথ্য দিন' : 'Set up your shop profile'}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Shop Name */}
+          <div>
+            <label style={labelStyle}>{isBn ? 'দোকানের নাম *' : 'Shop Name *'}</label>
+            <input
+              type="text"
+              value={shopName}
+              onChange={e => setShopName(e.target.value)}
+              placeholder={isBn ? 'আপনার দোকানের নাম' : 'Your shop name'}
+              style={{
+                ...inputStyle,
+                borderColor: errors.shopName ? '#fca5a5' : 'rgba(255,255,255,0.2)',
+              }}
             />
+            {errors.shopName && <p style={errorStyle}>{errors.shopName}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="ownerName">{t('registration.ownerName')}</Label>
-            <Input
-              id="ownerName"
-              value={formData.ownerName}
-              onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
-              placeholder={t('registration.ownerNamePlaceholder')}
+          {/* Owner Name */}
+          <div>
+            <label style={labelStyle}>{isBn ? 'মালিকের নাম *' : 'Owner Name *'}</label>
+            <input
+              type="text"
+              value={ownerName}
+              onChange={e => setOwnerName(e.target.value)}
+              placeholder={isBn ? 'আপনার নাম' : 'Your name'}
+              style={{
+                ...inputStyle,
+                borderColor: errors.ownerName ? '#fca5a5' : 'rgba(255,255,255,0.2)',
+              }}
             />
+            {errors.ownerName && <p style={errorStyle}>{errors.ownerName}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="mobileNumber">{t('registration.mobileNumber')}</Label>
-            <Input
-              id="mobileNumber"
+          {/* Phone */}
+          <div>
+            <label style={labelStyle}>{isBn ? 'ফোন নম্বর *' : 'Phone Number *'}</label>
+            <input
               type="tel"
-              value={formData.mobileNumber}
-              onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
-              placeholder={t('registration.mobileNumberPlaceholder')}
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              placeholder={isBn ? '০১XXXXXXXXX' : '01XXXXXXXXX'}
+              style={{
+                ...inputStyle,
+                borderColor: errors.phone ? '#fca5a5' : 'rgba(255,255,255,0.2)',
+              }}
+            />
+            {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
+          </div>
+
+          {/* Address */}
+          <div>
+            <label style={labelStyle}>{isBn ? 'ঠিকানা (ঐচ্ছিক)' : 'Address (optional)'}</label>
+            <input
+              type="text"
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+              placeholder={isBn ? 'দোকানের ঠিকানা' : 'Shop address'}
+              style={inputStyle}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="shopAddress">{t('registration.shopAddress')}</Label>
-            <Textarea
-              id="shopAddress"
-              value={formData.shopAddress}
-              onChange={(e) => setFormData({ ...formData, shopAddress: e.target.value })}
-              placeholder={t('registration.shopAddressPlaceholder')}
-              rows={3}
-            />
+          {/* Category */}
+          <div>
+            <label style={labelStyle}>{isBn ? 'দোকানের ধরন' : 'Shop Category'}</label>
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              style={{
+                ...inputStyle,
+                cursor: 'pointer',
+                appearance: 'none',
+              }}
+            >
+              <option value="" style={{ backgroundColor: '#1a1a2e' }}>
+                {isBn ? 'ধরন বেছে নিন' : 'Select category'}
+              </option>
+              {SHOP_CATEGORIES.map(cat => (
+                <option key={cat.value} value={cat.value} style={{ backgroundColor: '#1a1a2e' }}>
+                  {isBn ? cat.labelBn : cat.labelEn}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="shopType">{t('registration.shopType')}</Label>
-            <Select value={formData.shopType} onValueChange={(value) => setFormData({ ...formData, shopType: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('registration.shopTypePlaceholder')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="grocery">{t('registration.shopTypes.grocery')}</SelectItem>
-                <SelectItem value="electronics">{t('registration.shopTypes.electronics')}</SelectItem>
-                <SelectItem value="clothing">{t('registration.shopTypes.clothing')}</SelectItem>
-                <SelectItem value="pharmacy">{t('registration.shopTypes.pharmacy')}</SelectItem>
-                <SelectItem value="hardware">{t('registration.shopTypes.hardware')}</SelectItem>
-                <SelectItem value="other">{t('registration.shopTypes.other')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t('registration.profilePhoto')}</Label>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => document.getElementById('photo-upload')?.click()}>
-                <Upload className="mr-2 h-4 w-4" />
-                {t('registration.uploadPhoto')}
-              </Button>
+          {/* Terms */}
+          <div>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '10px',
+                cursor: 'pointer',
+              }}
+            >
               <input
-                id="photo-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePhotoChange}
+                type="checkbox"
+                checked={agreed}
+                onChange={e => setAgreed(e.target.checked)}
+                style={{ marginTop: '2px', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }}
               />
-            </div>
-            {photoPreview && (
-              <div className="mt-2 flex justify-center">
-                <img src={photoPreview} alt="Preview" className="h-24 w-24 rounded-lg object-cover" />
-              </div>
-            )}
+              <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', lineHeight: '1.5' }}>
+                {isBn
+                  ? 'আমি শর্তাবলী ও গোপনীয়তা নীতি মেনে নিচ্ছি।'
+                  : 'I agree to the Terms of Service and Privacy Policy.'}
+              </span>
+            </label>
+            {errors.agreed && <p style={errorStyle}>{errors.agreed}</p>}
           </div>
 
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button type="button" variant="outline" onClick={handleSkipClick} className="w-full sm:w-auto">
-              {t('registration.skip')}
-            </Button>
-            <Button type="submit" className="w-full sm:w-auto">
-              {t('registration.submit')}
-            </Button>
-          </DialogFooter>
+          {/* Submit */}
+          <button
+            type="submit"
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #006a4e, #f42a41)',
+              color: '#ffffff',
+              fontWeight: 900,
+              fontSize: '15px',
+              cursor: 'pointer',
+              letterSpacing: '0.03em',
+              marginTop: '4px',
+            }}
+          >
+            {isBn ? 'শুরু করুন' : 'Get Started'}
+          </button>
+
+          {/* Skip */}
+          <button
+            type="button"
+            onClick={handleSkip}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.2)',
+              background: 'transparent',
+              color: 'rgba(255,255,255,0.6)',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            {isBn ? 'এখন না, পরে করব' : 'Skip for now'}
+          </button>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
-}
+};
+
+export default RegistrationModal;

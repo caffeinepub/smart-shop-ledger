@@ -1,106 +1,193 @@
 {
   "kind": "build_request",
-  "title": "Redesign Sound Button, Add Premium Codes, and Unit Selector for Quantity Fields",
+  "title": "Smart Shop Ledger – Full Feature Upgrade (AdMob, History Fix, Bottom Sheet Lists, Color Tags, Premium UI)",
   "projectName": "Smart Shop Ledger",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Redesign the sound toggle/change button in the Settings page with a new visually appropriate design. The button should clearly communicate its function (sound control) through iconography and styling. Replace the existing button UI with the new design while preserving the underlying sound enable/disable and custom sound upload functionality from useClickSound.ts.",
+      "text": "Integrate AdMob Banner Ad in the web app using App ID `ca-app-pub-1425556101841688~8624741531` and Ad Unit ID `ca-app-pub-1425556101841688/7582793038`. Place the banner ad at high-traffic locations (e.g., bottom of Home page above the nav bar, and top of History page) following Google AdMob placement policies. The ad should only be visible to non-premium users.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5"
+          "msg-1",
+          "msg-2"
         ],
         "quotes": [
-          "সেই বাটনটাকে চেঞ্জ করে নতুন একটি ডিজাইন বাটন দিবে যেটা কিনা তার জন্য পারফেক্ট থাকবে"
+          "AdMob Banner Ad (ca-app-pub-1425556101841688/7582793038)"
         ]
       },
       "acceptanceCriteria": [
-        "The sound button in Settings page has a new visually distinct design with an appropriate icon (e.g., speaker/sound icon)",
-        "The button clearly conveys its sound-related function",
-        "Clicking the button still toggles sound on/off as before",
-        "Custom sound upload functionality remains intact",
-        "The new design fits cohesively within the Settings page layout"
+        "AdMob banner ad script is loaded with the correct App ID and Ad Unit ID",
+        "Banner ad appears at the bottom of Home page (above nav bar) for non-premium users",
+        "Banner ad appears at the top of History page for non-premium users",
+        "Premium users do not see the AdMob banner"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Replace the previously planned premium access codes 987789 and 879987 with 4 new well-designed codes in PremiumModal.tsx. All 4 new codes must work exactly like the existing code 987987 — granting full premium access when entered. The original code 987987 must remain valid. Generate the 4 new codes following a consistent, memorable pattern.",
+      "text": "Update the Facebook Page button link in the Settings page to `https://fb.openinapp.co/khncs`, replacing any previously hardcoded Facebook URL.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5"
+          "msg-2"
         ],
         "quotes": [
-          "নতুন কোড হিসেবে ঠিক আছে তুমিও চাইলে আরো দুটো নতুন কোড ডিজাইন করতে পারো এবং আমি যে নতুন দুইটা কোড দিয়েছে সেটাকে পরিবর্তন করে দিতে পারো এগুলো আগের কোডের মতই কাজ করবে"
+          "Facebook লিঙ্ক পরিবর্তন",
+          "https://fb.openinapp.co/khncs"
         ]
       },
       "acceptanceCriteria": [
-        "PremiumModal accepts 4 new premium codes in addition to the original 987987",
-        "Entering any of the 5 valid codes (987987 + 4 new ones) unlocks premium features",
-        "The 4 new codes replace the previously requested 987789 and 879987 codes",
-        "Invalid codes still show an error message",
-        "Premium unlock state is persisted in localStorage"
+        "The Facebook Page button in Settings navigates to https://fb.openinapp.co/khncs",
+        "No other Facebook URL remains in the Settings page"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Add a unit selector to quantity/measurement input fields in the AddSale page and ProductList page. Next to each quantity input field, display a small icon/button. Clicking this icon opens a dropdown with unit options: gram, kg, liter. The displayed unit labels must respect the current app language — showing Bengali labels (গ্রাম, কেজি, লিটার) when Bengali is active, and English labels (gram, kg, liter) when English is active, using the existing LanguageContext and translations system. The selected unit should be stored alongside the quantity value.",
+      "text": "Fix the sales history summary logic in `frontend/src/pages/History.tsx`. Replace the current single profit/revenue card with two separate cards: (1) 'Today's Total Income' = sum of all today's selling prices (gross revenue), and (2) 'Today's Net Profit' = Today's Total Income minus total cost of goods sold. Both cards reset at midnight and are auto-saved to history. Display them side-by-side as distinct styled cards with clear labels.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5"
+          "msg-2"
         ],
         "quotes": [
-          "পরিমাণ হিসেবে ধরে নেওয়া একটা চিহ্ন থাকলেও সেটাতে ক্লিক করার পর অপশন আসবে কি এই গ্রাম নাকি লিটার এখন ইংলিশ বাংলা অপশনের মাধ্যমে এটা কোন ভাষায় দেখাবে কে যে গ্রাম অপশন ঠিক আছে এটা তোমার নির্ভর করে তুমি ইংলিশ সিলেট করেছো নাকি বাংলা"
+          "মোট লাভ → Today's Net Profit",
+          "মোট রাজস্ব → Today's Total Income",
+          "Daily Reset রাত ১২টায়, History-তে অটো সেভ"
         ]
       },
       "acceptanceCriteria": [
-        "A unit selector icon appears next to quantity input fields in AddSale and ProductList pages",
-        "Clicking the icon opens a dropdown showing unit options: gram, kg, liter",
-        "When app language is Bengali, units display as গ্রাম, কেজি, লিটার",
-        "When app language is English, units display as gram, kg, liter",
-        "Switching app language updates the unit dropdown labels immediately",
-        "The selected unit is saved/stored alongside the quantity value",
-        "The quantity input still accepts numeric values normally"
+        "History page shows two separate summary cards: 'Today's Total Income' and 'Today's Net Profit'",
+        "Today's Total Income = sum of all selling prices for today's sales",
+        "Today's Net Profit = Today's Total Income - sum of all buying prices for today's sales",
+        "Both values reset to zero at midnight",
+        "Previous day's totals are saved to history before reset"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Add translation keys for the unit selector options (gram, kg, liter in both English and Bengali) to the translations object in frontend/src/locales/translations.ts.",
+      "text": "Redesign the Shopping List (কেনাকাটার তালিকা) and Task List (কাজের তালিকা) cards on the Home page to open as Bottom Sheet Popups instead of navigating to a separate page. The popup should slide up from the bottom covering 80% of the screen height. Task List popup: Tap & Hold an item for 2 seconds to mark it complete, with glow animation + confetti animation + success bell sound + device vibration. Shopping List popup: Swipe an item left/right to mark as bought, with card fade-out animation + cash register sound. Sound system: play a 'Whoosh' sound when any popup opens and a 'Soft Click' sound when it closes. Persist all list data to localStorage.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-2"
         ],
         "quotes": [
-          "ইংলিশ বাংলা অপশনের মাধ্যমে এটা কোন ভাষায় দেখাবে"
+          "Bottom Sheet Popup",
+          "Tap & Hold ২ সেকেন্ড → Task Complete",
+          "Swipe → কিনেছি",
+          "Popup Open (Whoosh), Close (Soft Click)"
         ]
       },
       "acceptanceCriteria": [
-        "translations.ts contains English entries: gram, kg, liter",
-        "translations.ts contains Bengali entries: গ্রাম, কেজি, লিটার",
-        "The translation keys are accessible via the existing translation lookup function in LanguageContext"
+        "Clicking Shopping List or Task List card on Home page opens a bottom sheet popup sliding up from the bottom",
+        "Popup covers 80% of screen height with smooth slide-up animation",
+        "Task List: tap-and-hold 2 seconds triggers complete state with glow + confetti + bell sound + vibration",
+        "Shopping List: swipe gesture on an item marks it as bought with fade-out + cash register sound",
+        "Whoosh sound plays on popup open; Soft Click sound plays on popup close",
+        "All list data persists in localStorage"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Add color categorization (রঙ বিভাজন) to the Add Sale flow in `frontend/src/pages/AddSale.tsx`. When adding a sale, show 4 color tag options displayed as colored dot + label in a single row: Red (লাল), Yellow (হলুদ), Green (সবুজ), Blue (নীল). Save the selected color tag with each sale record. On the Home screen, update the 'রঙ বিভাজন' card to show a breakdown of today's sales count per color tag (e.g., 🔴 Red: 3, 🟡 Yellow: 2, etc.).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "৪টি রঙ অপশন: 🔴 Red | 🟡 Yellow | 🟢 Green | 🔵 Blue",
+          "হোমস্ক্রিনে রঙ বিভাজন কার্ডে কোন রঙে কয়টা বিক্রি হয়েছে"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Add Sale page shows 4 color options (Red, Yellow, Green, Blue) as dot + name in one row",
+        "Selected color is saved with the sale record in localStorage",
+        "Home screen 'রঙ বিভাজন' card shows count of today's sales per color",
+        "Color breakdown is empty/shows placeholder when no sales exist for the day"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Upgrade the Premium section UI in `frontend/src/components/PremiumModal.tsx` and any premium plans display. Add a 'BUY' button above each of the 3 subscription plans. When a BUY button is clicked: display the owner's contact email with a one-tap copy-to-clipboard option, trigger a bubble/float-up animation and a sound effect. After a user successfully activates a subscription code, show a full-screen 'Congratulations' animation (confetti or similar). Improve the overall premium UI with better spacing, typography, and visual hierarchy.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "তিনটি প্ল্যানের উপরে BUY বাটন যোগ",
+          "Bubble Animation (উপরে উঠবে) + Sound",
+          "Congratulations Animation",
+          "প্রিমিয়াম UI আরও সুন্দর"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Each of the 3 premium plans has a BUY button above it",
+        "Clicking BUY shows owner email with a copy button",
+        "BUY button click triggers bubble float-up animation and sound",
+        "After successful premium code activation, a full-screen Congratulations animation plays",
+        "Premium modal has improved visual design with better spacing and typography"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Add a 'Today's Sales' summary popup on the Home screen. The existing stats area should be tappable; clicking it opens a smooth slide-up bottom sheet popup (70-80% screen height) showing a detailed list of all today's sales with product names, quantities, selling prices, and a totals row (Total Income + Net Profit) at the bottom.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Today's Sales popup on home screen",
+          "click opens smooth slide-up popup (70-80% height) with product list, quantities, prices, and totals"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Tapping the today's stats area on Home opens a slide-up popup",
+        "Popup shows list of all today's sales with product name, quantity, and selling price",
+        "Popup footer shows Total Income and Net Profit totals",
+        "Popup closes on tap-outside or a close button with soft-click sound"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Update all app icons and logos throughout the app: remove any black background from icon/logo elements, apply a golden + green color scheme to the logo, and use a shopping basket or shopping bag icon as the primary logo graphic. Update the splash screen, header logo, and favicon accordingly.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "লোগো কালার: গোল্ডেন + সবুজ, বাস্কেট/শপিং ব্যাগ আইকন",
+          "কালো ব্যাকগ্রাউন্ড নেই"
+        ]
+      },
+      "acceptanceCriteria": [
+        "App logo has no black background",
+        "Logo uses golden and green colors with a shopping basket/bag icon",
+        "Updated logo appears on splash screen, header, and as favicon"
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
-    "The existing premium code 987987 must remain valid after adding new codes",
-    "Unit selector must use the existing LanguageContext — do not create a separate language system"
+    "AdMob Ad Unit ID must be exactly: ca-app-pub-1425556101841688/7582793038",
+    "AdMob App ID must be exactly: ca-app-pub-1425556101841688~8624741531",
+    "Facebook link must be exactly: https://fb.openinapp.co/khncs",
+    "All data persistence must use localStorage (no backend changes required for these features)",
+    "Do not modify files in frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui"
   ],
   "nonGoals": [
-    "Backend changes — all data remains in localStorage",
-    "Adding new pages or navigation tabs",
-    "Changing the overall app theme or color scheme",
-    "Real-time sync or cloud storage of sales/product data"
+    "Android native app (AndroidManifest.xml, Java/Kotlin) is out of scope",
+    "Custom sound file replacement (REQ-5 of original list) — user will provide file later",
+    "Backend schema changes are not required for these features",
+    "Real-time sync or multi-device data sharing"
   ],
   "imageRequirements": {
-    "required": [],
+    "required": [
+      "Shopping basket icon with golden and green colors, transparent background, no black fill (shop-logo-golden-green.dim_128x128.png)"
+    ],
     "edits": []
   }
 }

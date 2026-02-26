@@ -19,6 +19,11 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const Time = IDL.Int;
+export const PremiumStatus = IDL.Record({
+  'expiryDate' : IDL.Opt(Time),
+  'isActive' : IDL.Bool,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -47,6 +52,8 @@ export const idlService = IDL.Service({
       [],
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+  'activatePremium' : IDL.Func([IDL.Text], [], []),
+  'getPremiumStatus' : IDL.Func([IDL.Text], [PremiumStatus], ['query']),
 });
 
 export const idlInitArgs = [];
@@ -62,6 +69,11 @@ export const idlFactory = ({ IDL }) => {
   const _CaffeineStorageRefillResult = IDL.Record({
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const Time = IDL.Int;
+  const PremiumStatus = IDL.Record({
+    'expiryDate' : IDL.Opt(Time),
+    'isActive' : IDL.Bool,
   });
   
   return IDL.Service({
@@ -91,6 +103,8 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+    'activatePremium' : IDL.Func([IDL.Text], [], []),
+    'getPremiumStatus' : IDL.Func([IDL.Text], [PremiumStatus], ['query']),
   });
 };
 

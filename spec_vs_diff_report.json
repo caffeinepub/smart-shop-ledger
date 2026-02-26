@@ -1,29 +1,94 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T13:36:09.250Z",
-  "summary": "All four requirements appear to be implemented in the diff. REQ-1 (sound button redesign) is addressed in Settings.tsx with new MicOff/Music icons and a pill-style dual-icon button. REQ-2 (4 new premium codes) is implemented in PremiumModal.tsx and Settings.tsx with codes 123321, 456654, 789987, 321123 plus the original 987987. REQ-3 (unit selector in AddSale and ProductList) is implemented in both pages with DropdownMenu components and LanguageContext-driven labels. REQ-4 (translation keys) is implemented in translations.ts with a new 'units' section. Implementation looks complete with no clearly missing requirements and one hallucinated feature (piece unit).",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-25T13:45:03.346Z",
+  "summary": "The diff implements most of the 8 requirements. REQ-1 through REQ-7 are substantially implemented. REQ-8 (logo/icon update) appears partially addressed via file references but the actual image asset is not confirmed in the diff. Several specific acceptance criteria have gaps: the AdMob App ID in index.html uses only the publisher ID prefix, the midnight reset/auto-save to history logic for REQ-3 is not evident, and the glow animation for Task List completion (REQ-4) is not confirmed.",
+  "missing_requirements": [
     {
-      "description": "A 'piece' unit option was added to the unit selector dropdown in both AddSale and ProductList pages, and a corresponding 'units.piece' translation key was added to translations.ts.",
-      "reason": "The build request only requested gram, kg, and liter as unit options. The 'piece' unit was not requested in REQ-3 or REQ-4.",
+      "id": "REQ-1",
+      "requirement": "AdMob script must be loaded with the correct App ID ca-app-pub-1425556101841688~8624741531",
+      "reason": "In frontend/index.html, the adsbygoogle.js script uses client=ca-app-pub-1425556101841688 (publisher ID only), not the full App ID ca-app-pub-1425556101841688~8624741531. The full App ID with the tilde and suffix is missing.",
       "evidence": [
-        "frontend/src/pages/AddSale.tsx",
-        "frontend/src/pages/ProductList.tsx",
-        "frontend/src/locales/translations.ts",
-        "frontend-file-summaries.txt"
+        "frontend/index.html"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Banner ad appears at the bottom of Home page (above nav bar) for non-premium users",
+      "reason": "AdMobBanner is explicitly imported and placed only in History.tsx in the diff. The Layout component summary mentions an ad banner above the nav bar, but no direct AdMobBanner placement is visible in Home.tsx source.",
+      "evidence": [
+        "frontend/src/pages/History.tsx",
+        "frontend/src/pages/Home.tsx"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Both cards reset to zero at midnight and previous day's totals are saved to history before reset",
+      "reason": "History.tsx computes totalIncome and netProfit from today's sales on render, but there is no evidence of a midnight reset timer or auto-save of previous day's totals to a history store anywhere in the diff.",
+      "evidence": [
+        "frontend/src/pages/History.tsx"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Task List: glow animation on task completion",
+      "reason": "TaskListPopup.tsx shows confetti animation and bell sound/vibration on task completion, but no glow animation class or style is visible in the truncated code.",
+      "evidence": [
+        "frontend/src/components/TaskListPopup.tsx"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Updated logo appears on splash screen, header, and as favicon with golden+green shopping basket/bag icon and no black background",
+      "reason": "The diff references existing image paths like app-logo.dim_80x80.png in HTML and components, but the actual new image asset files with golden+green shopping basket design are not present in the added files list. It cannot be confirmed the icons were replaced.",
+      "evidence": [
+        "frontend/index.html",
+        "frontend/src/pages/Home.tsx"
       ]
     }
   ],
-  "confidence": 0.82,
+  "hallucinated_features": [
+    {
+      "description": "InterstitialAdScreen component integrated into the app startup flow",
+      "reason": "The build request only asked for AdMob banner ads (REQ-1). An interstitial ad screen shown at app startup was not requested.",
+      "evidence": [
+        "frontend/src/App.tsx"
+      ]
+    },
+    {
+      "description": "Global click sound listener firing on all button and interactive element clicks throughout the app",
+      "reason": "While sound effects for specific interactions were requested in REQ-4 and REQ-6, a global click sound listener attached to all buttons app-wide was not part of any requirement.",
+      "evidence": [
+        "frontend/src/App.tsx"
+      ]
+    },
+    {
+      "description": "Sound upload feature in Settings allowing users to upload a custom click sound file",
+      "reason": "The build request explicitly states custom sound file replacement is out of scope. The Settings page still implements a handleUploadSound function with a file input for audio upload.",
+      "evidence": [
+        "frontend/src/pages/Settings.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.72,
   "changed_files": [
     "frontend-file-summaries.txt",
+    "frontend/index.html",
+    "frontend/src/App.tsx",
+    "frontend/src/components/AdMobBanner.tsx",
+    "frontend/src/components/BottomSheet.tsx",
+    "frontend/src/components/CongratulationsAnimation.tsx",
     "frontend/src/components/PremiumModal.tsx",
-    "frontend/src/locales/translations.ts",
+    "frontend/src/components/ShoppingListPopup.tsx",
+    "frontend/src/components/TaskListPopup.tsx",
+    "frontend/src/components/TodaysSalesPopup.tsx",
+    "frontend/src/index.css",
     "frontend/src/pages/AddSale.tsx",
-    "frontend/src/pages/ProductList.tsx",
+    "frontend/src/pages/History.tsx",
+    "frontend/src/pages/Home.tsx",
     "frontend/src/pages/Settings.tsx",
+    "frontend/src/utils/sounds.ts",
+    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

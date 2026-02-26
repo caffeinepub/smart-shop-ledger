@@ -1,14 +1,16 @@
 # Specification
 
 ## Summary
-**Goal:** Redesign the sound toggle button in Settings, add new premium access codes, and introduce a language-aware unit selector for quantity fields in AddSale and ProductList pages.
+**Goal:** Upgrade Smart Shop Ledger with AdMob ads, history fixes, bottom sheet list popups, color tags for sales, premium UI improvements, a today's sales popup, and an updated golden/green logo.
 
 **Planned changes:**
-- Replace the existing sound toggle button UI in the Settings page with a new design featuring a speaker/sound icon, while preserving toggle and custom sound upload functionality
-- Add 4 new premium access codes to PremiumModal.tsx (replacing previously planned codes 987789 and 879987), keeping the original code 987987 valid; all 5 codes grant full premium access
-- Add a unit selector icon next to quantity input fields in AddSale and ProductList pages; clicking it opens a dropdown with gram, kg, and liter options
-- Unit dropdown labels switch between English (gram, kg, liter) and Bengali (গ্রাম, কেজি, লিটার) based on the active app language via existing LanguageContext
-- Store the selected unit alongside the quantity value
-- Add English and Bengali translation keys for gram, kg, and liter to translations.ts
+- Integrate AdMob banner ad (App ID: `ca-app-pub-1425556101841688~8624741531`, Ad Unit ID: `ca-app-pub-1425556101841688/7582793038`) at the bottom of the Home page (above nav bar) and top of the History page; visible only to non-premium users
+- Update the Facebook Page button link in Settings to `https://fb.openinapp.co/khncs`
+- Fix History page summary to show two separate cards: "Today's Total Income" (sum of selling prices) and "Today's Net Profit" (income minus cost), both resetting at midnight with auto-save to history
+- Redesign Shopping List and Task List cards on Home to open as bottom sheet popups (80% screen height) with slide-up animation; Task List supports tap-and-hold 2 seconds to complete (glow + confetti + bell sound + vibration); Shopping List supports swipe to mark as bought (fade-out + cash register sound); Whoosh sound on open, Soft Click on close; data persisted in localStorage
+- Add 4 color tag options (🔴 Red, 🟡 Yellow, 🟢 Green, 🔵 Blue) to the Add Sale flow; save selected color with each sale; display per-color sale count on the Home screen's "রঙ বিভাজন" card
+- Upgrade Premium modal UI: add a BUY button above each of the 3 plans that shows owner email with copy-to-clipboard, triggers bubble float-up animation + sound; show full-screen Congratulations animation on successful code activation; improve spacing and typography
+- Add a tappable Today's Sales stats area on Home that opens a slide-up bottom sheet popup (70–80% height) listing all today's sales with product name, quantity, selling price, and a totals footer (Total Income + Net Profit)
+- Update app logo/icons to use golden + green color scheme with a shopping basket/bag graphic, no black background; apply to splash screen, header logo, and favicon
 
-**User-visible outcome:** Users see a redesigned sound button in Settings, can unlock premium with additional codes, and can select a unit (gram/kg/liter) next to quantity fields with labels matching the current app language.
+**User-visible outcome:** Users see banner ads (non-premium), an improved History page with separate income and profit cards, interactive bottom sheet popups for lists, color-tagged sales with a breakdown on the Home screen, an upgraded premium purchase flow, a today's sales detail popup, and a refreshed golden-green logo throughout the app.

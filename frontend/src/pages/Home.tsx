@@ -1,226 +1,240 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, Package, Plus, History as HistoryIcon, ShoppingBag, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { TrendingUp, ShoppingCart, Package, Tag, Plus, History, List, ShoppingBag } from 'lucide-react';
+import TaskListPopup from '../components/TaskListPopup';
+import ShoppingListPopup from '../components/ShoppingListPopup';
+import TodaysSalesPopup from '../components/TodaysSalesPopup';
 
-type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings' | 'product-list';
-
-interface HomeProps {
-  onNavigate: (page: Page) => void;
-}
-
-interface SaleRecord {
+interface Sale {
   id: string;
-  itemName: string;
-  wholesalePrice: number;
-  sellingPrice: number;
+  productName: string;
   quantity: number;
+  unit: string;
+  sellingPrice: number;
+  buyingPrice?: number;
   date: string;
-  timestamp: number;
+  colorTag?: string;
 }
 
-export default function Home({ onNavigate }: HomeProps) {
-  const { t } = useLanguage();
-  const [todayProfit, setTodayProfit] = useState(0);
-  const [todaySales, setTodaySales] = useState(0);
-  const [isPremiumUnlocked, setIsPremiumUnlocked] = useState(false);
-  const [lockedShake, setLockedShake] = useState(false);
+interface ShopProfile {
+  shopName: string;
+  ownerName: string;
+}
+
+function getTodaysSales(): Sale[] {
+  try {
+    const data = localStorage.getItem('sales');
+    if (!data) return [];
+    const sales: Sale[] = JSON.parse(data);
+    const today = new Date().toDateString();
+    return sales.filter(s => new Date(s.date).toDateString() === today);
+  } catch {
+    return [];
+  }
+}
+
+function getShopProfile(): ShopProfile {
+  try {
+    const data = localStorage.getItem('shopProfile');
+    if (!data) return { shopName: 'আমার দোকান', ownerName: '' };
+    return JSON.parse(data);
+  } catch {
+    return { shopName: 'আমার দোকান', ownerName: '' };
+  }
+}
+
+const COLOR_CONFIG = [
+  { key: 'red', label: 'লাল', labelEn: 'Red', bg: 'bg-red-500' },
+  { key: 'yellow', label: 'হলুদ', labelEn: 'Yellow', bg: 'bg-yellow-500' },
+  { key: 'green', label: 'সবুজ', labelEn: 'Green', bg: 'bg-green-500' },
+  { key: 'blue', label: 'নীল', labelEn: 'Blue', bg: 'bg-blue-500' },
+];
+
+const Home: React.FC = () => {
+  const { t, language } = useLanguage();
+  const [todaysSales, setTodaysSales] = useState<Sale[]>([]);
+  const [shopProfile, setShopProfile] = useState<ShopProfile>({ shopName: '', ownerName: '' });
+  const [taskPopupOpen, setTaskPopupOpen] = useState(false);
+  const [shoppingPopupOpen, setShoppingPopupOpen] = useState(false);
+  const [salesPopupOpen, setSalesPopupOpen] = useState(false);
 
   useEffect(() => {
-    const checkPremium = () => {
-      try {
-        setIsPremiumUnlocked(localStorage.getItem('premiumUnlocked') === 'true');
-      } catch {
-        setIsPremiumUnlocked(false);
-      }
-    };
-    checkPremium();
-
-    const handleStorageChange = () => {
-      checkPremium();
-      calculateTodayStats();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.scrollTo(0, 0);
+    setTodaysSales(getTodaysSales());
+    setShopProfile(getShopProfile());
   }, []);
 
-  const calculateTodayStats = () => {
-    try {
-      const data = localStorage.getItem('sales');
-      if (!data) {
-        setTodayProfit(0);
-        setTodaySales(0);
-        return;
-      }
-      const sales: SaleRecord[] = JSON.parse(data);
-      const today = new Date().toISOString().split('T')[0];
-      const todaySalesData = sales.filter(sale => sale.date === today);
-      const profit = todaySalesData.reduce((sum, sale) => {
-        return sum + (sale.sellingPrice - sale.wholesalePrice) * sale.quantity;
-      }, 0);
-      setTodayProfit(profit);
-      setTodaySales(todaySalesData.length);
-    } catch {
-      setTodayProfit(0);
-      setTodaySales(0);
-    }
-  };
+  const totalIncome = todaysSales.reduce((sum, s) => sum + (s.sellingPrice || 0), 0);
+  const totalCost = todaysSales.reduce((sum, s) => sum + (s.buyingPrice || 0), 0);
+  const netProfit = totalIncome - totalCost;
+  const itemsSold = todaysSales.length;
 
-  useEffect(() => {
-    calculateTodayStats();
-  }, []);
+  const colorCounts = COLOR_CONFIG.reduce((acc, c) => {
+    acc[c.key] = todaysSales.filter(s => s.colorTag === c.key).length;
+    return acc;
+  }, {} as Record<string, number>);
 
-  const handleProductListClick = () => {
-    if (isPremiumUnlocked) {
-      onNavigate('product-list');
-    } else {
-      setLockedShake(true);
-      setTimeout(() => setLockedShake(false), 600);
-    }
-  };
+  const hasColorData = Object.values(colorCounts).some(v => v > 0);
+
+  const today = new Date();
+  const dateStr = language === 'bn'
+    ? today.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-accent/5">
-      <div className="container mx-auto max-w-4xl px-4 py-6 pb-24">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">{t('home.welcome')}</h1>
-          <p className="text-muted-foreground">{t('home.subtitle')}</p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2">
-          <Card className="border-2 transition-shadow hover:shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <TrendingUp className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('home.todayProfit')}</p>
-                  <p className="text-2xl font-bold text-foreground">৳{todayProfit.toFixed(2)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 transition-shadow hover:shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <Package className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('home.todaySales')}</p>
-                  <p className="text-2xl font-bold text-foreground">{todaySales}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold text-foreground">{t('home.quickActions')}</h2>
-          <div className="space-y-4">
-            {/* Add New Sale */}
-            <Card
-              className="group cursor-pointer border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl"
-              onClick={() => onNavigate('add-sale')}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md transition-transform group-hover:scale-110">
-                    <Plus className="h-7 w-7" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-foreground">{t('home.addSale')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('home.addSaleDesc')}</p>
-                  </div>
-                  <div className="text-muted-foreground/40 transition-transform group-hover:translate-x-1">
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* View History */}
-            <Card
-              className="group cursor-pointer border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl"
-              onClick={() => onNavigate('history')}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-md transition-transform group-hover:scale-110">
-                    <HistoryIcon className="h-7 w-7" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-foreground">{t('home.viewHistory')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('home.viewHistoryDesc')}</p>
-                  </div>
-                  <div className="text-muted-foreground/40 transition-transform group-hover:translate-x-1">
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Product List — Premium */}
-            <Card
-              className={`group cursor-pointer border-2 transition-all hover:scale-[1.02] hover:shadow-xl ${
-                isPremiumUnlocked
-                  ? 'hover:border-amber-500 border-amber-400/60 bg-gradient-to-r from-amber-50/50 to-yellow-50/50 dark:from-amber-950/20 dark:to-yellow-950/20'
-                  : 'border-dashed border-muted-foreground/30 opacity-80'
-              } ${lockedShake ? 'animate-shake' : ''}`}
-              onClick={handleProductListClick}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-md transition-transform group-hover:scale-110 ${
-                    isPremiumUnlocked
-                      ? 'bg-gradient-to-br from-amber-400 to-yellow-500 text-white'
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {isPremiumUnlocked ? (
-                      <ShoppingBag className="h-7 w-7" />
-                    ) : (
-                      <Lock className="h-7 w-7" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold text-foreground">{t('home.productList')}</h3>
-                      {!isPremiumUnlocked && (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                          PREMIUM
-                        </span>
-                      )}
-                      {isPremiumUnlocked && (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                          ✓ UNLOCKED
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {isPremiumUnlocked ? t('home.productListDesc') : t('home.premiumLocked')}
-                    </p>
-                  </div>
-                  <div className="text-muted-foreground/40 transition-transform group-hover:translate-x-1">
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+    <div className="min-h-screen bg-gray-950 pb-4">
+      {/* Welcome Banner */}
+      <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-green-800 to-green-700 p-4 flex items-center gap-4 shadow-lg">
+        <img
+          src="/assets/generated/app-logo.dim_80x80.png"
+          alt="Logo"
+          className="w-14 h-14 rounded-xl object-contain"
+        />
+        <div>
+          <p className="text-green-200 text-sm">{t('welcome')}!</p>
+          <h2 className="text-white text-xl font-bold">{shopProfile.shopName || t('myShop')}</h2>
+          <p className="text-green-300 text-xs mt-0.5">{dateStr}</p>
         </div>
       </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 mx-4 mt-4">
+        {/* Today's Profit */}
+        <button
+          onClick={() => setSalesPopupOpen(true)}
+          className="bg-gray-900 border border-gray-800 rounded-2xl p-4 text-left hover:border-green-700 transition-colors"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={16} className="text-green-400" />
+            <span className="text-xs text-green-400 font-medium">{t('todayProfit')}</span>
+          </div>
+          <p className="text-2xl font-bold text-white">৳{netProfit.toFixed(0)}</p>
+        </button>
+
+        {/* Total Sales */}
+        <button
+          onClick={() => setSalesPopupOpen(true)}
+          className="bg-gray-900 border border-gray-800 rounded-2xl p-4 text-left hover:border-green-700 transition-colors"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <ShoppingCart size={16} className="text-green-400" />
+            <span className="text-xs text-green-400 font-medium">{t('totalSales')}</span>
+          </div>
+          <p className="text-2xl font-bold text-white">৳{totalIncome.toFixed(0)}</p>
+        </button>
+
+        {/* Items Sold */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Package size={16} className="text-green-400" />
+            <span className="text-xs text-green-400 font-medium">{t('itemsSold')}</span>
+          </div>
+          <p className="text-2xl font-bold text-white">{itemsSold}</p>
+        </div>
+
+        {/* Color Breakdown */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Tag size={16} className="text-green-400" />
+            <span className="text-xs text-green-400 font-medium">{t('colorBreakdown') || 'রঙ বিভাজন'}</span>
+          </div>
+          {hasColorData ? (
+            <div className="flex flex-wrap gap-1.5">
+              {COLOR_CONFIG.map(c => colorCounts[c.key] > 0 ? (
+                <div key={c.key} className="flex items-center gap-1">
+                  <div className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
+                  <span className="text-xs text-gray-300">{colorCounts[c.key]}</span>
+                </div>
+              ) : null)}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500">{t('noSalesToday') || 'আজ কোনো বিক্রয় নেই'}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mx-4 mt-5">
+        <h3 className="text-white font-bold text-base mb-3">{t('quickActions') || 'দ্রুত কাজ'}</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => {
+              const event = new CustomEvent('navigate', { detail: 'add-sale' });
+              window.dispatchEvent(event);
+            }}
+            className="bg-green-700 hover:bg-green-600 rounded-2xl p-4 text-left transition-colors"
+          >
+            <Plus size={22} className="text-white mb-2" />
+            <p className="text-white font-bold text-sm">{t('addSale')}</p>
+            <p className="text-green-200 text-xs">{t('newSaleRecord')}</p>
+          </button>
+          <button
+            onClick={() => {
+              const event = new CustomEvent('navigate', { detail: 'history' });
+              window.dispatchEvent(event);
+            }}
+            className="bg-green-700 hover:bg-green-600 rounded-2xl p-4 text-left transition-colors"
+          >
+            <History size={22} className="text-white mb-2" />
+            <p className="text-white font-bold text-sm">{t('viewHistory')}</p>
+            <p className="text-green-200 text-xs">{t('pastSales')}</p>
+          </button>
+          <button
+            onClick={() => {
+              const event = new CustomEvent('navigate', { detail: 'products' });
+              window.dispatchEvent(event);
+            }}
+            className="bg-green-700 hover:bg-green-600 rounded-2xl p-4 text-left transition-colors"
+          >
+            <Package size={22} className="text-white mb-2" />
+            <p className="text-white font-bold text-sm">{t('productList')}</p>
+            <p className="text-green-200 text-xs">{t('manageProducts')}</p>
+          </button>
+          <button
+            onClick={() => {
+              const event = new CustomEvent('navigate', { detail: 'lists' });
+              window.dispatchEvent(event);
+            }}
+            className="bg-green-700 hover:bg-green-600 rounded-2xl p-4 text-left transition-colors"
+          >
+            <List size={22} className="text-white mb-2" />
+            <p className="text-white font-bold text-sm">{t('lists') || 'তালিকা'}</p>
+            <p className="text-green-200 text-xs">{t('shoppingList') || 'কেনাকাটার তালিকা'}</p>
+          </button>
+        </div>
+      </div>
+
+      {/* Lists Section */}
+      <div className="mx-4 mt-5">
+        <h3 className="text-white font-bold text-base mb-3">{t('lists') || 'তালিকা'}</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Shopping List */}
+          <button
+            onClick={() => setShoppingPopupOpen(true)}
+            className="bg-gray-900 border border-gray-800 hover:border-green-700 rounded-2xl p-4 text-left transition-colors"
+          >
+            <ShoppingBag size={20} className="text-green-400 mb-2" />
+            <p className="text-white font-semibold text-sm">{t('shoppingList') || 'কেনাকাটার তালিকা'}</p>
+            <p className="text-gray-500 text-xs mt-0.5">{t('noList') || 'কোনো তালিকা নেই'}</p>
+          </button>
+          {/* Task List */}
+          <button
+            onClick={() => setTaskPopupOpen(true)}
+            className="bg-gray-900 border border-gray-800 hover:border-green-700 rounded-2xl p-4 text-left transition-colors"
+          >
+            <List size={20} className="text-green-400 mb-2" />
+            <p className="text-white font-semibold text-sm">{t('taskList') || 'কাজের তালিকা'}</p>
+            <p className="text-gray-500 text-xs mt-0.5">{t('noList') || 'কোনো তালিকা নেই'}</p>
+          </button>
+        </div>
+      </div>
+
+      {/* Popups */}
+      <TaskListPopup open={taskPopupOpen} onClose={() => setTaskPopupOpen(false)} />
+      <ShoppingListPopup open={shoppingPopupOpen} onClose={() => setShoppingPopupOpen(false)} />
+      <TodaysSalesPopup open={salesPopupOpen} onClose={() => setSalesPopupOpen(false)} />
     </div>
   );
-}
+};
+
+export default Home;

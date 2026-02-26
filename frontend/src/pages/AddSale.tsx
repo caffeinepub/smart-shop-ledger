@@ -1,425 +1,342 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Camera, Upload, ArrowLeft, X, ChevronDown, Scale } from 'lucide-react';
+import React, { useState, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useCamera } from '../camera/useCamera';
-import { toast } from 'sonner';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
+import { Camera, Image, X, ChevronDown } from 'lucide-react';
+import CameraModal from '../components/CameraModal';
 
-type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings';
-type StockColor = 'red' | 'yellow' | 'green' | null;
-type QuantityUnit = 'gram' | 'kg' | 'liter' | 'piece';
-
-interface AddSaleProps {
-  onNavigate: (page: Page) => void;
+interface SaleForm {
+  productName: string;
+  quantity: string;
+  unit: string;
+  sellingPrice: string;
+  buyingPrice: string;
+  note: string;
+  colorTag: string;
+  image?: string;
 }
 
-interface SaleRecord {
-  id: string;
-  itemName: string;
-  wholesalePrice: number;
-  sellingPrice: number;
-  quantity: number;
-  quantityUnit: QuantityUnit;
-  stockColor: StockColor;
-  photo: string | null;
-  date: string;
-  timestamp: number;
+const UNITS = ['Piece', 'KG', 'Gram', 'Liter', 'Dozen'];
+const COLOR_OPTIONS = [
+  { key: 'red', label: 'লাল', labelEn: 'Red', bg: 'bg-red-500', border: 'border-red-500', text: 'text-red-400' },
+  { key: 'yellow', label: 'হলুদ', labelEn: 'Yellow', bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-400' },
+  { key: 'green', label: 'সবুজ', labelEn: 'Green', bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-400' },
+  { key: 'blue', label: 'নীল', labelEn: 'Blue', bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-400' },
+];
+
+function getSales(): Record<string, unknown>[] {
+  try {
+    const data = localStorage.getItem('sales');
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
 }
 
-export default function AddSale({ onNavigate }: AddSaleProps) {
-  const { t } = useLanguage();
-  const [formData, setFormData] = useState({
-    itemName: '',
-    wholesalePrice: '',
+function saveSale(sale: Record<string, unknown>) {
+  const sales = getSales();
+  sales.unshift(sale);
+  localStorage.setItem('sales', JSON.stringify(sales));
+}
+
+function getSaleCount(): number {
+  return getSales().length;
+}
+
+const AddSale: React.FC = () => {
+  const { t, language } = useLanguage();
+  const { isActive: isPremium } = usePremiumStatus();
+  const [form, setForm] = useState<SaleForm>({
+    productName: '',
+    quantity: '1',
+    unit: 'Piece',
     sellingPrice: '',
-    quantity: '',
+    buyingPrice: '',
+    note: '',
+    colorTag: '',
   });
-  const [quantityUnit, setQuantityUnit] = useState<QuantityUnit>('piece');
-  const [stockColor, setStockColor] = useState<StockColor>(null);
-  const [photo, setPhoto] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const saleCount = getSaleCount();
+  const FREE_LIMIT = 199;
 
-  const {
-    isActive,
-    isSupported,
-    error: cameraError,
-    isLoading: cameraLoading,
-    startCamera,
-    stopCamera,
-    capturePhoto,
-    videoRef,
-    canvasRef,
-  } = useCamera({
-    facingMode: 'environment',
-    quality: 0.8,
-  });
-
-  const stockColors = [
-    { id: 'red' as StockColor, label: t('addSale.stockColors.red'), color: 'bg-red-500' },
-    { id: 'yellow' as StockColor, label: t('addSale.stockColors.yellow'), color: 'bg-yellow-500' },
-    { id: 'green' as StockColor, label: t('addSale.stockColors.green'), color: 'bg-green-500' },
-  ];
-
-  const unitOptions: { id: QuantityUnit; label: string }[] = [
-    { id: 'gram', label: t('units.gram') },
-    { id: 'kg', label: t('units.kg') },
-    { id: 'liter', label: t('units.liter') },
-    { id: 'piece', label: t('units.piece') },
-  ];
-
-  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleChange = (field: keyof SaleForm, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCameraOpen = async () => {
-    setShowCamera(true);
-    const success = await startCamera();
-    if (!success) {
-      toast.error('ক্যামেরা খুলতে ব্যর্থ / Failed to open camera');
-      setShowCamera(false);
-    }
-  };
-
-  const handleCameraCapture = async () => {
-    const file = await capturePhoto();
-    if (file) {
-      setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      await stopCamera();
-      setShowCamera(false);
-      toast.success('ছবি সংযুক্ত হয়েছে / Photo attached');
-    }
-  };
-
-  const handleCameraClose = async () => {
-    await stopCamera();
+  const handleImageCapture = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      setForm(prev => ({ ...prev, image: e.target?.result as string }));
+    };
+    reader.readAsDataURL(file);
     setShowCamera(false);
   };
 
-  const handleRemovePhoto = () => {
-    setPhoto(null);
-    setPhotoFile(null);
-    toast.info('ছবি সরানো হয়েছে / Photo removed');
+  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      setForm(prev => ({ ...prev, image: ev.target?.result as string }));
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const hasItemName = formData.itemName.trim() !== '';
-    const hasQuantity = formData.quantity.trim() !== '';
-    const hasSellingPrice = formData.sellingPrice.trim() !== '';
-    const hasWholesalePrice = formData.wholesalePrice.trim() !== '';
-    const hasStockColor = stockColor !== null;
-    const hasPhoto = photo !== null;
-
-    if (!hasItemName && !hasQuantity && !hasSellingPrice && !hasWholesalePrice && !hasStockColor && !hasPhoto) {
-      toast.error('অন্তত একটি ক্ষেত্র পূরণ করুন / Fill at least one field');
+  const handleSubmit = () => {
+    if (!form.sellingPrice) {
+      setError(language === 'bn' ? 'বিক্রয় মূল্য আবশ্যক' : 'Selling price is required');
       return;
     }
-
-    const wholesalePrice = formData.wholesalePrice.trim() === '' ? 0 : parseFloat(formData.wholesalePrice);
-    const sellingPrice = formData.sellingPrice.trim() === '' ? 0 : parseFloat(formData.sellingPrice);
-    const quantity = formData.quantity.trim() === '' ? 0 : parseInt(formData.quantity);
-
-    const now = new Date();
-    const saleRecord: SaleRecord = {
-      id: Date.now().toString(),
-      itemName: formData.itemName.trim() || 'Unnamed Item',
-      wholesalePrice,
-      sellingPrice,
-      quantity,
-      quantityUnit,
-      stockColor: stockColor || null,
-      photo,
-      date: now.toISOString().split('T')[0],
-      timestamp: Date.now(),
-    };
-
-    try {
-      const existingSales = localStorage.getItem('sales');
-      const salesArray: SaleRecord[] = existingSales ? JSON.parse(existingSales) : [];
-      salesArray.push(saleRecord);
-      localStorage.setItem('sales', JSON.stringify(salesArray));
-
-      toast.success('বিক্রয় সফলভাবে সংরক্ষিত হয়েছে / Sale saved successfully');
-
-      setFormData({
-        itemName: '',
-        wholesalePrice: '',
-        sellingPrice: '',
-        quantity: '',
-      });
-      setQuantityUnit('piece');
-      setStockColor(null);
-      setPhoto(null);
-      setPhotoFile(null);
-
-      setTimeout(() => {
-        onNavigate('history');
-      }, 1000);
-    } catch (error) {
-      console.error('Error saving sale:', error);
-      toast.error('বিক্রয় সংরক্ষণে ব্যর্থ / Failed to save sale');
+    if (!isPremium && saleCount >= FREE_LIMIT) {
+      setError(language === 'bn' ? 'বিনামূল্যে সীমা পূর্ণ হয়েছে' : 'Free limit reached');
+      return;
     }
+    const sale = {
+      id: Date.now().toString(),
+      productName: form.productName || (language === 'bn' ? 'পণ্য' : 'Product'),
+      quantity: parseFloat(form.quantity) || 1,
+      unit: form.unit,
+      sellingPrice: parseFloat(form.sellingPrice) || 0,
+      buyingPrice: parseFloat(form.buyingPrice) || 0,
+      note: form.note,
+      colorTag: form.colorTag,
+      image: form.image,
+      date: new Date().toISOString(),
+    };
+    saveSale(sale as Record<string, unknown>);
+    setSubmitted(true);
+    setError('');
+    setTimeout(() => {
+      setSubmitted(false);
+      setForm({ productName: '', quantity: '1', unit: 'Piece', sellingPrice: '', buyingPrice: '', note: '', colorTag: '' });
+    }, 1500);
   };
 
-  const selectedUnit = unitOptions.find(u => u.id === quantityUnit);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-accent/5">
-      <div className="container mx-auto max-w-2xl px-4 py-6">
-        {/* Header */}
-        <div className="mb-6 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => onNavigate('home')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{t('addSale.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('addSale.subtitle')}</p>
-          </div>
+    <div className="min-h-screen bg-gray-950 pb-8">
+      <div className="px-4 pt-4">
+        <h1 className="text-xl font-bold text-white mb-4">
+          {language === 'bn' ? 'বিক্রয় যোগ করুন' : 'Add Sale'}
+        </h1>
+
+        {/* Sale count */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 mb-4 flex justify-between items-center">
+          <span className="text-gray-400 text-sm">{language === 'bn' ? 'বিক্রয় সংখ্যা' : 'Sales Count'}</span>
+          <span className={`font-bold text-sm ${isPremium ? 'text-green-400' : 'text-yellow-400'}`}>
+            {isPremium ? `${saleCount} / ∞` : `${saleCount} / ${FREE_LIMIT}`}
+          </span>
         </div>
 
-        <Card className="border-2">
-          <CardHeader>
-            <CardTitle>{t('addSale.formTitle')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Item Name with Stock Color Dot */}
-              <div className="space-y-2">
-                <Label htmlFor="itemName">{t('addSale.itemName')}</Label>
-                <div className="flex items-center gap-2">
-                  {stockColor && (
-                    <div className={`h-3 w-3 rounded-full ${stockColors.find(c => c.id === stockColor)?.color}`} />
-                  )}
-                  <Input
-                    id="itemName"
-                    value={formData.itemName}
-                    onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
-                    placeholder={t('addSale.itemNamePlaceholder')}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
+        {/* Product Name */}
+        <div className="mb-4">
+          <label className="text-gray-400 text-sm mb-1.5 block">
+            {language === 'bn' ? 'পণ্যের নাম' : 'Product Name'}
+          </label>
+          <input
+            type="text"
+            value={form.productName}
+            onChange={e => handleChange('productName', e.target.value)}
+            placeholder={language === 'bn' ? 'পণ্যের নাম লিখুন' : 'Enter product name'}
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600"
+          />
+        </div>
 
-              {/* Stock Color Selector */}
-              <div className="space-y-2">
-                <Label>{t('addSale.stockStatus')}</Label>
-                <div className="flex gap-3">
-                  {stockColors.map((color) => (
+        {/* Quantity + Unit */}
+        <div className="flex gap-3 mb-4">
+          <div className="flex-1">
+            <label className="text-gray-400 text-sm mb-1.5 block">
+              {language === 'bn' ? 'পরিমাণ' : 'Quantity'}
+            </label>
+            <input
+              type="number"
+              value={form.quantity}
+              onChange={e => handleChange('quantity', e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600"
+            />
+          </div>
+          <div className="w-32">
+            <label className="text-gray-400 text-sm mb-1.5 block">
+              {language === 'bn' ? 'একক' : 'Unit'}
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowUnitDropdown(!showUnitDropdown)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-3 text-white flex items-center justify-between"
+              >
+                <span className="text-sm">{form.unit}</span>
+                <ChevronDown size={14} className="text-gray-400" />
+              </button>
+              {showUnitDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl overflow-hidden z-10 shadow-xl">
+                  {UNITS.map(u => (
                     <button
-                      key={color.id}
-                      type="button"
-                      onClick={() => setStockColor(color.id)}
-                      className={`flex flex-1 items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 transition-all ${
-                        stockColor === color.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
+                      key={u}
+                      onClick={() => { handleChange('unit', u); setShowUnitDropdown(false); }}
+                      className="w-full px-4 py-2.5 text-left text-white text-sm hover:bg-gray-700"
                     >
-                      <div className={`h-4 w-4 rounded-full ${color.color}`} />
-                      <span className="text-sm font-medium">{color.label}</span>
+                      {u}
                     </button>
                   ))}
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-              {/* Prices */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="wholesalePrice">{t('addSale.wholesalePrice')}</Label>
-                  <Input
-                    id="wholesalePrice"
-                    type="number"
-                    step="0.01"
-                    value={formData.wholesalePrice}
-                    onChange={(e) => setFormData({ ...formData, wholesalePrice: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sellingPrice">{t('addSale.sellingPrice')}</Label>
-                  <Input
-                    id="sellingPrice"
-                    type="number"
-                    step="0.01"
-                    value={formData.sellingPrice}
-                    onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
+        {/* Selling Price */}
+        <div className="mb-4">
+          <label className="text-gray-400 text-sm mb-1.5 block">
+            {language === 'bn' ? 'বিক্রয় মূল্য' : 'Selling Price'}{' '}
+            <span className="text-red-400">*</span>
+          </label>
+          <input
+            type="number"
+            value={form.sellingPrice}
+            onChange={e => handleChange('sellingPrice', e.target.value)}
+            placeholder="৳ 0"
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600"
+          />
+        </div>
 
-              {/* Quantity with Unit Selector */}
-              <div className="space-y-2">
-                <Label htmlFor="quantity">{t('addSale.quantity')}</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="quantity"
-                    type="number"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                    placeholder="1"
-                    className="flex-1"
-                  />
-                  {/* Unit Selector Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-10 min-w-[72px] items-center justify-between gap-1 rounded-lg border-2 border-border bg-secondary/50 px-3 text-sm font-bold uppercase tracking-wide transition-colors hover:border-primary/60 hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
-                        aria-label={t('units.label')}
-                      >
-                        <Scale className="h-3.5 w-3.5 shrink-0 text-primary" />
-                        <span className="text-xs font-bold">{selectedUnit?.label}</span>
-                        <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="min-w-[110px] rounded-xl">
-                      {unitOptions.map((unit) => (
-                        <DropdownMenuItem
-                          key={unit.id}
-                          onClick={() => setQuantityUnit(unit.id)}
-                          className={`cursor-pointer rounded-lg text-sm font-semibold ${
-                            quantityUnit === unit.id ? 'bg-primary/10 text-primary' : ''
-                          }`}
-                        >
-                          {unit.label}
-                          {quantityUnit === unit.id && (
-                            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-                          )}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
+        {/* Buying Price */}
+        <div className="mb-4">
+          <label className="text-gray-400 text-sm mb-1.5 block">
+            {language === 'bn' ? 'ক্রয় মূল্য' : 'Buying Price'}
+          </label>
+          <input
+            type="number"
+            value={form.buyingPrice}
+            onChange={e => handleChange('buyingPrice', e.target.value)}
+            placeholder="৳ 0"
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600"
+          />
+        </div>
 
-              {/* Photo Upload */}
-              <div className="space-y-2">
-                <Label>{t('addSale.photo')}</Label>
+        {/* Color Tag */}
+        <div className="mb-4">
+          <label className="text-gray-400 text-sm mb-2 block">
+            {language === 'bn' ? 'রঙ বিভাজন' : 'Color Tag'}
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {COLOR_OPTIONS.map(c => (
+              <button
+                key={c.key}
+                onClick={() => handleChange('colorTag', form.colorTag === c.key ? '' : c.key)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all ${
+                  form.colorTag === c.key
+                    ? `${c.border} bg-gray-800 ${c.text}`
+                    : 'border-gray-700 text-gray-500 hover:border-gray-500'
+                }`}
+              >
+                <div className={`w-3 h-3 rounded-full ${c.bg}`} />
+                <span className="text-xs font-medium">
+                  {language === 'bn' ? c.label : c.labelEn}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-                {!showCamera && !photo && (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={handleCameraOpen}
-                      disabled={isSupported === false}
-                    >
-                      <Camera className="mr-2 h-4 w-4" />
-                      ক্যামেরা / Camera
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => document.getElementById('photo-upload')?.click()}
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      গ্যালারি / Gallery
-                    </Button>
-                    <input
-                      id="photo-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleGalleryChange}
-                    />
-                  </div>
-                )}
+        {/* Note */}
+        <div className="mb-4">
+          <label className="text-gray-400 text-sm mb-1.5 block">
+            {language === 'bn' ? 'নোট' : 'Note'}
+          </label>
+          <textarea
+            value={form.note}
+            onChange={e => handleChange('note', e.target.value)}
+            placeholder={language === 'bn' ? 'ঐচ্ছিক নোট...' : 'Optional note...'}
+            rows={2}
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600 resize-none"
+          />
+        </div>
 
-                {/* Camera View */}
-                {showCamera && (
-                  <div className="space-y-3">
-                    <div className="relative w-full overflow-hidden rounded-lg border-2 border-primary bg-black" style={{ aspectRatio: '4/3', minHeight: '300px' }}>
-                      <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="h-full w-full object-cover"
-                      />
-                      <canvas ref={canvasRef} className="hidden" />
-                    </div>
-                    {cameraError && (
-                      <p className="text-sm text-destructive">
-                        {cameraError.message}
-                      </p>
-                    )}
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={handleCameraCapture}
-                        disabled={!isActive || cameraLoading}
-                        className="flex-1"
-                        size="sm"
-                      >
-                        <Camera className="mr-2 h-4 w-4" />
-                        ছবি তুলুন / Capture
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleCameraClose}
-                        size="sm"
-                      >
-                        বাতিল / Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
+        {/* Product Image */}
+        <div className="mb-4">
+          <label className="text-gray-400 text-sm mb-2 block">
+            {language === 'bn' ? 'পণ্যের ছবি' : 'Product Image'}
+          </label>
+          {form.image ? (
+            <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-700">
+              <img src={form.image} alt="Product" className="w-full h-full object-cover" />
+              <button
+                onClick={() => handleChange('image', '')}
+                className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-white"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              {isPremium && (
+                <button
+                  onClick={() => setShowCamera(true)}
+                  className="flex-1 flex items-center justify-center gap-2 bg-gray-900 border border-gray-700 rounded-xl py-3 text-gray-400 hover:border-green-600 hover:text-green-400 transition-colors"
+                >
+                  <Camera size={18} />
+                  <span className="text-sm">{language === 'bn' ? 'ক্যামেরা' : 'Camera'}</span>
+                </button>
+              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 bg-gray-900 border border-gray-700 rounded-xl py-3 text-gray-400 hover:border-green-600 hover:text-green-400 transition-colors"
+              >
+                <Image size={18} />
+                <span className="text-sm">{language === 'bn' ? 'গ্যালারি' : 'Gallery'}</span>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleGallerySelect}
+              />
+            </div>
+          )}
+          {!isPremium && !form.image && (
+            <div className="mt-2 bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+              <p className="text-xs text-gray-500">
+                {language === 'bn' ? 'বিজ্ঞাপন' : 'Advertisement'}
+              </p>
+            </div>
+          )}
+        </div>
 
-                {/* Photo Preview */}
-                {photo && !showCamera && (
-                  <div className="flex items-start gap-3">
-                    <img src={photo} alt="Preview" className="h-32 w-32 rounded-lg object-cover border-2 border-border" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      onClick={handleRemovePhoto}
-                      className="h-8 w-8"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
+        {/* Error */}
+        {error && (
+          <div className="mb-4 bg-red-900/30 border border-red-700/50 rounded-xl px-4 py-3">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
 
-              {/* Submit Button */}
-              <Button type="submit" className="w-full" size="lg">
-                {t('addSale.submit')}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        {/* Submit */}
+        <button
+          onClick={handleSubmit}
+          disabled={submitted}
+          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${
+            submitted
+              ? 'bg-green-600 text-white scale-95'
+              : 'bg-green-600 hover:bg-green-500 text-white active:scale-95'
+          }`}
+        >
+          {submitted
+            ? '✅ ' + (language === 'bn' ? 'বিক্রয় যোগ হয়েছে!' : 'Sale Added!')
+            : (language === 'bn' ? 'বিক্রয় যোগ করুন' : 'Add Sale')}
+        </button>
       </div>
+
+      {showCamera && (
+        <CameraModal
+          isOpen={showCamera}
+          onCapture={handleImageCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
     </div>
   );
-}
+};
+
+export default AddSale;

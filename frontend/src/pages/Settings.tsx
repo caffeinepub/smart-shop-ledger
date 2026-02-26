@@ -1,422 +1,267 @@
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Globe, Palette, Code2, Crown, CheckCircle2, Upload, RotateCcw, Music2, Music, MicOff } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useClickSound } from '../hooks/useClickSound';
-import DeveloperInfoModal from '../components/DeveloperInfoModal';
+import { useTheme, AccentColor } from '../contexts/ThemeContext';
+import { Moon, Sun, Globe, Volume2, Bell, Crown, ExternalLink, Upload, Info } from 'lucide-react';
 import PremiumModal from '../components/PremiumModal';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import DeveloperInfoModal from '../components/DeveloperInfoModal';
+import { playClickSound } from '../hooks/useClickSound';
 
-// All valid premium access codes (must match PremiumModal)
-const VALID_PREMIUM_CODES = ['987987', '123321', '456654', '789987', '321123'];
+const Settings: React.FC = () => {
+  const { t, language, setLanguage } = useLanguage();
+  const { mode, toggleMode, accentColor, setAccentColor } = useTheme();
+  const isDark = mode === 'dark';
+  const isBn = language === 'bn';
 
-export default function Settings() {
-  const { theme, setTheme, themeColor, setThemeColor } = useTheme();
-  const { language, setLanguage, t } = useLanguage();
-  const { soundEnabled, setSoundEnabled, hasCustomSound, setCustomSound, resetCustomSound } = useClickSound();
-  const [developerModalOpen, setDeveloperModalOpen] = useState(false);
-  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
-  const [isPremiumUnlocked, setIsPremiumUnlocked] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [promoError, setPromoError] = useState('');
-  const [promoDialogOpen, setPromoDialogOpen] = useState(false);
-  const soundFileRef = useRef<HTMLInputElement>(null);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    return localStorage.getItem('soundEnabled') !== 'false';
+  });
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    return localStorage.getItem('notificationsEnabled') !== 'false';
+  });
+  const [showPremium, setShowPremium] = useState(false);
+  const [showDevInfo, setShowDevInfo] = useState(false);
 
-  useEffect(() => {
-    try {
-      setIsPremiumUnlocked(localStorage.getItem('premiumUnlocked') === 'true');
-    } catch {
-      setIsPremiumUnlocked(false);
-    }
-  }, []);
-
-  const handlePremiumUnlock = () => {
-    setIsPremiumUnlocked(true);
-    setPremiumModalOpen(false);
-    window.dispatchEvent(new Event('storage'));
+  const toggleSound = () => {
+    const newVal = !soundEnabled;
+    setSoundEnabled(newVal);
+    localStorage.setItem('soundEnabled', String(newVal));
   };
 
-  const handlePromoSubmit = () => {
-    if (VALID_PREMIUM_CODES.includes(promoCode.trim())) {
-      try {
-        localStorage.setItem('premiumUnlocked', 'true');
-      } catch {
-        // ignore
-      }
-      setIsPremiumUnlocked(true);
-      setPromoDialogOpen(false);
-      setPromoCode('');
-      setPromoError('');
-      window.dispatchEvent(new Event('storage'));
-    } else {
-      setPromoError(t('settings.invalidCode'));
-    }
+  const toggleNotifications = () => {
+    const newVal = !notificationsEnabled;
+    setNotificationsEnabled(newVal);
+    localStorage.setItem('notificationsEnabled', String(newVal));
   };
 
-  const handleSoundFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      if (dataUrl) {
-        setCustomSound(dataUrl);
-      }
+  const handleSoundTest = () => {
+    playClickSound();
+  };
+
+  const handleUploadSound = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'audio/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const base64 = ev.target?.result as string;
+        localStorage.setItem('customClickSound', base64);
+      };
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    input.click();
   };
 
-  const themeColors = [
-    { id: 'red' as const, label: t('settings.themes.red'), color: 'bg-[#F42A41]' },
-    { id: 'green' as const, label: t('settings.themes.green'), color: 'bg-[#006A4E]' },
-    { id: 'black' as const, label: t('settings.themes.black'), color: 'bg-black' },
+  const accentColors: { key: AccentColor; label: string; color: string }[] = [
+    { key: 'green', label: isBn ? 'সবুজ' : 'Green', color: 'bg-green-500' },
+    { key: 'red', label: isBn ? 'লাল' : 'Red', color: 'bg-red-500' },
+    { key: 'blue', label: isBn ? 'নীল' : 'Blue', color: 'bg-blue-500' },
+    { key: 'yellow', label: isBn ? 'হলুদ' : 'Yellow', color: 'bg-yellow-500' },
+    { key: 'orange', label: isBn ? 'কমলা' : 'Orange', color: 'bg-orange-500' },
+    { key: 'dark', label: isBn ? 'কালো' : 'Dark', color: 'bg-gray-800' },
   ];
 
+  // Translate function for DeveloperInfoModal
+  const tFn = (key: string): string => {
+    return t(key as Parameters<typeof t>[0]) || key;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-accent/5">
-      <div className="container mx-auto max-w-2xl px-4 py-6 pb-24">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">{t('settings.title')}</h1>
-          <p className="text-muted-foreground">{t('settings.subtitle')}</p>
-        </div>
+    <div className="min-h-screen bg-gray-950 pb-8">
+      <div className="px-4 pt-4">
+        <h1 className="text-xl font-bold text-white mb-5">
+          {isBn ? 'সেটিংস' : 'Settings'}
+        </h1>
 
-        <div className="space-y-4">
-          {/* ── Appearance Section ── */}
-          <Card className="overflow-hidden rounded-2xl border border-border shadow-sm">
-            <CardHeader className="border-b border-border/50 bg-secondary/20 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15">
-                  <Palette className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider">{t('settings.appearance')}</CardTitle>
-                  <CardDescription className="text-xs">{t('settings.appearanceDesc')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5 px-5 py-4">
-              {/* Sun/Moon Dark Mode Toggle */}
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold uppercase tracking-wide">
-                  {t('settings.darkMode')}
-                </Label>
+        {/* Appearance */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-4">
+          <h2 className="text-white font-semibold mb-3 flex items-center gap-2">
+            {isDark
+              ? <Moon size={16} className="text-blue-400" />
+              : <Sun size={16} className="text-yellow-400" />}
+            {isBn ? 'চেহারা' : 'Appearance'}
+          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-gray-300 text-sm">{isBn ? 'ডার্ক মোড' : 'Dark Mode'}</span>
+            <button
+              onClick={toggleMode}
+              className={`w-12 h-6 rounded-full transition-colors relative ${isDark ? 'bg-green-600' : 'bg-gray-600'}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${isDark ? 'translate-x-6' : 'translate-x-0'}`} />
+            </button>
+          </div>
+          <div>
+            <p className="text-gray-400 text-sm mb-2">{isBn ? 'অ্যাকসেন্ট রঙ' : 'Accent Color'}</p>
+            <div className="flex gap-2 flex-wrap">
+              {accentColors.map(ac => (
                 <button
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="relative flex h-10 w-20 items-center rounded-full border-2 border-border bg-secondary p-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  aria-label="Toggle dark mode"
-                >
-                  <span className="absolute left-2 flex h-6 w-6 items-center justify-center text-base">☀️</span>
-                  <span className="absolute right-2 flex h-6 w-6 items-center justify-center text-base">🌙</span>
-                  <span
-                    className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-primary shadow-md transition-all duration-300"
-                    style={{
-                      transform: theme === 'dark' ? 'translateX(38px)' : 'translateX(0px)',
-                    }}
-                  >
-                    <span className="text-sm">{theme === 'dark' ? '🌙' : '☀️'}</span>
-                  </span>
-                </button>
-              </div>
-
-              {/* Theme Color */}
-              <div>
-                <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground">{t('settings.themeColor')}</p>
-                <div className="space-y-2">
-                  {themeColors.map((color) => (
-                    <button
-                      key={color.id}
-                      onClick={() => setThemeColor(color.id)}
-                      className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-3 transition-all ${
-                        themeColor === color.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-                      }`}
-                    >
-                      <div className={`h-7 w-7 rounded-full ${color.color} shadow-md`} />
-                      <span className="flex-1 text-left text-sm font-semibold">{color.label}</span>
-                      {themeColor === color.id && (
-                        <div className="h-2.5 w-2.5 rounded-full bg-primary" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ── Language Section ── */}
-          <Card className="overflow-hidden rounded-2xl border border-border shadow-sm">
-            <CardHeader className="border-b border-border/50 bg-secondary/20 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15">
-                  <Globe className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider">{t('settings.language')}</CardTitle>
-                  <CardDescription className="text-xs">{t('settings.languageDesc')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2 px-5 py-4">
-              <button
-                onClick={() => setLanguage('en')}
-                className={`flex w-full items-center justify-between rounded-xl border-2 px-4 py-3 transition-all ${
-                  language === 'en'
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-                }`}
-              >
-                <span className="text-sm font-semibold">ENGLISH</span>
-                {language === 'en' && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
-              </button>
-              <button
-                onClick={() => setLanguage('bn')}
-                className={`flex w-full items-center justify-between rounded-xl border-2 px-4 py-3 transition-all ${
-                  language === 'bn'
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-                }`}
-              >
-                <span className="text-sm font-semibold">বাংলা</span>
-                {language === 'bn' && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
-              </button>
-            </CardContent>
-          </Card>
-
-          {/* ── Sound Control Section ── */}
-          <Card className="overflow-hidden rounded-2xl border border-border shadow-sm">
-            <CardHeader className="border-b border-border/50 bg-secondary/20 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
-                  soundEnabled ? 'bg-primary/15' : 'bg-muted/40'
-                }`}>
-                  {soundEnabled ? (
-                    <Music2 className="h-4 w-4 text-primary" />
-                  ) : (
-                    <MicOff className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider">{t('settings.soundControl')}</CardTitle>
-                  <CardDescription className="text-xs">{t('settings.soundControlDesc')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4 px-5 py-4">
-              {/* Redesigned Sound ON/OFF toggle button */}
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold uppercase tracking-wide text-foreground">
-                    {t('settings.soundEnabled')}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {soundEnabled
-                      ? (language === 'bn' ? 'সাউন্ড চালু আছে' : 'Sound is ON')
-                      : (language === 'bn' ? 'সাউন্ড বন্ধ আছে' : 'Sound is OFF')}
-                  </span>
-                </div>
-                {/* Custom pill-style sound toggle */}
-                <button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  className={`relative flex h-14 w-28 items-center justify-between overflow-hidden rounded-2xl border-2 px-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                    soundEnabled
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border bg-secondary/50'
+                  key={ac.key}
+                  onClick={() => setAccentColor(ac.key)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs transition-all ${
+                    accentColor === ac.key ? 'border-white text-white' : 'border-gray-700 text-gray-400'
                   }`}
-                  aria-label="Toggle sound"
                 >
-                  {/* OFF side */}
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
-                    !soundEnabled ? 'bg-muted-foreground/20' : 'opacity-30'
-                  }`}>
-                    <MicOff className={`h-5 w-5 transition-colors ${!soundEnabled ? 'text-foreground' : 'text-muted-foreground'}`} />
-                  </span>
-                  {/* ON side */}
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
-                    soundEnabled ? 'bg-primary shadow-md' : 'opacity-30'
-                  }`}>
-                    <Music className={`h-5 w-5 transition-colors ${soundEnabled ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
-                  </span>
+                  <div className={`w-3 h-3 rounded-full ${ac.color}`} />
+                  {ac.label}
                 </button>
-              </div>
-
-              {/* Custom sound upload */}
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {hasCustomSound ? t('settings.customSoundActive') : t('settings.uploadCustomSound')}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 gap-2 rounded-xl border-2 text-xs font-bold uppercase"
-                    onClick={() => soundFileRef.current?.click()}
-                    disabled={!soundEnabled}
-                  >
-                    <Upload className="h-3.5 w-3.5" />
-                    {t('settings.uploadCustomSound')}
-                  </Button>
-                  {hasCustomSound && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 rounded-xl border-2 text-xs font-bold uppercase text-destructive hover:bg-destructive/10"
-                      onClick={resetCustomSound}
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" />
-                      {t('settings.resetSound')}
-                    </Button>
-                  )}
-                </div>
-                <input
-                  ref={soundFileRef}
-                  type="file"
-                  accept="audio/mp3,audio/wav,audio/ogg,audio/*"
-                  className="hidden"
-                  onChange={handleSoundFileUpload}
-                />
-                {hasCustomSound && (
-                  <p className="text-xs text-primary">✓ {t('settings.customSoundActive')}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ── Premium Section ── */}
-          <Card className={`overflow-hidden rounded-2xl border-2 shadow-sm ${
-            isPremiumUnlocked
-              ? 'border-amber-400 bg-gradient-to-r from-amber-50/80 to-yellow-50/80 dark:from-amber-950/30 dark:to-yellow-950/30'
-              : 'border-amber-400/60 bg-gradient-to-r from-amber-50/40 to-yellow-50/40 dark:from-amber-950/10 dark:to-yellow-950/10'
-          }`}>
-            <CardHeader className="border-b border-amber-200/50 px-5 py-4 dark:border-amber-800/30">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/20">
-                  {isPremiumUnlocked ? (
-                    <CheckCircle2 className="h-4 w-4 text-amber-600" />
-                  ) : (
-                    <Crown className="h-4 w-4 text-amber-600" />
-                  )}
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                    {isPremiumUnlocked ? t('settings.premiumUnlocked') : t('settings.premium')}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {isPremiumUnlocked ? t('settings.premiumUnlockedDesc') : t('settings.premiumDesc')}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="px-5 py-4">
-              {isPremiumUnlocked ? (
-                <div className="flex items-center gap-2 rounded-xl bg-amber-100/80 px-4 py-3 dark:bg-amber-900/30">
-                  <CheckCircle2 className="h-5 w-5 text-amber-600" />
-                  <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
-                    {t('settings.premiumFeaturesUnlocked')}
-                  </span>
-                </div>
-              ) : (
-                <Button
-                  className="w-full gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 font-bold uppercase tracking-wide text-white shadow-md hover:from-amber-600 hover:to-yellow-600"
-                  onClick={() => setPromoDialogOpen(true)}
-                >
-                  <Crown className="h-4 w-4" />
-                  {t('settings.enterPromoCode')}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* ── Developer Section ── */}
-          <Card className="overflow-hidden rounded-2xl border border-dashed border-primary/30 bg-primary/5 shadow-sm">
-            <CardHeader className="border-b border-primary/10 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                  <Code2 className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-bold tracking-widest text-primary">
-                    {t('settings.developerWatermark')}
-                  </CardTitle>
-                  <CardDescription className="text-xs">DEVELOPER</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="px-5 py-4">
-              <Button
-                variant="outline"
-                className="w-full rounded-xl border-primary/40 font-bold uppercase tracking-wide text-primary hover:bg-primary/10"
-                onClick={() => setDeveloperModalOpen(true)}
-              >
-                {t('settings.detailsButton')}
-              </Button>
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </div>
         </div>
+
+        {/* Language */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-4">
+          <h2 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <Globe size={16} className="text-green-400" />
+            {isBn ? 'ভাষা' : 'Language'}
+          </h2>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setLanguage('bn')}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                language === 'bn' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              বাংলা
+            </button>
+            <button
+              onClick={() => setLanguage('en')}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                language === 'en' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              English
+            </button>
+          </div>
+        </div>
+
+        {/* Sound */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-4">
+          <h2 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <Volume2 size={16} className="text-green-400" />
+            {isBn ? 'সাউন্ড' : 'Sound'}
+          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-gray-300 text-sm">{isBn ? 'সাউন্ড চালু' : 'Enable Sound'}</span>
+            <button
+              onClick={toggleSound}
+              className={`w-12 h-6 rounded-full transition-colors relative ${soundEnabled ? 'bg-green-600' : 'bg-gray-600'}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${soundEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSoundTest}
+              className="flex-1 bg-gray-800 text-gray-300 rounded-xl py-2 text-sm hover:bg-gray-700"
+            >
+              {isBn ? 'সাউন্ড টেস্ট' : 'Sound Test'}
+            </button>
+            <button
+              onClick={handleUploadSound}
+              className="flex items-center gap-1.5 bg-gray-800 text-gray-300 rounded-xl px-3 py-2 text-sm hover:bg-gray-700"
+            >
+              <Upload size={14} />
+              {isBn ? 'আপলোড' : 'Upload'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-600 mt-2">
+            {isBn
+              ? 'ডিফল্ট ক্লিক সাউন্ড প্রতিস্থাপন করতে নিজের অডিও ফাইল আপলোড করুন'
+              : 'Upload your own audio file to replace the default click sound'}
+          </p>
+        </div>
+
+        {/* Notifications */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-4">
+          <h2 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <Bell size={16} className="text-green-400" />
+            {isBn ? 'নোটিফিকেশন' : 'Notifications'}
+          </h2>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-300 text-sm">
+              {isBn ? 'নোটিফিকেশন চালু' : 'Enable Notifications'}
+            </span>
+            <button
+              onClick={toggleNotifications}
+              className={`w-12 h-6 rounded-full transition-colors relative ${notificationsEnabled ? 'bg-green-600' : 'bg-gray-600'}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${notificationsEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Premium */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-4">
+          <h2 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <Crown size={16} className="text-yellow-400" />
+            {isBn ? 'প্রিমিয়াম' : 'Premium'}
+          </h2>
+          <button
+            onClick={() => setShowPremium(true)}
+            className="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-400 transition-all"
+          >
+            👑 {isBn ? 'প্রিমিয়াম আপগ্রেড করুন' : 'Upgrade to Premium'}
+          </button>
+        </div>
+
+        {/* Developer Info / Facebook */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-4">
+          <h2 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <Info size={16} className="text-green-400" />
+            {isBn ? 'ডেভেলপার তথ্য' : 'Developer Info'}
+          </h2>
+          <button
+            onClick={() => setShowDevInfo(true)}
+            className="w-full bg-gray-800 text-gray-300 rounded-xl py-2.5 text-sm hover:bg-gray-700 mb-3"
+          >
+            {isBn ? 'অ্যাপ তথ্য' : 'App Info'}
+          </button>
+          <a
+            href="https://fb.openinapp.co/khncs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-colors"
+          >
+            <ExternalLink size={16} />
+            Facebook Page
+          </a>
+        </div>
+
+        {/* Footer */}
+        <footer className="pt-4 pb-2 text-center">
+          <p className="text-xs text-gray-600">
+            © {new Date().getFullYear()} Smart Shop Ledger · Built with ❤️ using{' '}
+            <a
+              href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-500"
+            >
+              caffeine.ai
+            </a>
+          </p>
+        </footer>
       </div>
 
-      {/* Developer Info Modal */}
-      <DeveloperInfoModal
-        open={developerModalOpen}
-        onClose={() => setDeveloperModalOpen(false)}
-      />
-
-      {/* Premium Modal (legacy, kept for compatibility) */}
-      <PremiumModal
-        open={premiumModalOpen}
-        onClose={() => setPremiumModalOpen(false)}
-        onUnlock={handlePremiumUnlock}
-      />
-
-      {/* Promo Code Dialog */}
-      <Dialog open={promoDialogOpen} onOpenChange={(open) => {
-        setPromoDialogOpen(open);
-        if (!open) { setPromoCode(''); setPromoError(''); }
-      }}>
-        <DialogContent className="mx-4 max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-center text-lg font-bold uppercase">
-              <Crown className="h-5 w-5 text-amber-500" />
-              {t('settings.premium')}
-            </DialogTitle>
-            <DialogDescription className="text-center text-sm">
-              {t('settings.enterPromoCode')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <Input
-              type="text"
-              placeholder={t('settings.enterPromoCode')}
-              value={promoCode}
-              onChange={(e) => { setPromoCode(e.target.value); setPromoError(''); }}
-              className="rounded-xl text-center text-lg font-bold tracking-widest"
-              onKeyDown={(e) => { if (e.key === 'Enter') handlePromoSubmit(); }}
-            />
-            {promoError && (
-              <p className="text-center text-sm font-semibold text-destructive">{promoError}</p>
-            )}
-            <Button
-              className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 font-bold uppercase tracking-wide text-white hover:from-amber-600 hover:to-yellow-600"
-              onClick={handlePromoSubmit}
-            >
-              {t('settings.submit')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {showPremium && (
+        <PremiumModal
+          onClose={() => setShowPremium(false)}
+          onActivate={() => setShowPremium(false)}
+        />
+      )}
+      {showDevInfo && (
+        <DeveloperInfoModal
+          isOpen={showDevInfo}
+          onClose={() => setShowDevInfo(false)}
+          isDark={isDark}
+          t={tFn}
+        />
+      )}
     </div>
   );
-}
+};
+
+export default Settings;

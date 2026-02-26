@@ -1,76 +1,63 @@
 import { useEffect, useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
 
 interface SplashScreenProps {
   onComplete: () => void;
 }
 
 export default function SplashScreen({ onComplete }: SplashScreenProps) {
-  const { t } = useLanguage();
-  const [visible, setVisible] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Trigger animation on next frame to ensure it's visible
-    const frameId = requestAnimationFrame(() => {
-      setVisible(true);
-    });
+    const duration = 2500;
+    const interval = 50;
+    const steps = duration / interval;
+    let currentStep = 0;
 
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 2500);
+    const timer = setInterval(() => {
+      currentStep++;
+      setProgress((currentStep / steps) * 100);
+      if (currentStep >= steps) {
+        clearInterval(timer);
+        onComplete();
+      }
+    }, interval);
 
-    return () => {
-      clearTimeout(timer);
-      cancelAnimationFrame(frameId);
-    };
+    return () => clearInterval(timer);
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80">
-      <div
-        className="space-y-8 text-center"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'scale(1)' : 'scale(0.8)',
-          transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
-        }}
-      >
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#0a0e1a] z-50">
+      <div className="flex flex-col items-center gap-6">
         {/* Logo */}
-        <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-3xl bg-white/10 p-4 shadow-2xl backdrop-blur-sm">
-          <img
-            src="/assets/generated/app-logo.dim_512x512.png"
-            alt="Smart Shop Ledger Logo"
-            className="h-full w-full object-contain"
-          />
+        <div className="relative">
+          <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-2xl animate-pulse">
+            <img
+              src="/assets/generated/app-logo.dim_256x256.png"
+              alt="Smart Shop Ledger Logo"
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
 
         {/* App Name */}
-        <div className="space-y-3">
-          <h1 className="text-4xl font-bold text-white drop-shadow-lg">
-            {t('appName')}
+        <div className="text-center">
+          <h1 className="text-3xl font-extrabold text-white tracking-widest uppercase">
+            SMART SHOP LEDGER
           </h1>
-          <p
-            className="text-lg font-medium tracking-wide text-white/90 drop-shadow-md"
-            style={{
-              opacity: visible ? 1 : 0,
-              transition: 'opacity 0.6s ease-out 0.3s',
-            }}
-          >
-            {t('appTagline')}
+          <p className="text-amber-400 text-base font-semibold mt-1 tracking-wide">
+            Smart Shop Ledger
           </p>
         </div>
 
-        {/* Loading bar */}
-        <div className="flex justify-center">
-          <div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/20">
+        {/* Progress Bar */}
+        <div className="w-64 mt-4">
+          <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
             <div
-              className="h-full rounded-full bg-white/80"
-              style={{
-                width: visible ? '100%' : '0%',
-                transition: 'width 2.2s ease-in-out',
-              }}
+              className="h-full bg-amber-400 rounded-full transition-all duration-75 ease-linear"
+              style={{ width: `${progress}%` }}
             />
           </div>
+          <p className="text-gray-500 text-xs text-center mt-2">Loading...</p>
         </div>
       </div>
     </div>

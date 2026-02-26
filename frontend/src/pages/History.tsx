@@ -1,193 +1,190 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, Calendar as CalendarIcon, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { toast } from 'sonner';
+import { Search, Calendar, Trash2, TrendingUp, ShoppingCart } from 'lucide-react';
+import AdMobBanner from '../components/AdMobBanner';
 
-type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings';
-type StockColor = 'red' | 'yellow' | 'green' | null;
-
-interface HistoryProps {
-  onNavigate: (page: Page) => void;
-}
-
-interface SaleRecord {
+interface Sale {
   id: string;
-  itemName: string;
-  wholesalePrice: number;
-  sellingPrice: number;
+  productName: string;
   quantity: number;
-  stockColor: StockColor;
-  photo: string | null;
+  unit: string;
+  sellingPrice: number;
+  buyingPrice?: number;
   date: string;
-  timestamp: number;
+  colorTag?: string;
 }
 
-export default function History({ onNavigate }: HistoryProps) {
-  const { t } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [salesHistory, setSalesHistory] = useState<SaleRecord[]>([]);
+function getSales(): Sale[] {
+  try {
+    const data = localStorage.getItem('sales');
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
 
-  // Load sales from localStorage
+function saveSales(sales: Sale[]) {
+  localStorage.setItem('sales', JSON.stringify(sales));
+}
+
+const COLOR_DOT: Record<string, string> = {
+  red: 'bg-red-500',
+  yellow: 'bg-yellow-500',
+  green: 'bg-green-500',
+  blue: 'bg-blue-500',
+};
+
+const History: React.FC = () => {
+  const { t, language } = useLanguage();
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [search, setSearch] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [showDateFilter, setShowDateFilter] = useState(false);
+
   useEffect(() => {
-    const loadSales = () => {
-      try {
-        const data = localStorage.getItem('sales');
-        if (data) {
-          const parsed: SaleRecord[] = JSON.parse(data);
-          // Sort by timestamp descending (newest first)
-          const sorted = parsed.sort((a, b) => b.timestamp - a.timestamp);
-          setSalesHistory(sorted);
-          console.log('Loaded sales from localStorage:', sorted);
-        } else {
-          setSalesHistory([]);
-        }
-      } catch (error) {
-        console.error('Error loading sales:', error);
-        setSalesHistory([]);
-      }
-    };
-
-    loadSales();
-
-    // Listen for storage changes
-    const handleStorageChange = () => {
-      loadSales();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.scrollTo(0, 0);
+    setSales(getSales());
   }, []);
 
-  const getStockColorClass = (color: StockColor) => {
-    switch (color) {
-      case 'red':
-        return 'bg-red-500';
-      case 'yellow':
-        return 'bg-yellow-500';
-      case 'green':
-        return 'bg-green-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
+  const today = new Date().toDateString();
+  const todaysSales = sales.filter(s => new Date(s.date).toDateString() === today);
+  const totalIncome = todaysSales.reduce((sum, s) => sum + (s.sellingPrice || 0), 0);
+  const totalCost = todaysSales.reduce((sum, s) => sum + (s.buyingPrice || 0), 0);
+  const netProfit = totalIncome - totalCost;
 
-  const handleDelete = (id: string) => {
-    try {
-      const filtered = salesHistory.filter(sale => sale.id !== id);
-      localStorage.setItem('sales', JSON.stringify(filtered));
-      setSalesHistory(filtered);
-      toast.success('বিক্রয় মুছে ফেলা হয়েছে / Sale deleted');
-      window.dispatchEvent(new Event('storage'));
-    } catch (error) {
-      console.error('Error deleting sale:', error);
-      toast.error('মুছতে ব্যর্থ / Failed to delete');
-    }
-  };
-
-  // Filter sales
-  const filteredSales = salesHistory.filter(sale => {
-    const matchesSearch = sale.itemName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDate = date ? sale.date === format(date, 'yyyy-MM-dd') : true;
-    return matchesSearch && matchesDate;
+  const filtered = sales.filter(s => {
+    const matchSearch = !search || s.productName?.toLowerCase().includes(search.toLowerCase());
+    const matchDate = !dateFilter || s.date?.startsWith(dateFilter);
+    return matchSearch && matchDate;
   });
 
+  const deleteSale = (id: string) => {
+    const updated = sales.filter(s => s.id !== id);
+    setSales(updated);
+    saveSales(updated);
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return language === 'bn'
+        ? d.toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' })
+        : d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-accent/5">
-      <div className="container mx-auto max-w-4xl px-4 py-6">
-        {/* Header */}
-        <div className="mb-6 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => onNavigate('home')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{t('history.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('history.subtitle')}</p>
+    <div className="min-h-screen bg-gray-950 pb-4">
+      {/* AdMob Banner at top */}
+      <AdMobBanner />
+
+      {/* Header */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp size={22} className="text-green-400" />
+          <h1 className="text-xl font-bold text-white">{t('salesHistory') || 'বিক্রয় ইতিহাস'}</h1>
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('searchSales') || 'বিক্রয় খুঁজুন...'}
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-600"
+          />
+        </div>
+
+        {/* Date filter */}
+        <button
+          onClick={() => setShowDateFilter(!showDateFilter)}
+          className="w-full flex items-center justify-between bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-gray-400 text-sm mb-3"
+        >
+          <div className="flex items-center gap-2">
+            <Calendar size={16} />
+            <span>{dateFilter || (t('filterByDate') || 'তারিখ অনুযায়ী ফিল্টার')}</span>
           </div>
-        </div>
+          <span>{showDateFilter ? '▲' : '▼'}</span>
+        </button>
+        {showDateFilter && (
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={e => setDateFilter(e.target.value)}
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm mb-3 focus:outline-none focus:border-green-600"
+          />
+        )}
+      </div>
 
-        {/* Filters */}
-        <Card className="mb-6 border-2">
-          <CardContent className="pt-6">
-            <div className="flex flex-col gap-4 sm:flex-row">
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('history.searchPlaceholder')}
-                  className="pl-10"
-                />
+      {/* Today's Summary Cards */}
+      <div className="grid grid-cols-2 gap-3 px-4 mb-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+          <div className="flex items-center gap-1.5 mb-1">
+            <TrendingUp size={14} className="text-green-400" />
+            <span className="text-xs text-green-400 font-medium">
+              {language === 'bn' ? 'আজকের মোট ইনকাম' : "Today's Total Income"}
+            </span>
+          </div>
+          <p className="text-xl font-bold text-white">৳{totalIncome.toFixed(0)}</p>
+          <p className="text-xs text-gray-500 mt-0.5">Daily Gross Income</p>
+        </div>
+        <div className={`border rounded-2xl p-4 ${netProfit >= 0 ? 'bg-gray-900 border-gray-800' : 'bg-red-950/30 border-red-900/50'}`}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <ShoppingCart size={14} className={netProfit >= 0 ? 'text-green-400' : 'text-red-400'} />
+            <span className={`text-xs font-medium ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {language === 'bn' ? 'আজকের প্রকৃত লাভ' : "Today's Net Profit"}
+            </span>
+          </div>
+          <p className={`text-xl font-bold ${netProfit >= 0 ? 'text-white' : 'text-red-400'}`}>
+            {netProfit >= 0 ? '+' : ''}৳{netProfit.toFixed(0)}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">Daily Net Profit</p>
+        </div>
+      </div>
+
+      {/* Sales List */}
+      <div className="px-4">
+        {filtered.length === 0 ? (
+          <div className="text-center text-gray-500 py-12">
+            <ShoppingCart size={48} className="mx-auto mb-3 opacity-30" />
+            <p>{t('noSalesFound') || 'কোনো বিক্রয় পাওয়া যায়নি'}</p>
+          </div>
+        ) : (
+          filtered.map((sale, idx) => (
+            <div key={sale.id || idx} className="mb-3 bg-gray-900 border border-gray-800 rounded-2xl p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                {sale.colorTag && COLOR_DOT[sale.colorTag] ? (
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${COLOR_DOT[sale.colorTag]}`} />
+                ) : (
+                  <div className="w-3 h-3 rounded-full flex-shrink-0 bg-gray-600" />
+                )}
+                <div className="min-w-0">
+                  <p className="text-white font-semibold text-sm truncate">{sale.productName || 'পণ্য'}</p>
+                  <p className="text-xs text-gray-500">
+                    {sale.quantity} {sale.unit} · {sale.buyingPrice ? `৳/Piece` : `৳/Piece`}
+                  </p>
+                  <p className="text-xs text-gray-600">{formatDate(sale.date)}</p>
+                </div>
               </div>
-
-              {/* Date Filter */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PPP') : t('history.selectDate')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                </PopoverContent>
-              </Popover>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <span className="text-green-400 font-bold text-sm">+৳{sale.sellingPrice}</span>
+                <button
+                  onClick={() => deleteSale(sale.id)}
+                  className="w-8 h-8 rounded-full bg-red-900/40 flex items-center justify-center text-red-400 hover:bg-red-900/70"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Sales List */}
-        <div className="space-y-4">
-          {filteredSales.length === 0 ? (
-            <Card className="border-2">
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">{t('history.noRecords')}</p>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredSales.map((sale) => {
-              const profit = (sale.sellingPrice - sale.wholesalePrice) * sale.quantity;
-              return (
-                <Card key={sale.id} className="border-2">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        {sale.stockColor && (
-                          <div className={`mt-1 h-3 w-3 rounded-full ${getStockColorClass(sale.stockColor)}`} />
-                        )}
-                        <div>
-                          <h3 className="font-semibold text-foreground">{sale.itemName}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {t('history.quantity')}: {sale.quantity} | {t('history.profit')}: ৳{profit.toFixed(2)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {sale.date ? format(new Date(sale.date), 'PPP') : 'No date'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" disabled>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(sale.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
-        </div>
+          ))
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default History;

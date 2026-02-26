@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { LanguageProvider } from './contexts/LanguageContext';
-import { Toaster } from '@/components/ui/sonner';
+import { useState, useEffect } from 'react';
 import SplashScreen from './components/SplashScreen';
 import RegistrationModal from './components/RegistrationModal';
+import InterstitialAdScreen from './components/InterstitialAdScreen';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import AddSale from './pages/AddSale';
@@ -11,138 +9,136 @@ import History from './pages/History';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ProductList from './pages/ProductList';
-import { useClickSound } from './hooks/useClickSound';
+import Lists from './pages/Lists';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { usePremiumStatus } from './hooks/usePremiumStatus';
+import { playClickSound } from './hooks/useClickSound';
 
-type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings' | 'product-list';
+type Page = 'home' | 'add-sale' | 'history' | 'profile' | 'settings' | 'products' | 'lists';
 
 function AppContent() {
-  const { playSound } = useClickSound();
-
-  // Clear stale timer localStorage keys on startup
-  useEffect(() => {
-    try {
-      localStorage.removeItem('timerEnabled');
-      localStorage.removeItem('currentTimer');
-      localStorage.removeItem('timerNotification');
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable ||
-        target.closest('input') ||
-        target.closest('textarea')
-      ) {
-        return;
-      }
-      playSound();
-    };
-
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, [playSound]);
-
-  // Always show splash on every app load
   const [showSplash, setShowSplash] = useState(true);
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [showInterstitial, setShowInterstitial] = useState(false);
+  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const { checkAndEnforceExpiry } = usePremiumStatus();
 
-  const [showRegistration, setShowRegistration] = useState(() => {
-    try {
-      const shopData = localStorage.getItem('shop_profile');
-      return !shopData;
-    } catch {
-      return false;
-    }
-  });
+  useEffect(() => {
+    checkAndEnforceExpiry();
+  }, [checkAndEnforceExpiry]);
 
-  const [currentPage, setCurrentPage] = useState<Page>(() => {
-    try {
-      const saved = localStorage.getItem('currentPage');
-      const page = saved as Page;
-      if (page && ['home', 'add-sale', 'history', 'profile', 'settings'].includes(page)) {
-        return page;
+  // Global click sound listener — fires on any button/interactive element except text inputs
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      const clickable = target.closest('button, [role="button"], a, select, label');
+      if (clickable) {
+        playClickSound();
       }
-      return 'home';
-    } catch {
-      return 'home';
-    }
-  });
-
-  const handleSplashComplete = useCallback(() => {
-    setShowSplash(false);
-    try {
-      const shopData = localStorage.getItem('shop_profile');
-      if (!shopData) {
-        setShowRegistration(true);
-      }
-    } catch {
-      // ignore
-    }
+    };
+    document.addEventListener('click', handleGlobalClick, true);
+    return () => document.removeEventListener('click', handleGlobalClick, true);
   }, []);
 
-  const handleRegistrationComplete = useCallback(() => {
+  // Listen for custom navigate events dispatched from child components
+  useEffect(() => {
+    const handleCustomNavigate = (e: Event) => {
+      const detail = (e as CustomEvent).detail as string;
+      if (detail) setCurrentPage(detail as Page);
+    };
+    window.addEventListener('navigate', handleCustomNavigate);
+    return () => window.removeEventListener('navigate', handleCustomNavigate);
+  }, []);
+
+  const handleSplashComplete = () => {
+    const registrationComplete = localStorage.getItem('registrationComplete');
+    if (!registrationComplete) {
+      setShowSplash(false);
+      setShowRegistration(true);
+    } else {
+      const interstitialShown = sessionStorage.getItem('interstitialShown');
+      if (!interstitialShown) {
+        setShowSplash(false);
+        setShowInterstitial(true);
+      } else {
+        setShowSplash(false);
+      }
+    }
+  };
+
+  const handleRegistrationComplete = () => {
     setShowRegistration(false);
-  }, []);
-
-  const handleRegistrationSkip = useCallback(() => {
-    setShowRegistration(false);
-  }, []);
-
-  const handleNavigate = useCallback((page: Page) => {
-    setCurrentPage(page);
-    try {
-      if (page !== 'product-list') {
-        localStorage.setItem('currentPage', page);
-      }
-    } catch {
-      // ignore
+    const interstitialShown = sessionStorage.getItem('interstitialShown');
+    if (!interstitialShown) {
+      setShowInterstitial(true);
     }
-  }, []);
+  };
+
+  const handleRegistrationSkip = () => {
+    setShowRegistration(false);
+    const interstitialShown = sessionStorage.getItem('interstitialShown');
+    if (!interstitialShown) {
+      setShowInterstitial(true);
+    }
+  };
+
+  const handleInterstitialComplete = () => {
+    sessionStorage.setItem('interstitialShown', 'true');
+    setShowInterstitial(false);
+  };
+
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page as Page);
+  };
 
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
-  const isSubPage = currentPage === 'product-list';
-
-  return (
-    <div className="min-h-screen">
-      <Toaster position="top-center" richColors />
-      
-      <RegistrationModal 
-        open={showRegistration}
+  if (showRegistration) {
+    return (
+      <RegistrationModal
         onComplete={handleRegistrationComplete}
         onSkip={handleRegistrationSkip}
       />
+    );
+  }
 
-      {isSubPage ? (
-        <ProductList onNavigate={handleNavigate} />
-      ) : (
-        <Layout currentPage={currentPage} onNavigate={handleNavigate}>
-          {currentPage === 'home' && <Home onNavigate={handleNavigate} />}
-          {currentPage === 'add-sale' && <AddSale onNavigate={handleNavigate} />}
-          {currentPage === 'history' && <History onNavigate={handleNavigate} />}
-          {currentPage === 'profile' && <Profile onNavigate={handleNavigate} />}
-          {currentPage === 'settings' && <Settings />}
-        </Layout>
-      )}
-    </div>
+  if (showInterstitial) {
+    return <InterstitialAdScreen onComplete={handleInterstitialComplete} />;
+  }
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':     return <Home />;
+      case 'add-sale': return <AddSale />;
+      case 'history':  return <History />;
+      case 'profile':  return <Profile />;
+      case 'settings': return <Settings />;
+      case 'products': return <ProductList />;
+      case 'lists':    return <Lists />;
+      default:         return <Home />;
+    }
+  };
+
+  return (
+    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+      {renderPage()}
+    </Layout>
   );
 }
 
-function App() {
+export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <AppContent />
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
       </LanguageProvider>
     </ThemeProvider>
   );
 }
-
-export default App;

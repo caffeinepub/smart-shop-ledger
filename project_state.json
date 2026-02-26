@@ -1,44 +1,80 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "A product/shopping app with premium access codes, sound settings, and product quantity measurement features. Users can access premium products with codes, change sound settings, and specify product quantities with unit selectors (gram/kg/liter) that adapt to the app language (Bengali/English).",
+  "summary": "Smart Shop Ledger - A Bengali shop management web app (WebView-compatible) with sales tracking, task/shopping lists, AdMob banner ads, color categorization, premium subscription, and animated UI components.",
   "architectural_notes": [
-    "App supports bilingual display (Bengali/English); UI elements like unit selectors should respect the active language setting"
+    "App is a React+TypeScript web app hosted on Caffeine (smart-shop-ledger-j7l.caffeine.xyz), intended to be wrapped in a WebView Android app",
+    "AdMob App ID: ca-app-pub-1425556101841688~8624741531; Banner Ad Unit ID: ca-app-pub-1425556101841688/7582793038",
+    "Daily reset at midnight: Today's sales data auto-saves to history, counters reset to zero",
+    "Data persistence via LocalStorage with backup support"
   ],
   "known_issues": [
-    "Quantity/measurement field only accepts numeric input; unit labels (kg, gram) cannot be typed — unit selector dropdown needed"
+    "Sales history previously showed incorrect profit/income logic - needs separation into Daily Gross Income and Daily Net Profit"
   ],
   "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Shopping basket icon with golden and green colors, transparent background, no black fill (shop-logo-golden-green.dim_128x128.png)",
   "existing_features": [
     {
-      "id": "feature-redesign-the-sound-toggle-change-button-in-the-settings-page-with-a-new-visually-appropriate-design-the-button-should-clearly-communicate-its-function-sound-control-through-iconography-and-styling-replace-the-existing-button-ui-with-the-new-design-while-preserving-the-underlying-sound-enable-disable-and-custom-sound-upload-functionality-from-useclicksound-ts",
-      "title": "Redesign the sound toggle/change button in the Settings page with a new visually appropriate design. The button should clearly communicate its function (sound control) through iconography and styling. Replace the existing button UI with the new design while preserving the underlying sound enable/disable and custom sound upload functionality from useClickSound.ts.",
+      "id": "feature-integrate-admob-banner-ad-in-the-web-app-using-app-id-ca-app-pub-1425556101841688-8624741531-and-ad-unit-id-ca-app-pub-1425556101841688-7582793038-place-the-banner-ad-at-high-traffic-locations-e-g-bottom-of-home-page-above-the-nav-bar-and-top-of-history-page-following-google-admob-placement-policies-the-ad-should-only-be-visible-to-non-premium-users",
+      "title": "Integrate AdMob Banner Ad in the web app using App ID `ca-app-pub-1425556101841688~8624741531` and Ad Unit ID `ca-app-pub-1425556101841688/7582793038`. Place the banner ad at high-traffic locations (e.g., bottom of Home page above the nav bar, and top of History page) following Google AdMob placement policies. The ad should only be visible to non-premium users.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-replace-the-previously-planned-premium-access-codes-987789-and-879987-with-4-new-well-designed-codes-in-premiummodal-tsx-all-4-new-codes-must-work-exactly-like-the-existing-code-987987-granting-full-premium-access-when-entered-the-original-code-987987-must-remain-valid-generate-the-4-new-codes-following-a-consistent-memorable-pattern",
-      "title": "Replace the previously planned premium access codes 987789 and 879987 with 4 new well-designed codes in PremiumModal.tsx. All 4 new codes must work exactly like the existing code 987987 — granting full premium access when entered. The original code 987987 must remain valid. Generate the 4 new codes following a consistent, memorable pattern.",
+      "id": "feature-update-the-facebook-page-button-link-in-the-settings-page-to-https-fb-openinapp-co-khncs-replacing-any-previously-hardcoded-facebook-url",
+      "title": "Update the Facebook Page button link in the Settings page to `https://fb.openinapp.co/khncs`, replacing any previously hardcoded Facebook URL.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-a-unit-selector-to-quantity-measurement-input-fields-in-the-addsale-page-and-productlist-page-next-to-each-quantity-input-field-display-a-small-icon-button-clicking-this-icon-opens-a-dropdown-with-unit-options-gram-kg-liter-the-displayed-unit-labels-must-respect-the-current-app-language-showing-bengali-labels-when-bengali-is-active-and-english-labels-gram-kg-liter-when-english-is-active-using-the-existing-languagecontext-and-translations-system-the-selected-unit-should-be-stored-alongside-the-quantity-value",
-      "title": "Add a unit selector to quantity/measurement input fields in the AddSale page and ProductList page. Next to each quantity input field, display a small icon/button. Clicking this icon opens a dropdown with unit options: gram, kg, liter. The displayed unit labels must respect the current app language — showing Bengali labels (গ্রাম, কেজি, লিটার) when Bengali is active, and English labels (gram, kg, liter) when English is active, using the existing LanguageContext and translations system. The selected unit should be stored alongside the quantity value.",
+      "id": "feature-fix-the-sales-history-summary-logic-in-frontend-src-pages-history-tsx-replace-the-current-single-profit-revenue-card-with-two-separate-cards-1-today-s-total-income-sum-of-all-today-s-selling-prices-gross-revenue-and-2-today-s-net-profit-today-s-total-income-minus-total-cost-of-goods-sold-both-cards-reset-at-midnight-and-are-auto-saved-to-history-display-them-side-by-side-as-distinct-styled-cards-with-clear-labels",
+      "title": "Fix the sales history summary logic in `frontend/src/pages/History.tsx`. Replace the current single profit/revenue card with two separate cards: (1) 'Today's Total Income' = sum of all today's selling prices (gross revenue), and (2) 'Today's Net Profit' = Today's Total Income minus total cost of goods sold. Both cards reset at midnight and are auto-saved to history. Display them side-by-side as distinct styled cards with clear labels.",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-translation-keys-for-the-unit-selector-options-gram-kg-liter-in-both-english-and-bengali-to-the-translations-object-in-frontend-src-locales-translations-ts",
-      "title": "Add translation keys for the unit selector options (gram, kg, liter in both English and Bengali) to the translations object in frontend/src/locales/translations.ts.",
+      "id": "feature-redesign-the-shopping-list-and-task-list-cards-on-the-home-page-to-open-as-bottom-sheet-popups-instead-of-navigating-to-a-separate-page-the-popup-should-slide-up-from-the-bottom-covering-80-of-the-screen-height-task-list-popup-tap-hold-an-item-for-2-seconds-to-mark-it-complete-with-glow-animation-confetti-animation-success-bell-sound-device-vibration-shopping-list-popup-swipe-an-item-left-right-to-mark-as-bought-with-card-fade-out-animation-cash-register-sound-sound-system-play-a-whoosh-sound-when-any-popup-opens-and-a-soft-click-sound-when-it-closes-persist-all-list-data-to-localstorage",
+      "title": "Redesign the Shopping List (কেনাকাটার তালিকা) and Task List (কাজের তালিকা) cards on the Home page to open as Bottom Sheet Popups instead of navigating to a separate page. The popup should slide up from the bottom covering 80% of the screen height. Task List popup: Tap & Hold an item for 2 seconds to mark it complete, with glow animation + confetti animation + success bell sound + device vibration. Shopping List popup: Swipe an item left/right to mark as bought, with card fade-out animation + cash register sound. Sound system: play a 'Whoosh' sound when any popup opens and a 'Soft Click' sound when it closes. Persist all list data to localStorage.",
       "reqIds": [
         "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-color-categorization-to-the-add-sale-flow-in-frontend-src-pages-addsale-tsx-when-adding-a-sale-show-4-color-tag-options-displayed-as-colored-dot-label-in-a-single-row-red-yellow-green-blue-save-the-selected-color-tag-with-each-sale-record-on-the-home-screen-update-the-card-to-show-a-breakdown-of-today-s-sales-count-per-color-tag-e-g-red-3-yellow-2-etc",
+      "title": "Add color categorization (রঙ বিভাজন) to the Add Sale flow in `frontend/src/pages/AddSale.tsx`. When adding a sale, show 4 color tag options displayed as colored dot + label in a single row: Red (লাল), Yellow (হলুদ), Green (সবুজ), Blue (নীল). Save the selected color tag with each sale record. On the Home screen, update the 'রঙ বিভাজন' card to show a breakdown of today's sales count per color tag (e.g., 🔴 Red: 3, 🟡 Yellow: 2, etc.).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-upgrade-the-premium-section-ui-in-frontend-src-components-premiummodal-tsx-and-any-premium-plans-display-add-a-buy-button-above-each-of-the-3-subscription-plans-when-a-buy-button-is-clicked-display-the-owner-s-contact-email-with-a-one-tap-copy-to-clipboard-option-trigger-a-bubble-float-up-animation-and-a-sound-effect-after-a-user-successfully-activates-a-subscription-code-show-a-full-screen-congratulations-animation-confetti-or-similar-improve-the-overall-premium-ui-with-better-spacing-typography-and-visual-hierarchy",
+      "title": "Upgrade the Premium section UI in `frontend/src/components/PremiumModal.tsx` and any premium plans display. Add a 'BUY' button above each of the 3 subscription plans. When a BUY button is clicked: display the owner's contact email with a one-tap copy-to-clipboard option, trigger a bubble/float-up animation and a sound effect. After a user successfully activates a subscription code, show a full-screen 'Congratulations' animation (confetti or similar). Improve the overall premium UI with better spacing, typography, and visual hierarchy.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-today-s-sales-summary-popup-on-the-home-screen-the-existing-stats-area-should-be-tappable-clicking-it-opens-a-smooth-slide-up-bottom-sheet-popup-70-80-screen-height-showing-a-detailed-list-of-all-today-s-sales-with-product-names-quantities-selling-prices-and-a-totals-row-total-income-net-profit-at-the-bottom",
+      "title": "Add a 'Today's Sales' summary popup on the Home screen. The existing stats area should be tappable; clicking it opens a smooth slide-up bottom sheet popup (70-80% screen height) showing a detailed list of all today's sales with product names, quantities, selling prices, and a totals row (Total Income + Net Profit) at the bottom.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-all-app-icons-and-logos-throughout-the-app-remove-any-black-background-from-icon-logo-elements-apply-a-golden-green-color-scheme-to-the-logo-and-use-a-shopping-basket-or-shopping-bag-icon-as-the-primary-logo-graphic-update-the-splash-screen-header-logo-and-favicon-accordingly",
+      "title": "Update all app icons and logos throughout the app: remove any black background from icon/logo elements, apply a golden + green color scheme to the logo, and use a shopping basket or shopping bag icon as the primary logo graphic. Update the splash screen, header logo, and favicon accordingly.",
+      "reqIds": [
+        "REQ-8"
       ],
       "version": 1
     }
@@ -46,19 +82,55 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Redesign the sound button with a new improved design suitable for its function",
+      "summary": "AdMob Banner Ad integration (App ID: ca-app-pub-1425556101841688~8624741531, Ad Unit ID: ca-app-pub-1425556101841688/7582793038) placed at high-traffic locations per Google policy",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Add 4 new premium access codes (replacing user-provided codes 987789 and 879987 with better designed ones plus 2 additional codes), all functioning like the existing 987987 code",
+      "summary": "Update Facebook link in settings (image position 1) to https://fb.openinapp.co/khncs",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Add a unit selector icon next to quantity fields; clicking it shows a dropdown with gram/kg/liter options displayed in Bengali or English based on the app language setting",
+      "summary": "Fix sales history logic: separate 'Today's Total Income' (Daily Gross Income = sum of all sales) and 'Today's Net Profit' (Daily Net Profit = Gross Income - Total Cost), shown as separate cards with daily reset at midnight and auto-save to history",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Redesign কেনাকাটা ও কাজের তালিকা as Bottom Sheet Popups (80% screen height, slide-up animation). Task list: Tap & Hold 2s to complete with glow+confetti+bell sound+vibration. Shopping list: Swipe to mark bought with fade+cash register sound. Sound system: Whoosh on open, Soft Click on close.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Replace default click sound with new sound file (to be provided by user later)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Update all app icons/logos: no background, golden + green color, shopping basket/bag icon",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Premium section upgrade: add BUY button above 3 plans showing owner email on click (copyable), bubble animation + sound on BUY click, Congratulations animation after subscription purchase, improved premium UI",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Color categorization (রং বিভাজন): 4 color options (Red, Yellow, Green, Blue) as dot+name in single line when adding a sale. Home screen shows color-wise breakdown of sales count/items.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Today's Sales popup on home screen: compact card showing Total Income + Net Profit, click opens smooth slide-up popup (70-80% height) with product list, quantities, prices, and totals",
       "reqIds": [],
       "status": "pending"
     }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { translations } from '../locales/translations';
 
 type Language = 'en' | 'bn';
@@ -9,48 +9,36 @@ interface LanguageContextType {
   t: (key: string) => string;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+export const LanguageContext = createContext<LanguageContextType>({
+  language: 'en',
+  setLanguage: () => {},
+  t: (key: string) => key,
+});
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  console.log('[LanguageProvider] Initializing at', new Date().toISOString());
-
   const [language, setLanguageState] = useState<Language>(() => {
     try {
       const savedLanguage = localStorage.getItem('language') as Language;
-      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'bn')) {
-        console.log('[LanguageProvider] Loaded language from localStorage:', savedLanguage);
-        return savedLanguage;
-      }
-      console.log('[LanguageProvider] Using default language: en');
+      if (savedLanguage === 'en' || savedLanguage === 'bn') return savedLanguage;
       return 'en';
-    } catch (error) {
-      console.error('[LanguageProvider] Failed to load language from localStorage:', error);
+    } catch {
       return 'en';
     }
   });
 
   const setLanguage = (lang: Language) => {
-    console.log('[LanguageProvider] Setting language to:', lang);
-    if (lang !== 'en' && lang !== 'bn') {
-      console.warn('[LanguageProvider] Invalid language value:', lang);
-      return;
-    }
+    if (lang !== 'en' && lang !== 'bn') return;
     setLanguageState(lang);
-    try {
-      localStorage.setItem('language', lang);
-    } catch (error) {
-      console.error('[LanguageProvider] Failed to save language to localStorage:', error);
-    }
+    try { localStorage.setItem('language', lang); } catch {}
   };
 
   const t = (key: string): string => {
     const keys = key.split('.');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let value: any = translations[language];
-    
     for (const k of keys) {
       value = value?.[k];
     }
-    
     return value || key;
   };
 

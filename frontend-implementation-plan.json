@@ -1,82 +1,212 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Redesign Sound Button, Add Premium Codes, and Unit Selector for Quantity Fields",
+  "title": "Smart Shop Ledger – Full Feature Upgrade (AdMob, History Fix, Bottom Sheet Lists, Color Tags, Premium UI)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Redesign the sound toggle button in the Settings page with new visually appropriate iconography and styling while preserving existing sound enable/disable and custom sound upload functionality",
+      "summary": "Integrate AdMob Banner Ad for non-premium users at high-traffic locations",
       "acceptanceCriteria": [
-        "The sound button in Settings page has a new visually distinct design with an appropriate icon (e.g., speaker/sound icon)",
-        "The button clearly conveys its sound-related function",
-        "Clicking the button still toggles sound on/off as before",
-        "Custom sound upload functionality remains intact",
-        "The new design fits cohesively within the Settings page layout"
+        "AdMob banner ad script is loaded with the correct App ID and Ad Unit ID",
+        "Banner ad appears at the bottom of Home page (above nav bar) for non-premium users",
+        "Banner ad appears at the top of History page for non-premium users",
+        "Premium users do not see the AdMob banner"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Settings.tsx",
+          "path": "frontend/index.html",
           "operation": "modify",
-          "description": "Replace the existing sound toggle button UI with a new visually appropriate design featuring clear sound iconography (speaker icon with sound waves). Update the button styling to make it more prominent and visually distinct. Ensure the redesigned button still integrates with useClickSound hook for toggling sound state and handling custom sound upload. Keep all existing functionality intact while improving the visual design and user experience."
+          "description": "Add AdMob script tags with App ID ca-app-pub-1425556101841688~8624741531 in the <head> section to initialize the AdMob SDK globally."
+        },
+        {
+          "path": "frontend/src/components/AdMobBanner.tsx",
+          "operation": "create",
+          "description": "Create a new AdMobBanner component that checks premium status using usePremiumStatus hook, renders an ad container div with the Ad Unit ID ca-app-pub-1425556101841688/7582793038 for non-premium users, and returns null for premium users. Use ins element with class 'adsbygoogle' and data-ad-client/data-ad-slot attributes per AdMob web integration guidelines."
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
+          "operation": "modify",
+          "description": "Import and place the AdMobBanner component at the bottom of the page content, just above the fixed bottom navigation bar (before the Layout's bottom padding), so it appears above the nav bar for non-premium users."
+        },
+        {
+          "path": "frontend/src/pages/History.tsx",
+          "operation": "modify",
+          "description": "Import and place the AdMobBanner component at the top of the page content (after the header/title, before the search and filter UI) for non-premium users."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Add 4 new premium access codes to PremiumModal.tsx that work exactly like the existing 987987 code, replacing the previously planned codes",
+      "summary": "Update Facebook Page button link in Settings to new redirect URL",
       "acceptanceCriteria": [
-        "PremiumModal accepts 4 new premium codes in addition to the original 987987",
-        "Entering any of the 5 valid codes (987987 + 4 new ones) unlocks premium features",
-        "The 4 new codes replace the previously requested 987789 and 879987 codes",
-        "Invalid codes still show an error message",
-        "Premium unlock state is persisted in localStorage"
+        "The Facebook Page button in Settings navigates to https://fb.openinapp.co/khncs",
+        "No other Facebook URL remains in the Settings page"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/PremiumModal.tsx",
+          "path": "frontend/src/pages/Settings.tsx",
           "operation": "modify",
-          "description": "Add 4 new premium access codes following a consistent, memorable pattern (e.g., 123321, 456654, 789987, 321123). Update the code validation logic to accept all 5 codes: the original 987987 plus the 4 new codes. Ensure each code grants full premium access when entered, with the unlock state persisted in localStorage. Keep the invalid code error message behavior unchanged."
+          "description": "Locate the Facebook Page button or link in the Settings page (likely in the external links or social section) and replace the href value with exactly 'https://fb.openinapp.co/khncs'. Remove any old hardcoded Facebook URLs."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Add a bilingual unit selector (gram/kg/liter) next to quantity input fields in AddSale and ProductList pages that respects the current app language using LanguageContext",
+      "summary": "Fix History page sales summary to show separate Today's Total Income and Today's Net Profit cards with daily reset and auto-save",
       "acceptanceCriteria": [
-        "A unit selector icon appears next to quantity input fields in AddSale and ProductList pages",
-        "Clicking the icon opens a dropdown showing unit options: gram, kg, liter",
-        "When app language is Bengali, units display as গ্রাম, কেজি, লিটার",
-        "When app language is English, units display as gram, kg, liter",
-        "Switching app language updates the unit dropdown labels immediately",
-        "The selected unit is saved/stored alongside the quantity value",
-        "The quantity input still accepts numeric values normally"
+        "History page shows two separate summary cards: 'Today's Total Income' and 'Today's Net Profit'",
+        "Today's Total Income = sum of all selling prices for today's sales",
+        "Today's Net Profit = Today's Total Income - sum of all buying prices for today's sales",
+        "Both values reset to zero at midnight",
+        "Previous day's totals are saved to history before reset"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AddSale.tsx",
+          "path": "frontend/src/pages/History.tsx",
           "operation": "modify",
-          "description": "Add a unit selector icon/button next to the quantity input field. Implement a dropdown menu that opens when the icon is clicked, showing three unit options: gram, kg, liter. Use the existing LanguageContext and translation keys (unitGram, unitKg, unitLiter) to display Bengali labels (গ্রাম, কেজি, লিটার) or English labels (gram, kg, liter) based on the current app language. Store the selected unit alongside the quantity value in the sale data structure saved to localStorage. Ensure the quantity input continues to accept numeric values normally and the unit selector updates immediately when the app language is switched."
-        },
-        {
-          "path": "frontend/src/pages/ProductList.tsx",
-          "operation": "modify",
-          "description": "Add a unit selector icon/button next to the quantity/measurement input field in the product form (both add and edit modes). Implement a dropdown menu that opens when the icon is clicked, showing three unit options: gram, kg, liter. Use the existing LanguageContext and translation keys (unitGram, unitKg, unitLiter) to display Bengali labels (গ্রাম, কেজি, লিটার) or English labels (gram, kg, liter) based on the current app language. Store the selected unit alongside the quantity value in the product data structure saved to localStorage. Ensure the quantity input continues to accept numeric values normally and the unit selector updates immediately when the app language is switched."
+          "description": "Replace the current single profit/revenue card with two side-by-side styled cards: (1) 'Today's Total Income' showing sum of all today's sellingPrice values, and (2) 'Today's Net Profit' showing sum(sellingPrice) - sum(buyingPrice) for today's sales. Add logic to detect midnight reset (compare current date with last-saved date in localStorage), save previous day's totals to a history array before resetting both values to zero. Ensure both cards are labeled clearly with translations from the translations object."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "Add translation keys for unit selector options (gram, kg, liter) in both English and Bengali to the translations object",
+      "summary": "Redesign Shopping List and Task List cards to open as Bottom Sheet Popups with interactive gestures, animations, and sounds",
       "acceptanceCriteria": [
-        "translations.ts contains English entries: gram, kg, liter",
-        "translations.ts contains Bengali entries: গ্রাম, কেজি, লিটার",
-        "The translation keys are accessible via the existing translation lookup function in LanguageContext"
+        "Clicking Shopping List or Task List card on Home page opens a bottom sheet popup sliding up from the bottom",
+        "Popup covers 80% of screen height with smooth slide-up animation",
+        "Task List: tap-and-hold 2 seconds triggers complete state with glow + confetti + bell sound + vibration",
+        "Shopping List: swipe gesture on an item marks it as bought with fade-out + cash register sound",
+        "Whoosh sound plays on popup open; Soft Click sound plays on popup close",
+        "All list data persists in localStorage"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/locales/translations.ts",
+          "path": "frontend/src/components/BottomSheet.tsx",
+          "operation": "create",
+          "description": "Create a reusable BottomSheet component that accepts open state, onClose callback, and children. Implement a slide-up animation from the bottom covering 80% of screen height using Tailwind transition classes and transform properties. Play a 'Whoosh' sound on mount when open=true and a 'Soft Click' sound when closing (using Web Audio API or audio elements). Include a backdrop overlay that closes the sheet on click."
+        },
+        {
+          "path": "frontend/src/components/TaskListPopup.tsx",
+          "operation": "create",
+          "description": "Create a TaskListPopup component that wraps the BottomSheet and displays the task list from localStorage. Implement a tap-and-hold gesture (using onPointerDown/onPointerUp with 2-second timer) on each task item. When triggered, mark the task complete with a glow CSS animation, trigger a confetti animation (using canvas-confetti library or CSS keyframes), play a bell sound via Web Audio API, and trigger device vibration using navigator.vibrate([200]). Persist updated task data to localStorage."
+        },
+        {
+          "path": "frontend/src/components/ShoppingListPopup.tsx",
+          "operation": "create",
+          "description": "Create a ShoppingListPopup component that wraps the BottomSheet and displays the shopping list from localStorage. Implement swipe-left or swipe-right gesture detection on each shopping item (using onTouchStart/onTouchMove/onTouchEnd or a gesture library). When a swipe is detected, mark the item as bought, apply a fade-out CSS animation, play a cash register sound via Web Audio API, and persist the updated list to localStorage."
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
           "operation": "modify",
-          "description": "Add three new translation key pairs to the translations object: 'unitGram' with English value 'gram' and Bengali value 'গ্রাম', 'unitKg' with English value 'kg' and Bengali value 'কেজি', and 'unitLiter' with English value 'liter' and Bengali value 'লিটার'. Place these keys in a logical location within the existing translations structure, ensuring they are accessible via the translation lookup function in LanguageContext."
+          "description": "Replace the Shopping List and Task List card navigation (which currently links to a separate page) with onClick handlers that open the TaskListPopup and ShoppingListPopup components as bottom sheet overlays. Add state to manage which popup is open. Remove any navigation logic that was routing to /lists or a separate lists page for these two cards."
+        },
+        {
+          "path": "frontend/src/utils/sounds.ts",
+          "operation": "create",
+          "description": "Create a sounds utility module that provides functions to play 'Whoosh', 'Soft Click', 'Bell', and 'Cash Register' sounds using the Web Audio API (with AudioContext and OscillatorNode or pre-encoded audio buffers). Export playWhoosh(), playSoftClick(), playBell(), and playCashRegister() functions. These sounds should be simple synthesized tones or short audio clips."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Add color categorization to Add Sale flow and display color breakdown on Home screen",
+      "acceptanceCriteria": [
+        "Add Sale page shows 4 color options (Red, Yellow, Green, Blue) as dot + name in one row",
+        "Selected color is saved with the sale record in localStorage",
+        "Home screen 'রঙ বিভাজন' card shows count of today's sales per color",
+        "Color breakdown is empty/shows placeholder when no sales exist for the day"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AddSale.tsx",
+          "operation": "modify",
+          "description": "Add a color selection UI with 4 radio buttons or clickable color dots displayed in a single horizontal row: Red (🔴 লাল), Yellow (🟡 হলুদ), Green (🟢 সবুজ), Blue (🔵 নীল). Use Tailwind color classes (bg-red-500, bg-yellow-500, bg-green-500, bg-blue-500) for the dots. Add a colorTag field to the sale form state (default to no selection or 'none'). When the sale is saved to localStorage, include the selected colorTag property in the sale record object."
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
+          "operation": "modify",
+          "description": "Update the 'রঙ বিভাজন' (Color Division) card on the Home dashboard. Read today's sales from localStorage, filter by today's date, and count how many sales have each colorTag (red, yellow, green, blue). Display the breakdown as text: e.g., '🔴 Red: 3, 🟡 Yellow: 2, 🟢 Green: 5, 🔵 Blue: 1'. If no sales exist for today, show a placeholder message like 'আজ কোনো বিক্রয় নেই' (No sales today)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Upgrade Premium UI with BUY buttons, contact email display, bubble animation, and Congratulations animation",
+      "acceptanceCriteria": [
+        "Each of the 3 premium plans has a BUY button above it",
+        "Clicking BUY shows owner email with a copy button",
+        "BUY button click triggers bubble float-up animation and sound",
+        "After successful premium code activation, a full-screen Congratulations animation plays",
+        "Premium modal has improved visual design with better spacing and typography"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/PremiumModal.tsx",
+          "operation": "modify",
+          "description": "Add a 'BUY' button above each of the 3 subscription plan cards. When a BUY button is clicked, display the owner's contact email (retrieved from shop registration data in localStorage or hardcoded if unavailable) with a one-tap copy-to-clipboard button (using navigator.clipboard.writeText). Trigger a bubble float-up CSS animation (keyframe that moves an element upward with opacity fade) and play a sound effect via Web Audio API. Improve the modal's visual design: increase spacing (padding, margins), use larger/clearer typography (font-size, font-weight), and enhance visual hierarchy with color accents and card shadows."
+        },
+        {
+          "path": "frontend/src/components/CongratulationsAnimation.tsx",
+          "operation": "create",
+          "description": "Create a full-screen overlay component that displays a 'Congratulations' animation (confetti using canvas-confetti library or CSS-based confetti, plus a success message) when premium is successfully activated. The animation should play for 3-4 seconds and then auto-dismiss or provide a close button. Use absolute positioning (fixed inset-0 z-50) to cover the entire viewport."
+        },
+        {
+          "path": "frontend/src/components/PremiumModal.tsx",
+          "operation": "modify",
+          "description": "After successful premium code activation (when the code is validated and premium status is saved to localStorage), trigger the CongratulationsAnimation component to display for the user. Import and conditionally render the CongratulationsAnimation component when activation succeeds."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Add Today's Sales summary popup on Home screen with detailed sales list",
+      "acceptanceCriteria": [
+        "Tapping the today's stats area on Home opens a slide-up popup",
+        "Popup shows list of all today's sales with product name, quantity, and selling price",
+        "Popup footer shows Total Income and Net Profit totals",
+        "Popup closes on tap-outside or a close button with soft-click sound"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/TodaysSalesPopup.tsx",
+          "operation": "create",
+          "description": "Create a TodaysSalesPopup component that wraps the BottomSheet (from REQ-4) and displays a detailed list of all today's sales from localStorage. Show product name, quantity, and selling price for each sale. At the bottom, display a totals row with 'Total Income' (sum of selling prices) and 'Net Profit' (Total Income - sum of buying prices). Ensure the popup closes on backdrop click or close button with soft-click sound (reuse the BottomSheet's close behavior)."
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
+          "operation": "modify",
+          "description": "Make the today's stats area (the cards showing today's sales count, profit, revenue, or color breakdown) tappable by adding an onClick handler. When clicked, open the TodaysSalesPopup component as a bottom sheet overlay. Add state to manage whether the popup is open and wire the open/close handlers."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Update app icons and logos with golden + green color scheme and shopping basket graphic, remove black background",
+      "acceptanceCriteria": [
+        "App logo has no black background",
+        "Logo uses golden and green colors with a shopping basket/bag icon",
+        "Updated logo appears on splash screen, header, and as favicon"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/index.html",
+          "operation": "modify",
+          "description": "Update the favicon link tag to reference the new generated logo image at frontend/public/assets/generated/shop-logo-golden-green.dim_128x128.png (or an appropriately sized variant). Ensure the rel='icon' link points to this new logo file."
+        },
+        {
+          "path": "frontend/src/components/SplashScreen.tsx",
+          "operation": "modify",
+          "description": "Replace the current splash screen logo image src with the new generated logo at frontend/public/assets/generated/shop-logo-golden-green.dim_128x128.png. Verify the logo has no black background and displays the golden + green shopping basket icon."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Update the header logo image src (if displayed in the Layout header) to use the new generated logo at frontend/public/assets/generated/shop-logo-golden-green.dim_128x128.png. Ensure it displays the golden + green shopping basket icon with no black background."
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
+          "operation": "modify",
+          "description": "If the Home page displays a logo or branding element, update its src to reference the new generated logo at frontend/public/assets/generated/shop-logo-golden-green.dim_128x128.png."
         }
       ]
     }
