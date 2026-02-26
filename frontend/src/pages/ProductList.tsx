@@ -1,358 +1,344 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { usePremiumStatus } from '../hooks/usePremiumStatus';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { Plus, Edit2, Trash2, Crown, Package, AlertCircle } from 'lucide-react';
 import PremiumModal from '../components/PremiumModal';
+import { useNotification } from '../hooks/useNotification';
 
 interface Product {
   id: string;
   name: string;
-  price: number;
+  buyingPrice: number;
+  sellingPrice: number;
   stock: number;
-  category?: string;
+  unit: string;
+  note: string;
+  createdAt: string;
 }
 
-const FREE_PRODUCT_LIMIT = 10;
+const FREE_ITEM_LIMIT = 199;
 
-const ProductList: React.FC = () => {
-  const { mode, accentColor } = useTheme();
-  const { language } = useLanguage();
-  const { isActive: isPremium, checkAndEnforceExpiry } = usePremiumStatus();
-  const { showNotification } = useNotificationContext();
+export default function ProductList() {
+  const { t, language } = useLanguage();
+  const { isDark } = useTheme();
+  const { isActive: isPremium } = usePremiumStatus();
+  const { showNotification } = useNotification();
   const isBn = language === 'bn';
-  const isDark = mode === 'dark';
 
   const [products, setProducts] = useState<Product[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newName, setNewName] = useState('');
-  const [newPrice, setNewPrice] = useState('');
-  const [newStock, setNewStock] = useState('');
-  const [shake, setShake] = useState(false);
 
-  const accent = accentColor || '#FFA500';
-  const bg = isDark ? '#0f0f1a' : '#f5f5f5';
-  const cardBg = isDark ? '#1a1a2e' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#1a1a2e';
-  const subText = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)';
-  const borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-  const inputBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)';
+  const [name, setName] = useState('');
+  const [buyingPrice, setBuyingPrice] = useState('');
+  const [sellingPrice, setSellingPrice] = useState('');
+  const [stock, setStock] = useState('');
+  const [unit, setUnit] = useState(isBn ? 'পিস' : 'pcs');
+  const [note, setNote] = useState('');
 
   useEffect(() => {
-    checkAndEnforceExpiry();
-    const stored = localStorage.getItem('products');
-    if (stored) {
-      try { setProducts(JSON.parse(stored)); } catch { setProducts([]); }
-    }
-  }, [checkAndEnforceExpiry]);
-
-  const saveProducts = (updated: Product[]) => {
-    setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
-  };
-
-  const handleAddClick = () => {
-    if (!isPremium && products.length >= FREE_PRODUCT_LIMIT) {
-      setShake(true);
-      setTimeout(() => setShake(false), 600);
+    if (!isPremium) {
       setShowPremiumModal(true);
       return;
     }
-    setShowAddForm(true);
-    setEditingId(null);
-    setNewName('');
-    setNewPrice('');
-    setNewStock('');
+    loadProducts();
+  }, [isPremium]);
+
+  const loadProducts = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('products') || '[]');
+      setProducts(Array.isArray(saved) ? saved : []);
+    } catch {
+      setProducts([]);
+    }
   };
 
-  const handleEditClick = (product: Product) => {
+  const saveProducts = (newProducts: Product[]) => {
+    try {
+      localStorage.setItem('products', JSON.stringify(newProducts));
+    } catch {}
+  };
+
+  const handleAdd = () => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+
+    if (!isPremium && products.length >= FREE_ITEM_LIMIT) {
+      setShowPremiumModal(true);
+      return;
+    }
+
+    if (!name.trim()) return;
+
+    if (editingId) {
+      const updated = products.map(p =>
+        p.id === editingId
+          ? { ...p, name: name.trim(), buyingPrice: parseFloat(buyingPrice) || 0, sellingPrice: parseFloat(sellingPrice) || 0, stock: parseFloat(stock) || 0, unit, note }
+          : p
+      );
+      setProducts(updated);
+      saveProducts(updated);
+      setEditingId(null);
+    } else {
+      const newProduct: Product = {
+        id: Date.now().toString(),
+        name: name.trim(),
+        buyingPrice: parseFloat(buyingPrice) || 0,
+        sellingPrice: parseFloat(sellingPrice) || 0,
+        stock: parseFloat(stock) || 0,
+        unit,
+        note,
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [newProduct, ...products];
+      setProducts(updated);
+      saveProducts(updated);
+      showNotification(isBn ? 'পণ্য যোগ হয়েছে!' : 'Product added!');
+    }
+
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setName('');
+    setBuyingPrice('');
+    setSellingPrice('');
+    setStock('');
+    setUnit(isBn ? 'পিস' : 'pcs');
+    setNote('');
+    setShowAddForm(false);
+    setEditingId(null);
+  };
+
+  const handleEdit = (product: Product) => {
     if (!isPremium) {
       setShowPremiumModal(true);
       return;
     }
     setEditingId(product.id);
-    setNewName(product.name);
-    setNewPrice(product.price.toString());
-    setNewStock(product.stock.toString());
+    setName(product.name);
+    setBuyingPrice(product.buyingPrice.toString());
+    setSellingPrice(product.sellingPrice.toString());
+    setStock(product.stock.toString());
+    setUnit(product.unit);
+    setNote(product.note);
     setShowAddForm(true);
   };
 
-  const handleSave = () => {
-    if (!newName.trim()) return;
-    if (editingId) {
-      const updated = products.map(p =>
-        p.id === editingId
-          ? { ...p, name: newName.trim(), price: parseFloat(newPrice) || 0, stock: parseInt(newStock) || 0 }
-          : p
-      );
-      saveProducts(updated);
-    } else {
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        name: newName.trim(),
-        price: parseFloat(newPrice) || 0,
-        stock: parseInt(newStock) || 0,
-      };
-      saveProducts([newProduct, ...products]);
-      showNotification(`${isBn ? 'নতুন পণ্য যোগ হয়েছে' : 'New product added'}: ${newProduct.name}`);
-    }
-    setShowAddForm(false);
-    setEditingId(null);
-    setNewName('');
-    setNewPrice('');
-    setNewStock('');
-  };
-
   const handleDelete = (id: string) => {
-    saveProducts(products.filter(p => p.id !== id));
+    const updated = products.filter(p => p.id !== id);
+    setProducts(updated);
+    saveProducts(updated);
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px 12px',
-    borderRadius: '10px',
-    border: `1px solid ${borderColor}`,
-    background: inputBg,
-    color: textColor,
-    fontSize: '14px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    marginBottom: '8px',
-  };
+  const nearLimit = !isPremium && products.length >= 190 && products.length < FREE_ITEM_LIMIT;
+
+  if (!isPremium) {
+    return (
+      <div className={`min-h-screen flex flex-col items-center justify-center px-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className={`w-full max-w-sm rounded-3xl p-8 text-center shadow-xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <Crown size={36} className="text-amber-500" />
+          </div>
+          <h2 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            {isBn ? 'প্রিমিয়াম ফিচার' : 'Premium Feature'}
+          </h2>
+          <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            {isBn ? 'পণ্যের তালিকা ব্যবহার করতে প্রিমিয়াম সাবস্ক্রিপশন প্রয়োজন।' : 'Product List requires a Premium subscription.'}
+          </p>
+          <button
+            onClick={() => setShowPremiumModal(true)}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold"
+          >
+            👑 {isBn ? 'প্রিমিয়াম নিন' : 'Get Premium'}
+          </button>
+        </div>
+
+        <PremiumModal
+          isOpen={showPremiumModal}
+          onClose={() => setShowPremiumModal(false)}
+          onActivate={() => {
+            setShowPremiumModal(false);
+            loadProducts();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div style={{ minHeight: '100vh', background: bg, padding: '16px', paddingBottom: '100px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <h1 style={{ color: textColor, fontSize: '26px', fontWeight: '800', margin: 0 }}>
-          {isBn ? 'পণ্য তালিকা' : 'Product List'}
-        </h1>
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Header */}
+      <div className={`px-4 py-4 flex items-center justify-between border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div>
+          <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            {isBn ? 'তোমার পণ্যের তালিকা' : 'Your Product List'}
+          </h1>
+          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            {products.length} {isBn ? 'টি পণ্য' : 'products'}
+          </p>
+        </div>
         <button
-          onClick={handleAddClick}
-          style={{
-            background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-            border: 'none',
-            borderRadius: '12px',
-            padding: '10px 16px',
-            color: '#fff',
-            fontWeight: '700',
-            fontSize: '14px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
+          onClick={() => {
+            if (!isPremium && products.length >= FREE_ITEM_LIMIT) {
+              setShowPremiumModal(true);
+              return;
+            }
+            resetForm();
+            setShowAddForm(true);
           }}
+          className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center shadow-lg"
         >
-          + {isBn ? 'যোগ করুন' : 'Add'}
+          <Plus size={20} className="text-white" />
         </button>
       </div>
 
-      {/* Free limit banner */}
-      {!isPremium && (
-        <div style={{
-          background: products.length >= FREE_PRODUCT_LIMIT ? 'rgba(244,67,54,0.1)' : 'rgba(255,165,0,0.1)',
-          border: `1px solid ${products.length >= FREE_PRODUCT_LIMIT ? 'rgba(244,67,54,0.3)' : 'rgba(255,165,0,0.3)'}`,
-          borderRadius: '12px',
-          padding: '10px 14px',
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          ...(shake ? { animation: 'shake 0.5s ease' } : {}),
-        }}>
-          <span style={{ color: products.length >= FREE_PRODUCT_LIMIT ? '#f44336' : accent, fontSize: '13px', fontWeight: '600' }}>
-            {products.length}/{FREE_PRODUCT_LIMIT} {isBn ? 'পণ্য (ফ্রি সীমা)' : 'products (free limit)'}
-          </span>
-          {products.length >= FREE_PRODUCT_LIMIT && (
-            <button
-              onClick={() => setShowPremiumModal(true)}
-              style={{
-                background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-                border: 'none',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                color: '#fff',
-                fontWeight: '700',
-                fontSize: '12px',
-                cursor: 'pointer',
-              }}
-            >
-              {isBn ? 'আপগ্রেড করুন' : 'Upgrade'}
-            </button>
-          )}
+      {/* Near limit warning */}
+      {nearLimit && (
+        <div className="mx-4 mt-3 flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+          <AlertCircle size={16} className="text-amber-500 flex-shrink-0" />
+          <p className="text-amber-700 text-sm">
+            {isBn
+              ? `সতর্কতা: আপনি ${FREE_ITEM_LIMIT - products.length}টি পণ্য আর যোগ করতে পারবেন`
+              : `Warning: You can add ${FREE_ITEM_LIMIT - products.length} more products`}
+          </p>
         </div>
       )}
 
       {/* Add/Edit Form */}
       {showAddForm && (
-        <div style={{
-          background: cardBg,
-          borderRadius: '16px',
-          padding: '16px',
-          marginBottom: '16px',
-          border: `1px solid ${borderColor}`,
-        }}>
-          <h3 style={{ color: textColor, fontSize: '16px', fontWeight: '700', marginBottom: '12px', margin: '0 0 12px 0' }}>
+        <div className={`mx-4 mt-4 rounded-2xl p-4 border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+          <h3 className={`font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             {editingId ? (isBn ? 'পণ্য সম্পাদনা' : 'Edit Product') : (isBn ? 'নতুন পণ্য' : 'New Product')}
           </h3>
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder={isBn ? 'পণ্যের নাম *' : 'Product name *'}
-            style={inputStyle}
-            autoFocus
-          />
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="space-y-3">
             <input
-              type="number"
-              value={newPrice}
-              onChange={(e) => setNewPrice(e.target.value)}
-              placeholder={isBn ? 'মূল্য' : 'Price'}
-              style={{ ...inputStyle, flex: 1 }}
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder={isBn ? 'পণ্যের নাম *' : 'Product Name *'}
+              className={`w-full px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
             />
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={buyingPrice}
+                onChange={e => setBuyingPrice(e.target.value)}
+                placeholder={isBn ? 'ক্রয় মূল্য' : 'Buying Price'}
+                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
+              />
+              <input
+                type="number"
+                value={sellingPrice}
+                onChange={e => setSellingPrice(e.target.value)}
+                placeholder={isBn ? 'বিক্রয় মূল্য' : 'Selling Price'}
+                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
+              />
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={stock}
+                onChange={e => setStock(e.target.value)}
+                placeholder={isBn ? 'স্টক' : 'Stock'}
+                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
+              />
+              <input
+                type="text"
+                value={unit}
+                onChange={e => setUnit(e.target.value)}
+                placeholder={isBn ? 'একক' : 'Unit'}
+                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
+              />
+            </div>
             <input
-              type="number"
-              value={newStock}
-              onChange={(e) => setNewStock(e.target.value)}
-              placeholder={isBn ? 'স্টক' : 'Stock'}
-              style={{ ...inputStyle, flex: 1 }}
+              type="text"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder={isBn ? 'নোট' : 'Note'}
+              className={`w-full px-3 py-2 rounded-xl border outline-none text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'} focus:border-amber-500`}
             />
-          </div>
-          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-            <button
-              onClick={handleSave}
-              disabled={!newName.trim()}
-              style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: '10px',
-                border: 'none',
-                background: newName.trim() ? `linear-gradient(135deg, ${accent}, ${accent}cc)` : 'rgba(255,255,255,0.1)',
-                color: newName.trim() ? '#fff' : subText,
-                fontWeight: '700',
-                fontSize: '14px',
-                cursor: newName.trim() ? 'pointer' : 'not-allowed',
-              }}
-            >
-              {isBn ? 'সংরক্ষণ' : 'Save'}
-            </button>
-            <button
-              onClick={() => { setShowAddForm(false); setEditingId(null); }}
-              style={{
-                padding: '10px 16px',
-                borderRadius: '10px',
-                border: `1px solid ${borderColor}`,
-                background: 'transparent',
-                color: subText,
-                fontSize: '14px',
-                cursor: 'pointer',
-              }}
-            >
-              {isBn ? 'বাতিল' : 'Cancel'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={resetForm}
+                className={`flex-1 py-2 rounded-xl border text-sm font-semibold ${isDark ? 'border-gray-600 text-gray-300' : 'border-gray-300 text-gray-600'}`}
+              >
+                {isBn ? 'বাতিল' : 'Cancel'}
+              </button>
+              <button
+                onClick={handleAdd}
+                className="flex-1 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold"
+              >
+                {editingId ? (isBn ? 'আপডেট' : 'Update') : (isBn ? 'যোগ করুন' : 'Add')}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Products */}
-      {products.length === 0 ? (
-        <div style={{
-          background: cardBg,
-          borderRadius: '16px',
-          padding: '40px 20px',
-          textAlign: 'center',
-          border: `1px solid ${borderColor}`,
-        }}>
-          <div style={{ fontSize: '40px', marginBottom: '12px' }}>📦</div>
-          <p style={{ color: subText, fontSize: '15px' }}>
-            {isBn ? 'এখনো কোনো পণ্য নেই' : 'No products yet'}
-          </p>
-        </div>
-      ) : (
-        products.map((product) => (
-          <div
-            key={product.id}
-            style={{
-              background: cardBg,
-              borderRadius: '14px',
-              padding: '14px 16px',
-              marginBottom: '10px',
-              border: `1px solid ${borderColor}`,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-            }}
-          >
-            <div style={{
-              width: '42px', height: '42px',
-              borderRadius: '10px',
-              background: `${accent}22`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '20px',
-              flexShrink: 0,
-            }}>
-              📦
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ color: textColor, fontWeight: '700', fontSize: '15px', marginBottom: '2px' }}>
-                {product.name}
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <span style={{ color: accent, fontSize: '13px', fontWeight: '600' }}>৳{product.price}</span>
-                <span style={{ color: subText, fontSize: '13px' }}>
-                  {isBn ? 'স্টক: ' : 'Stock: '}{product.stock}
-                </span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-              <button
-                onClick={() => handleEditClick(product)}
-                style={{
-                  background: `${accent}22`,
-                  border: 'none',
-                  borderRadius: '8px',
-                  width: '34px', height: '34px',
-                  color: accent,
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                ✏️
-              </button>
-              <button
-                onClick={() => handleDelete(product.id)}
-                style={{
-                  background: 'rgba(244,67,54,0.1)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  width: '34px', height: '34px',
-                  color: '#f44336',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                🗑️
-              </button>
-            </div>
+      <div className="px-4 py-4 space-y-3">
+        {products.length === 0 ? (
+          <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            <Package size={40} className="mx-auto mb-3 opacity-50" />
+            <p>{isBn ? 'কোনো পণ্য নেই' : 'No products yet'}</p>
           </div>
-        ))
-      )}
+        ) : (
+          products.map(product => (
+            <div
+              key={product.id}
+              className={`rounded-2xl p-4 border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.name}</p>
+                  <div className="flex flex-wrap gap-3 mt-1">
+                    <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {isBn ? 'ক্রয়:' : 'Buy:'} ৳{product.buyingPrice}
+                    </span>
+                    <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {isBn ? 'বিক্রয়:' : 'Sell:'} ৳{product.sellingPrice}
+                    </span>
+                    <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {isBn ? 'স্টক:' : 'Stock:'} {product.stock} {product.unit}
+                    </span>
+                  </div>
+                  {product.note && (
+                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{product.note}</p>
+                  )}
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleEdit(product)}
+                    className={`p-2 rounded-lg ${isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <Edit2 size={15} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product.id)}
+                    className="p-2 rounded-lg text-red-400 hover:bg-red-50"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
 
-      {showPremiumModal && (
-        <PremiumModal
-          onClose={() => setShowPremiumModal(false)}
-          onActivate={() => {
-            checkAndEnforceExpiry();
-            setShowPremiumModal(false);
-          }}
-        />
-      )}
+      <PremiumModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        onActivate={() => {
+          setShowPremiumModal(false);
+          loadProducts();
+        }}
+      />
     </div>
   );
-};
-
-export default ProductList;
+}

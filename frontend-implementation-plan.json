@@ -1,212 +1,183 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Smart Shop Ledger – Full Feature Upgrade (AdMob, History Fix, Bottom Sheet Lists, Color Tags, Premium UI)",
+  "title": "Fix Dark Mode Persistence, Revert Premium Modal Design, and Enforce Premium Locks",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Integrate AdMob Banner Ad for non-premium users at high-traffic locations",
-      "acceptanceCriteria": [
-        "AdMob banner ad script is loaded with the correct App ID and Ad Unit ID",
-        "Banner ad appears at the bottom of Home page (above nav bar) for non-premium users",
-        "Banner ad appears at the top of History page for non-premium users",
-        "Premium users do not see the AdMob banner"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/index.html",
-          "operation": "modify",
-          "description": "Add AdMob script tags with App ID ca-app-pub-1425556101841688~8624741531 in the <head> section to initialize the AdMob SDK globally."
-        },
-        {
-          "path": "frontend/src/components/AdMobBanner.tsx",
-          "operation": "create",
-          "description": "Create a new AdMobBanner component that checks premium status using usePremiumStatus hook, renders an ad container div with the Ad Unit ID ca-app-pub-1425556101841688/7582793038 for non-premium users, and returns null for premium users. Use ins element with class 'adsbygoogle' and data-ad-client/data-ad-slot attributes per AdMob web integration guidelines."
-        },
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Import and place the AdMobBanner component at the bottom of the page content, just above the fixed bottom navigation bar (before the Layout's bottom padding), so it appears above the nav bar for non-premium users."
-        },
-        {
-          "path": "frontend/src/pages/History.tsx",
-          "operation": "modify",
-          "description": "Import and place the AdMobBanner component at the top of the page content (after the header/title, before the search and filter UI) for non-premium users."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Update Facebook Page button link in Settings to new redirect URL",
-      "acceptanceCriteria": [
-        "The Facebook Page button in Settings navigates to https://fb.openinapp.co/khncs",
-        "No other Facebook URL remains in the Settings page"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Settings.tsx",
-          "operation": "modify",
-          "description": "Locate the Facebook Page button or link in the Settings page (likely in the external links or social section) and replace the href value with exactly 'https://fb.openinapp.co/khncs'. Remove any old hardcoded Facebook URLs."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Fix History page sales summary to show separate Today's Total Income and Today's Net Profit cards with daily reset and auto-save",
-      "acceptanceCriteria": [
-        "History page shows two separate summary cards: 'Today's Total Income' and 'Today's Net Profit'",
-        "Today's Total Income = sum of all selling prices for today's sales",
-        "Today's Net Profit = Today's Total Income - sum of all buying prices for today's sales",
-        "Both values reset to zero at midnight",
-        "Previous day's totals are saved to history before reset"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/History.tsx",
-          "operation": "modify",
-          "description": "Replace the current single profit/revenue card with two side-by-side styled cards: (1) 'Today's Total Income' showing sum of all today's sellingPrice values, and (2) 'Today's Net Profit' showing sum(sellingPrice) - sum(buyingPrice) for today's sales. Add logic to detect midnight reset (compare current date with last-saved date in localStorage), save previous day's totals to a history array before resetting both values to zero. Ensure both cards are labeled clearly with translations from the translations object."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Redesign Shopping List and Task List cards to open as Bottom Sheet Popups with interactive gestures, animations, and sounds",
-      "acceptanceCriteria": [
-        "Clicking Shopping List or Task List card on Home page opens a bottom sheet popup sliding up from the bottom",
-        "Popup covers 80% of screen height with smooth slide-up animation",
-        "Task List: tap-and-hold 2 seconds triggers complete state with glow + confetti + bell sound + vibration",
-        "Shopping List: swipe gesture on an item marks it as bought with fade-out + cash register sound",
-        "Whoosh sound plays on popup open; Soft Click sound plays on popup close",
-        "All list data persists in localStorage"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/BottomSheet.tsx",
-          "operation": "create",
-          "description": "Create a reusable BottomSheet component that accepts open state, onClose callback, and children. Implement a slide-up animation from the bottom covering 80% of screen height using Tailwind transition classes and transform properties. Play a 'Whoosh' sound on mount when open=true and a 'Soft Click' sound when closing (using Web Audio API or audio elements). Include a backdrop overlay that closes the sheet on click."
-        },
-        {
-          "path": "frontend/src/components/TaskListPopup.tsx",
-          "operation": "create",
-          "description": "Create a TaskListPopup component that wraps the BottomSheet and displays the task list from localStorage. Implement a tap-and-hold gesture (using onPointerDown/onPointerUp with 2-second timer) on each task item. When triggered, mark the task complete with a glow CSS animation, trigger a confetti animation (using canvas-confetti library or CSS keyframes), play a bell sound via Web Audio API, and trigger device vibration using navigator.vibrate([200]). Persist updated task data to localStorage."
-        },
-        {
-          "path": "frontend/src/components/ShoppingListPopup.tsx",
-          "operation": "create",
-          "description": "Create a ShoppingListPopup component that wraps the BottomSheet and displays the shopping list from localStorage. Implement swipe-left or swipe-right gesture detection on each shopping item (using onTouchStart/onTouchMove/onTouchEnd or a gesture library). When a swipe is detected, mark the item as bought, apply a fade-out CSS animation, play a cash register sound via Web Audio API, and persist the updated list to localStorage."
-        },
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Replace the Shopping List and Task List card navigation (which currently links to a separate page) with onClick handlers that open the TaskListPopup and ShoppingListPopup components as bottom sheet overlays. Add state to manage which popup is open. Remove any navigation logic that was routing to /lists or a separate lists page for these two cards."
-        },
-        {
-          "path": "frontend/src/utils/sounds.ts",
-          "operation": "create",
-          "description": "Create a sounds utility module that provides functions to play 'Whoosh', 'Soft Click', 'Bell', and 'Cash Register' sounds using the Web Audio API (with AudioContext and OscillatorNode or pre-encoded audio buffers). Export playWhoosh(), playSoftClick(), playBell(), and playCashRegister() functions. These sounds should be simple synthesized tones or short audio clips."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Add color categorization to Add Sale flow and display color breakdown on Home screen",
-      "acceptanceCriteria": [
-        "Add Sale page shows 4 color options (Red, Yellow, Green, Blue) as dot + name in one row",
-        "Selected color is saved with the sale record in localStorage",
-        "Home screen 'রঙ বিভাজন' card shows count of today's sales per color",
-        "Color breakdown is empty/shows placeholder when no sales exist for the day"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AddSale.tsx",
-          "operation": "modify",
-          "description": "Add a color selection UI with 4 radio buttons or clickable color dots displayed in a single horizontal row: Red (🔴 লাল), Yellow (🟡 হলুদ), Green (🟢 সবুজ), Blue (🔵 নীল). Use Tailwind color classes (bg-red-500, bg-yellow-500, bg-green-500, bg-blue-500) for the dots. Add a colorTag field to the sale form state (default to no selection or 'none'). When the sale is saved to localStorage, include the selected colorTag property in the sale record object."
-        },
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Update the 'রঙ বিভাজন' (Color Division) card on the Home dashboard. Read today's sales from localStorage, filter by today's date, and count how many sales have each colorTag (red, yellow, green, blue). Display the breakdown as text: e.g., '🔴 Red: 3, 🟡 Yellow: 2, 🟢 Green: 5, 🔵 Blue: 1'. If no sales exist for today, show a placeholder message like 'আজ কোনো বিক্রয় নেই' (No sales today)."
-        }
-      ]
-    },
-    {
       "id": "REQ-6",
-      "summary": "Upgrade Premium UI with BUY buttons, contact email display, bubble animation, and Congratulations animation",
+      "summary": "Fix dark mode persistence using localStorage so the theme state is restored on app reopening",
       "acceptanceCriteria": [
-        "Each of the 3 premium plans has a BUY button above it",
-        "Clicking BUY shows owner email with a copy button",
-        "BUY button click triggers bubble float-up animation and sound",
-        "After successful premium code activation, a full-screen Congratulations animation plays",
-        "Premium modal has improved visual design with better spacing and typography"
+        "When user enables dark mode and closes/reopens the app, dark mode is still active",
+        "When user disables dark mode and closes/reopens the app, light mode is still active",
+        "ThemeContext initializes dark mode state from localStorage key (e.g., 'darkMode') on mount",
+        "Every dark mode toggle writes the new value to localStorage immediately"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/PremiumModal.tsx",
+          "path": "frontend/src/contexts/ThemeContext.tsx",
           "operation": "modify",
-          "description": "Add a 'BUY' button above each of the 3 subscription plan cards. When a BUY button is clicked, display the owner's contact email (retrieved from shop registration data in localStorage or hardcoded if unavailable) with a one-tap copy-to-clipboard button (using navigator.clipboard.writeText). Trigger a bubble float-up CSS animation (keyframe that moves an element upward with opacity fade) and play a sound effect via Web Audio API. Improve the modal's visual design: increase spacing (padding, margins), use larger/clearer typography (font-size, font-weight), and enhance visual hierarchy with color accents and card shadows."
-        },
-        {
-          "path": "frontend/src/components/CongratulationsAnimation.tsx",
-          "operation": "create",
-          "description": "Create a full-screen overlay component that displays a 'Congratulations' animation (confetti using canvas-confetti library or CSS-based confetti, plus a success message) when premium is successfully activated. The animation should play for 3-4 seconds and then auto-dismiss or provide a close button. Use absolute positioning (fixed inset-0 z-50) to cover the entire viewport."
-        },
-        {
-          "path": "frontend/src/components/PremiumModal.tsx",
-          "operation": "modify",
-          "description": "After successful premium code activation (when the code is validated and premium status is saved to localStorage), trigger the CongratulationsAnimation component to display for the user. Import and conditionally render the CongratulationsAnimation component when activation succeeds."
+          "description": "Modify ThemeContext to read dark mode state from localStorage on initialization (using key 'darkMode') and write the new dark mode value to localStorage immediately on every toggle. Ensure the isDarkMode state is synchronized with localStorage throughout the component lifecycle."
         }
       ]
     },
     {
       "id": "REQ-7",
-      "summary": "Add Today's Sales summary popup on Home screen with detailed sales list",
+      "summary": "Revert PremiumModal visual design back to Version 27 style while preserving all promo code logic and pricing",
       "acceptanceCriteria": [
-        "Tapping the today's stats area on Home opens a slide-up popup",
-        "Popup shows list of all today's sales with product name, quantity, and selling price",
-        "Popup footer shows Total Income and Net Profit totals",
-        "Popup closes on tap-outside or a close button with soft-click sound"
+        "PremiumModal visually matches the Version 27 design (original color scheme, layout, card styling)",
+        "All existing promo codes (987987, 789789, 2580, 01736026413, 01859040014) still work",
+        "Monthly, yearly, and lifetime plan options are still displayed",
+        "The promo code activation flow still functions correctly"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/TodaysSalesPopup.tsx",
-          "operation": "create",
-          "description": "Create a TodaysSalesPopup component that wraps the BottomSheet (from REQ-4) and displays a detailed list of all today's sales from localStorage. Show product name, quantity, and selling price for each sale. At the bottom, display a totals row with 'Total Income' (sum of selling prices) and 'Net Profit' (Total Income - sum of buying prices). Ensure the popup closes on backdrop click or close button with soft-click sound (reuse the BottomSheet's close behavior)."
-        },
-        {
-          "path": "frontend/src/pages/Home.tsx",
+          "path": "frontend/src/components/PremiumModal.tsx",
           "operation": "modify",
-          "description": "Make the today's stats area (the cards showing today's sales count, profit, revenue, or color breakdown) tappable by adding an onClick handler. When clicked, open the TodaysSalesPopup component as a bottom sheet overlay. Add state to manage whether the popup is open and wire the open/close handlers."
+          "description": "Revert the PremiumModal component's visual design (color scheme, layout, card styles, typography, button styles) back to Version 27 appearance. Do not modify promo code validation logic, pricing values, plan options, or the activation flow. Focus only on restoring the original UI styling and structure."
         }
       ]
     },
     {
       "id": "REQ-8",
-      "summary": "Update app icons and logos with golden + green color scheme and shopping basket graphic, remove black background",
+      "summary": "Lock color categorization feature behind premium; show PremiumModal when free users attempt to use color tags",
       "acceptanceCriteria": [
-        "App logo has no black background",
-        "Logo uses golden and green colors with a shopping basket/bag icon",
-        "Updated logo appears on splash screen, header, and as favicon"
+        "Free users cannot use the color tag/color categorization feature when adding a sale",
+        "Tapping the color tag option as a free user opens the PremiumModal",
+        "Premium users can use color categorization without any restriction",
+        "The home screen color breakdown section is visible to all users but color tagging during add is locked for free users"
       ],
       "file_operations": [
         {
-          "path": "frontend/index.html",
+          "path": "frontend/src/pages/AddSale.tsx",
           "operation": "modify",
-          "description": "Update the favicon link tag to reference the new generated logo image at frontend/public/assets/generated/shop-logo-golden-green.dim_128x128.png (or an appropriately sized variant). Ensure the rel='icon' link points to this new logo file."
-        },
-        {
-          "path": "frontend/src/components/SplashScreen.tsx",
-          "operation": "modify",
-          "description": "Replace the current splash screen logo image src with the new generated logo at frontend/public/assets/generated/shop-logo-golden-green.dim_128x128.png. Verify the logo has no black background and displays the golden + green shopping basket icon."
-        },
+          "description": "Add a premium check using usePremiumStatus hook before allowing color tag selection in the AddSale form. When a free user taps the color tag picker, open the PremiumModal instead of allowing selection. Premium users can use the color picker without restriction. Keep the color breakdown display on the Home screen visible to all users."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Lock 'Task List' and 'Product List' navigation behind premium with PremiumModal prompts for free users",
+      "acceptanceCriteria": [
+        "Free users tapping 'Task List' or 'Product List' see the PremiumModal instead of the content",
+        "Premium users can access both Task List and Product List without restriction",
+        "The lock is enforced both in the bottom navigation and any other entry points to these pages",
+        "A premium lock icon or visual indicator is shown on these options for free users"
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/components/Layout.tsx",
           "operation": "modify",
-          "description": "Update the header logo image src (if displayed in the Layout header) to use the new generated logo at frontend/public/assets/generated/shop-logo-golden-green.dim_128x128.png. Ensure it displays the golden + green shopping basket icon with no black background."
+          "description": "Add premium checks using usePremiumStatus hook to the bottom navigation entries for 'Task List' (Lists page) and 'Product List'. When a free user taps these nav items, prevent navigation and show the PremiumModal. Add a lock icon overlay on these nav items for free users. Premium users navigate freely."
         },
+        {
+          "path": "frontend/src/pages/Lists.tsx",
+          "operation": "modify",
+          "description": "Add a premium gate at the page entry level using usePremiumStatus. If a free user accesses this page directly (e.g., via URL), show the PremiumModal and prevent content display. Premium users see the full task list functionality."
+        },
+        {
+          "path": "frontend/src/pages/ProductList.tsx",
+          "operation": "modify",
+          "description": "Add a premium gate at the page entry level using usePremiumStatus. If a free user accesses this page directly (e.g., via URL), show the PremiumModal and prevent content display. Premium users see the full product list functionality. Note: This page already has a 10-item free limit; this change replaces that with a full premium lock."
+        }
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "summary": "Lock 3 specific color themes in Settings behind premium with lock icons and PremiumModal for free users",
+      "acceptanceCriteria": [
+        "Exactly 3 color themes in Settings are marked as premium-only with a lock icon",
+        "Free users tapping a locked theme see the PremiumModal",
+        "Premium users can apply all themes including the 3 locked ones",
+        "The default/base theme remains accessible to free users without restriction"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Settings.tsx",
+          "operation": "modify",
+          "description": "Identify 3 color theme options to mark as premium-only (e.g., purple, orange, teal or other visually distinct themes). Add a lock icon to those 3 theme options for free users using usePremiumStatus. When a free user taps a locked theme, open the PremiumModal instead of applying the theme. Premium users can apply all themes. Ensure the default theme remains unlocked and usable by free users."
+        }
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "summary": "Enforce a 199-item free tier limit per content type; block 200th add attempt and show PremiumModal",
+      "acceptanceCriteria": [
+        "Free users can add up to 199 items per content type (sales, products, tasks, shopping list)",
+        "The 200th add attempt by a free user is blocked and PremiumModal is shown",
+        "Premium users can add unlimited items with no cap",
+        "A counter or subtle indicator shows remaining free slots when approaching the limit (e.g., at 190+)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AddSale.tsx",
+          "operation": "modify",
+          "description": "Add a free-tier item count check using usePremiumStatus before allowing a new sale to be added. Read the current sales array from localStorage and check its length. If a free user has 199+ sales, block the add and show PremiumModal. Premium users can add unlimited sales. Optionally show a counter badge when approaching the limit (e.g., at 190+ sales)."
+        },
+        {
+          "path": "frontend/src/pages/ProductList.tsx",
+          "operation": "modify",
+          "description": "Add a 199-item free-tier limit check using usePremiumStatus before allowing a new product to be added. If a free user has 199+ products in localStorage, block the add and show PremiumModal. Premium users can add unlimited products. Optionally show a counter when approaching the limit. Note: This replaces the existing 10-item limit with the new 199-item limit."
+        },
+        {
+          "path": "frontend/src/components/TaskListPopup.tsx",
+          "operation": "modify",
+          "description": "Add a 199-item free-tier limit check using usePremiumStatus before allowing a new task to be added. Read the current tasks array from localStorage and check its length. If a free user has 199+ tasks, block the add and show PremiumModal. Premium users can add unlimited tasks. Optionally show a counter when approaching the limit."
+        },
+        {
+          "path": "frontend/src/components/ShoppingListPopup.tsx",
+          "operation": "modify",
+          "description": "Add a 199-item free-tier limit check using usePremiumStatus before allowing a new shopping list item to be added. Read the current shopping list array from localStorage and check its length. If a free user has 199+ items, block the add and show PremiumModal. Premium users can add unlimited items. Optionally show a counter when approaching the limit."
+        }
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "summary": "Lock custom sound upload feature in Settings behind premium with a lock icon and PremiumModal",
+      "acceptanceCriteria": [
+        "Custom sound upload option in Settings is visible but locked for free users",
+        "A lock icon is displayed next to the custom sound upload option for free users",
+        "Tapping the locked custom sound option opens the PremiumModal",
+        "Premium users can upload custom sounds without any restriction"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Settings.tsx",
+          "operation": "modify",
+          "description": "Add a premium check using usePremiumStatus to the custom sound upload section. Display a lock icon next to the custom sound upload option for free users. When a free user taps the locked option, open the PremiumModal instead of allowing the file input to open. Premium users can upload and use custom sounds freely."
+        }
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "summary": "Add a premium 'Data Export' feature allowing CSV download of sales/product data; lock for free users",
+      "acceptanceCriteria": [
+        "A 'Data Export' option is visible in Settings or History page",
+        "Free users see a lock icon on the Data Export option and tapping it opens PremiumModal",
+        "Premium users can tap Data Export to download their sales/product data as CSV",
+        "Exported file includes date, product name, quantity, price, and profit columns"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Settings.tsx",
+          "operation": "modify",
+          "description": "Add a 'Data Export' button in the Settings page premium features section. Use usePremiumStatus to check premium status. Free users see a lock icon and tapping opens PremiumModal. Premium users can tap to trigger a CSV export function that reads sales and product data from localStorage, formats it as CSV (with columns: date, product name, quantity, price, profit), and downloads it using a blob URL and anchor element click."
+        }
+      ]
+    },
+    {
+      "id": "REQ-14",
+      "summary": "Add a premium 'Advanced Statistics' feature showing detailed analytics; lock with overlay for free users",
+      "acceptanceCriteria": [
+        "An 'Advanced Statistics' section is visible on the Home or History page",
+        "Free users see the section with a premium lock overlay; tapping it opens PremiumModal",
+        "Premium users see weekly/monthly profit trends, top-selling products, and best sales days",
+        "Statistics are calculated from existing localStorage sales data"
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/pages/Home.tsx",
           "operation": "modify",
-          "description": "If the Home page displays a logo or branding element, update its src to reference the new generated logo at frontend/public/assets/generated/shop-logo-golden-green.dim_128x128.png."
+          "description": "Add an 'Advanced Statistics' section to the Home page below the existing stats summary. Use usePremiumStatus to check premium status. For free users, display a blurred or overlay-locked preview of the statistics section; tapping it opens PremiumModal. For premium users, calculate and display weekly/monthly profit trends, top-selling products, and best sales days using sales data from localStorage. Use simple bar or line indicators for trends."
         }
       ]
     }

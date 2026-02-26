@@ -1,193 +1,207 @@
 {
   "kind": "build_request",
-  "title": "Smart Shop Ledger – Full Feature Upgrade (AdMob, History Fix, Bottom Sheet Lists, Color Tags, Premium UI)",
+  "title": "Fix Dark Mode Persistence, Revert Premium Modal Design, and Enforce Premium Locks",
   "projectName": "Smart Shop Ledger",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Integrate AdMob Banner Ad in the web app using App ID `ca-app-pub-1425556101841688~8624741531` and Ad Unit ID `ca-app-pub-1425556101841688/7582793038`. Place the banner ad at high-traffic locations (e.g., bottom of Home page above the nav bar, and top of History page) following Google AdMob placement policies. The ad should only be visible to non-premium users.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1",
-          "msg-2"
-        ],
-        "quotes": [
-          "AdMob Banner Ad (ca-app-pub-1425556101841688/7582793038)"
-        ]
-      },
-      "acceptanceCriteria": [
-        "AdMob banner ad script is loaded with the correct App ID and Ad Unit ID",
-        "Banner ad appears at the bottom of Home page (above nav bar) for non-premium users",
-        "Banner ad appears at the top of History page for non-premium users",
-        "Premium users do not see the AdMob banner"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Update the Facebook Page button link in the Settings page to `https://fb.openinapp.co/khncs`, replacing any previously hardcoded Facebook URL.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Facebook লিঙ্ক পরিবর্তন",
-          "https://fb.openinapp.co/khncs"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The Facebook Page button in Settings navigates to https://fb.openinapp.co/khncs",
-        "No other Facebook URL remains in the Settings page"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Fix the sales history summary logic in `frontend/src/pages/History.tsx`. Replace the current single profit/revenue card with two separate cards: (1) 'Today's Total Income' = sum of all today's selling prices (gross revenue), and (2) 'Today's Net Profit' = Today's Total Income minus total cost of goods sold. Both cards reset at midnight and are auto-saved to history. Display them side-by-side as distinct styled cards with clear labels.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "মোট লাভ → Today's Net Profit",
-          "মোট রাজস্ব → Today's Total Income",
-          "Daily Reset রাত ১২টায়, History-তে অটো সেভ"
-        ]
-      },
-      "acceptanceCriteria": [
-        "History page shows two separate summary cards: 'Today's Total Income' and 'Today's Net Profit'",
-        "Today's Total Income = sum of all selling prices for today's sales",
-        "Today's Net Profit = Today's Total Income - sum of all buying prices for today's sales",
-        "Both values reset to zero at midnight",
-        "Previous day's totals are saved to history before reset"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Redesign the Shopping List (কেনাকাটার তালিকা) and Task List (কাজের তালিকা) cards on the Home page to open as Bottom Sheet Popups instead of navigating to a separate page. The popup should slide up from the bottom covering 80% of the screen height. Task List popup: Tap & Hold an item for 2 seconds to mark it complete, with glow animation + confetti animation + success bell sound + device vibration. Shopping List popup: Swipe an item left/right to mark as bought, with card fade-out animation + cash register sound. Sound system: play a 'Whoosh' sound when any popup opens and a 'Soft Click' sound when it closes. Persist all list data to localStorage.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Bottom Sheet Popup",
-          "Tap & Hold ২ সেকেন্ড → Task Complete",
-          "Swipe → কিনেছি",
-          "Popup Open (Whoosh), Close (Soft Click)"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Clicking Shopping List or Task List card on Home page opens a bottom sheet popup sliding up from the bottom",
-        "Popup covers 80% of screen height with smooth slide-up animation",
-        "Task List: tap-and-hold 2 seconds triggers complete state with glow + confetti + bell sound + vibration",
-        "Shopping List: swipe gesture on an item marks it as bought with fade-out + cash register sound",
-        "Whoosh sound plays on popup open; Soft Click sound plays on popup close",
-        "All list data persists in localStorage"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Add color categorization (রঙ বিভাজন) to the Add Sale flow in `frontend/src/pages/AddSale.tsx`. When adding a sale, show 4 color tag options displayed as colored dot + label in a single row: Red (লাল), Yellow (হলুদ), Green (সবুজ), Blue (নীল). Save the selected color tag with each sale record. On the Home screen, update the 'রঙ বিভাজন' card to show a breakdown of today's sales count per color tag (e.g., 🔴 Red: 3, 🟡 Yellow: 2, etc.).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "৪টি রঙ অপশন: 🔴 Red | 🟡 Yellow | 🟢 Green | 🔵 Blue",
-          "হোমস্ক্রিনে রঙ বিভাজন কার্ডে কোন রঙে কয়টা বিক্রি হয়েছে"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Add Sale page shows 4 color options (Red, Yellow, Green, Blue) as dot + name in one row",
-        "Selected color is saved with the sale record in localStorage",
-        "Home screen 'রঙ বিভাজন' card shows count of today's sales per color",
-        "Color breakdown is empty/shows placeholder when no sales exist for the day"
-      ]
-    },
-    {
       "id": "REQ-6",
-      "text": "Upgrade the Premium section UI in `frontend/src/components/PremiumModal.tsx` and any premium plans display. Add a 'BUY' button above each of the 3 subscription plans. When a BUY button is clicked: display the owner's contact email with a one-tap copy-to-clipboard option, trigger a bubble/float-up animation and a sound effect. After a user successfully activates a subscription code, show a full-screen 'Congratulations' animation (confetti or similar). Improve the overall premium UI with better spacing, typography, and visual hierarchy.",
+      "text": "Fix dark mode persistence: save the user's dark/light mode preference to localStorage so that when the app is closed and reopened, the dark mode state is restored exactly as it was left. The ThemeContext must read from localStorage on initialization and write to localStorage on every toggle.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "তিনটি প্ল্যানের উপরে BUY বাটন যোগ",
-          "Bubble Animation (উপরে উঠবে) + Sound",
-          "Congratulations Animation",
-          "প্রিমিয়াম UI আরও সুন্দর"
+          "ডার্ক মোডে সমস্যা আছে ডার্ক মোড করার পর ওটা চালু থাকার পরও চালু থাকলেও বা লক থাকলেও বন্ধ থাকলেও তোমার পাশে থাকে",
+          "ডার্ক মোড পার্সিস্টেন্স ঠিক করা — অ্যাপ বন্ধ করে আবার খুললেও ডার্ক মোড চালু থাকবে"
         ]
       },
       "acceptanceCriteria": [
-        "Each of the 3 premium plans has a BUY button above it",
-        "Clicking BUY shows owner email with a copy button",
-        "BUY button click triggers bubble float-up animation and sound",
-        "After successful premium code activation, a full-screen Congratulations animation plays",
-        "Premium modal has improved visual design with better spacing and typography"
+        "When user enables dark mode and closes/reopens the app, dark mode is still active",
+        "When user disables dark mode and closes/reopens the app, light mode is still active",
+        "ThemeContext initializes dark mode state from localStorage key (e.g., 'darkMode') on mount",
+        "Every dark mode toggle writes the new value to localStorage immediately"
       ]
     },
     {
       "id": "REQ-7",
-      "text": "Add a 'Today's Sales' summary popup on the Home screen. The existing stats area should be tappable; clicking it opens a smooth slide-up bottom sheet popup (70-80% screen height) showing a detailed list of all today's sales with product names, quantities, selling prices, and a totals row (Total Income + Net Profit) at the bottom.",
+      "text": "Revert the PremiumModal component's visual design back to the Version 27 style. The modal must use the original layout, color scheme, card styles, typography, button styles, and overall visual appearance from Version 27. Do not change any promo code logic or plan pricing — only restore the UI design.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "Today's Sales popup on home screen",
-          "click opens smooth slide-up popup (70-80% height) with product list, quantities, prices, and totals"
+          "প্রিমিয়ামের ডিজাইন পরিবর্তন কেন করেছে আমি ডিজাইন আগে ডিজাইনই চাই এই ডিজাইন আমার পছন্দ হয় না",
+          "ভার্সন ২৭-এর প্রিমিয়াম ডিজাইনে ফিরে যাওয়া"
         ]
       },
       "acceptanceCriteria": [
-        "Tapping the today's stats area on Home opens a slide-up popup",
-        "Popup shows list of all today's sales with product name, quantity, and selling price",
-        "Popup footer shows Total Income and Net Profit totals",
-        "Popup closes on tap-outside or a close button with soft-click sound"
+        "PremiumModal visually matches the Version 27 design (original color scheme, layout, card styling)",
+        "All existing promo codes (987987, 789789, 2580, 01736026413, 01859040014) still work",
+        "Monthly, yearly, and lifetime plan options are still displayed",
+        "The promo code activation flow still functions correctly"
       ]
     },
     {
       "id": "REQ-8",
-      "text": "Update all app icons and logos throughout the app: remove any black background from icon/logo elements, apply a golden + green color scheme to the logo, and use a shopping basket or shopping bag icon as the primary logo graphic. Update the splash screen, header logo, and favicon accordingly.",
+      "text": "Lock the color categorization feature on the Home screen behind premium. When a free user tries to use color tags to categorize items (the color picker/color tag selector in the AddSale form or home screen breakdown), show a PremiumModal prompt instead of allowing access. Premium users can use it freely.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-4",
+          "msg-8"
         ],
         "quotes": [
-          "লোগো কালার: গোল্ডেন + সবুজ, বাস্কেট/শপিং ব্যাগ আইকন",
-          "কালো ব্যাকগ্রাউন্ড নেই"
+          "হোমস্ক্রিনে কালার দিয়ে আলাদা করা",
+          "কালার দিয়ে আলাদা করার সেই অপশনটা লক করা নেই কাস্টমার ততক্ষণ পর্যন্ত সেটা ব্যবহার করতে পারবে না যতক্ষণ সে প্রিমিয়ার subscription নিবে না"
         ]
       },
       "acceptanceCriteria": [
-        "App logo has no black background",
-        "Logo uses golden and green colors with a shopping basket/bag icon",
-        "Updated logo appears on splash screen, header, and as favicon"
+        "Free users cannot use the color tag/color categorization feature when adding a sale",
+        "Tapping the color tag option as a free user opens the PremiumModal",
+        "Premium users can use color categorization without any restriction",
+        "The home screen color breakdown section is visible to all users but color tagging during add is locked for free users"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Lock the 'Task List' (তোমার কাজের তালিকা) and 'Product List' (তোমার পণ্যের তালিকা) bottom navigation or bottom options behind premium. Free users tapping these options must see a PremiumModal prompt. Premium users can access them freely.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-8"
+        ],
+        "quotes": [
+          "নিচে সবার নিচে যে দুইটা অপশন রয়েছে মানে লিস্ট তোমার কাজের তালিকা এবং তোমার পণ্যের তালিকা তোমাকে কি এই দুইটা অপশন লক করা থাকতে হবে"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Free users tapping 'Task List' or 'Product List' see the PremiumModal instead of the content",
+        "Premium users can access both Task List and Product List without restriction",
+        "The lock is enforced both in the bottom navigation and any other entry points to these pages",
+        "A premium lock icon or visual indicator is shown on these options for free users"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "In the Settings page, lock 3 specific color themes behind premium. Mark those 3 themes with a lock icon for free users. When a free user taps a locked theme, show the PremiumModal. Premium users can apply all themes freely. The default theme must remain usable by free users.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-8"
+        ],
+        "quotes": [
+          "সেটিংসে থিম হিসেবে যেকোনো তিনটা ভালো থিম অফ করে রাখতে হবে মানে তিনটা কালার থিম অফ করে রাখতে হবে যাতে সেটা প্রিমিয়াম হলে যাতে ব্যবহার করতে পারে ফ্রিতে যাতে ব্যবহার না করতে পারে"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Exactly 3 color themes in Settings are marked as premium-only with a lock icon",
+        "Free users tapping a locked theme see the PremiumModal",
+        "Premium users can apply all themes including the 3 locked ones",
+        "The default/base theme remains accessible to free users without restriction"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "text": "Enforce a 199-item free tier limit across all addable content (sales records, product list entries, task list items, shopping list items). When a free user attempts to add a 200th item of any type, block the action and show a PremiumModal prompt. Premium users have no item limit. The 199-item cap applies per content type.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-8"
+        ],
+        "quotes": [
+          "ডিফল্টভাবে কেন আগে থেকে ফ্রি অপশনে আনলিমিটেড অ্যাড করার সুযোগ সুবিধা দিয়েছো সর্বোচ্চ ফ্রিতে ১৯৯ বার তোমার যে কোন জিনিস এড করতে পারবে ১৯৯ বাই এড করার পর আর এড হবে না কোন জিনিস প্রিমিয়াম নিলে আনলিমিটেড থাকবে"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Free users can add up to 199 items per content type (sales, products, tasks, shopping list)",
+        "The 200th add attempt by a free user is blocked and PremiumModal is shown",
+        "Premium users can add unlimited items with no cap",
+        "A counter or subtle indicator shows remaining free slots when approaching the limit (e.g., at 190+)"
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "text": "Lock the custom sound upload feature in Settings behind premium. Free users should see the custom sound upload option with a lock icon; tapping it must open the PremiumModal. Premium users can upload and use custom sounds freely.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-8"
+        ],
+        "quotes": [
+          "কাস্টম সাউন্ড নিজের ইচ্ছামতো সাউন্ড দিতে চাইলে সেটা তুমি আমি যোগ করে দাও"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Custom sound upload option in Settings is visible but locked for free users",
+        "A lock icon is displayed next to the custom sound upload option for free users",
+        "Tapping the locked custom sound option opens the PremiumModal",
+        "Premium users can upload custom sounds without any restriction"
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "text": "Add a 'Data Export' premium feature: allow premium users to export their sales history and product list data as a downloadable CSV or text file from the Settings or History page. For free users, show the export option with a lock icon that opens the PremiumModal when tapped.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "আরও ২টি প্রিমিয়াম ফিচার (ডেটা এক্সপোর্ট + অ্যাডভান্সড স্ট্যাটিস্টিক্স)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A 'Data Export' option is visible in Settings or History page",
+        "Free users see a lock icon on the Data Export option and tapping it opens PremiumModal",
+        "Premium users can tap Data Export to download their sales/product data as CSV",
+        "Exported file includes date, product name, quantity, price, and profit columns"
+      ]
+    },
+    {
+      "id": "REQ-14",
+      "text": "Add an 'Advanced Statistics' premium feature: show premium users a detailed analytics section (e.g., weekly/monthly profit trends, top-selling products, best sales days) accessible from the Home or History page. For free users, show the section with a lock overlay that opens the PremiumModal when tapped.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "আরও ২টি প্রিমিয়াম ফিচার (ডেটা এক্সপোর্ট + অ্যাডভান্সড স্ট্যাটিস্টিক্স)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "An 'Advanced Statistics' section is visible on the Home or History page",
+        "Free users see the section with a premium lock overlay; tapping it opens PremiumModal",
+        "Premium users see weekly/monthly profit trends, top-selling products, and best sales days",
+        "Statistics are calculated from existing localStorage sales data"
       ]
     }
   ],
   "constraints": [
-    "AdMob Ad Unit ID must be exactly: ca-app-pub-1425556101841688/7582793038",
-    "AdMob App ID must be exactly: ca-app-pub-1425556101841688~8624741531",
-    "Facebook link must be exactly: https://fb.openinapp.co/khncs",
-    "All data persistence must use localStorage (no backend changes required for these features)",
-    "Do not modify files in frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui"
+    "Do not change any existing promo code values (987987, 789789, 2580, 01736026413, 01859040014)",
+    "Do not modify immutable frontend paths: useInternetIdentity.ts, useActor.ts, main.tsx, or components/ui",
+    "Dark mode persistence must use localStorage only — no backend changes required",
+    "All premium lock checks must use the existing usePremiumStatus hook",
+    "The 199-item limit applies per content type, not as a global total"
   ],
   "nonGoals": [
-    "Android native app (AndroidManifest.xml, Java/Kotlin) is out of scope",
-    "Custom sound file replacement (REQ-5 of original list) — user will provide file later",
-    "Backend schema changes are not required for these features",
-    "Real-time sync or multi-device data sharing"
+    "Do not change the splash screen (already fixed in a previous version)",
+    "Do not change the Facebook URL in DeveloperInfoModal (already fixed)",
+    "Do not change the items sold count logic (already fixed)",
+    "Do not add any backend changes — all premium and theme logic remains in localStorage/frontend",
+    "Do not redesign any pages other than reverting PremiumModal to Version 27 style"
   ],
   "imageRequirements": {
-    "required": [
-      "Shopping basket icon with golden and green colors, transparent background, no black fill (shop-logo-golden-green.dim_128x128.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }

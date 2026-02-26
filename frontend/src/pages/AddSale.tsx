@@ -1,342 +1,376 @@
 import React, { useState, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { usePremiumStatus } from '../hooks/usePremiumStatus';
-import { Camera, Image, X, ChevronDown } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
+import { Camera, X, ChevronLeft, AlertCircle } from 'lucide-react';
 import CameraModal from '../components/CameraModal';
+import PremiumModal from '../components/PremiumModal';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
 
-interface SaleForm {
+interface Sale {
+  id: string;
   productName: string;
-  quantity: string;
+  quantity: number;
   unit: string;
-  sellingPrice: string;
-  buyingPrice: string;
-  note: string;
+  sellingPrice: number;
+  buyingPrice: number;
   colorTag: string;
-  image?: string;
+  note: string;
+  imageData?: string;
+  date: string;
+  profit: number;
 }
 
-const UNITS = ['Piece', 'KG', 'Gram', 'Liter', 'Dozen'];
-const COLOR_OPTIONS = [
-  { key: 'red', label: 'লাল', labelEn: 'Red', bg: 'bg-red-500', border: 'border-red-500', text: 'text-red-400' },
-  { key: 'yellow', label: 'হলুদ', labelEn: 'Yellow', bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-400' },
-  { key: 'green', label: 'সবুজ', labelEn: 'Green', bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-400' },
-  { key: 'blue', label: 'নীল', labelEn: 'Blue', bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-400' },
+interface AddSaleProps {
+  onBack: () => void;
+  onSaleAdded: () => void;
+}
+
+const COLOR_TAGS = [
+  { value: 'red', label: 'লাল', color: '#ef4444' },
+  { value: 'green', label: 'সবুজ', color: '#22c55e' },
+  { value: 'blue', label: 'নীল', color: '#3b82f6' },
+  { value: 'yellow', label: 'হলুদ', color: '#eab308' },
 ];
 
-function getSales(): Record<string, unknown>[] {
-  try {
-    const data = localStorage.getItem('sales');
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
+const FREE_ITEM_LIMIT = 199;
 
-function saveSale(sale: Record<string, unknown>) {
-  const sales = getSales();
-  sales.unshift(sale);
-  localStorage.setItem('sales', JSON.stringify(sales));
-}
-
-function getSaleCount(): number {
-  return getSales().length;
-}
-
-const AddSale: React.FC = () => {
+export default function AddSale({ onBack, onSaleAdded }: AddSaleProps) {
   const { t, language } = useLanguage();
+  const { isDark } = useTheme();
   const { isActive: isPremium } = usePremiumStatus();
-  const [form, setForm] = useState<SaleForm>({
-    productName: '',
-    quantity: '1',
-    unit: 'Piece',
-    sellingPrice: '',
-    buyingPrice: '',
-    note: '',
-    colorTag: '',
-  });
-  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
+  const isBn = language === 'bn';
+
+  const [productName, setProductName] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [unit, setUnit] = useState(isBn ? 'পিস' : 'pcs');
+  const [sellingPrice, setSellingPrice] = useState('');
+  const [buyingPrice, setBuyingPrice] = useState('');
+  const [colorTag, setColorTag] = useState('');
+  const [note, setNote] = useState('');
+  const [imageData, setImageData] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumModalReason, setPremiumModalReason] = useState<'color' | 'limit' | null>(null);
   const [error, setError] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const saleCount = getSaleCount();
-  const FREE_LIMIT = 199;
+  const [saving, setSaving] = useState(false);
 
-  const handleChange = (field: keyof SaleForm, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+  const getSalesCount = () => {
+    try {
+      const sales = JSON.parse(localStorage.getItem('sales') || '[]');
+      return Array.isArray(sales) ? sales.length : 0;
+    } catch {
+      return 0;
+    }
   };
 
-  const handleImageCapture = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      setForm(prev => ({ ...prev, image: e.target?.result as string }));
-    };
-    reader.readAsDataURL(file);
-    setShowCamera(false);
-  };
+  const salesCount = getSalesCount();
+  const nearLimit = !isPremium && salesCount >= 190 && salesCount < FREE_ITEM_LIMIT;
+  const atLimit = !isPremium && salesCount >= FREE_ITEM_LIMIT;
 
-  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      setForm(prev => ({ ...prev, image: ev.target?.result as string }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSubmit = () => {
-    if (!form.sellingPrice) {
-      setError(language === 'bn' ? 'বিক্রয় মূল্য আবশ্যক' : 'Selling price is required');
+  const handleColorTagClick = (value: string) => {
+    if (!isPremium) {
+      setPremiumModalReason('color');
+      setShowPremiumModal(true);
       return;
     }
-    if (!isPremium && saleCount >= FREE_LIMIT) {
-      setError(language === 'bn' ? 'বিনামূল্যে সীমা পূর্ণ হয়েছে' : 'Free limit reached');
+    setColorTag(prev => prev === value ? '' : value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!productName.trim()) {
+      setError(isBn ? 'পণ্যের নাম দিন' : 'Enter product name');
       return;
     }
-    const sale = {
-      id: Date.now().toString(),
-      productName: form.productName || (language === 'bn' ? 'পণ্য' : 'Product'),
-      quantity: parseFloat(form.quantity) || 1,
-      unit: form.unit,
-      sellingPrice: parseFloat(form.sellingPrice) || 0,
-      buyingPrice: parseFloat(form.buyingPrice) || 0,
-      note: form.note,
-      colorTag: form.colorTag,
-      image: form.image,
-      date: new Date().toISOString(),
-    };
-    saveSale(sale as Record<string, unknown>);
-    setSubmitted(true);
-    setError('');
-    setTimeout(() => {
-      setSubmitted(false);
-      setForm({ productName: '', quantity: '1', unit: 'Piece', sellingPrice: '', buyingPrice: '', note: '', colorTag: '' });
-    }, 1500);
+    if (!sellingPrice) {
+      setError(isBn ? 'বিক্রয় মূল্য দিন' : 'Enter selling price');
+      return;
+    }
+
+    if (atLimit) {
+      setPremiumModalReason('limit');
+      setShowPremiumModal(true);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const sales: Sale[] = JSON.parse(localStorage.getItem('sales') || '[]');
+      const sp = parseFloat(sellingPrice) || 0;
+      const bp = parseFloat(buyingPrice) || 0;
+      const qty = parseFloat(quantity) || 1;
+      const profit = (sp - bp) * qty;
+
+      const newSale: Sale = {
+        id: Date.now().toString(),
+        productName: productName.trim(),
+        quantity: qty,
+        unit,
+        sellingPrice: sp,
+        buyingPrice: bp,
+        colorTag,
+        note: note.trim(),
+        imageData: imageData || undefined,
+        date: new Date().toISOString(),
+        profit,
+      };
+
+      sales.unshift(newSale);
+      localStorage.setItem('sales', JSON.stringify(sales));
+      onSaleAdded();
+      onBack();
+    } catch (err) {
+      setError(isBn ? 'সংরক্ষণে সমস্যা হয়েছে' : 'Error saving sale');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePremiumActivate = () => {
+    setShowPremiumModal(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-8">
-      <div className="px-4 pt-4">
-        <h1 className="text-xl font-bold text-white mb-4">
-          {language === 'bn' ? 'বিক্রয় যোগ করুন' : 'Add Sale'}
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Header */}
+      <div className={`sticky top-0 z-10 px-4 py-3 flex items-center gap-3 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b shadow-sm`}>
+        <button onClick={onBack} className={`p-2 rounded-full ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>
+          <ChevronLeft size={22} className={isDark ? 'text-white' : 'text-gray-800'} />
+        </button>
+        <h1 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {isBn ? 'নতুন বিক্রয় যোগ করুন' : 'Add New Sale'}
         </h1>
+      </div>
 
-        {/* Sale count */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 mb-4 flex justify-between items-center">
-          <span className="text-gray-400 text-sm">{language === 'bn' ? 'বিক্রয় সংখ্যা' : 'Sales Count'}</span>
-          <span className={`font-bold text-sm ${isPremium ? 'text-green-400' : 'text-yellow-400'}`}>
-            {isPremium ? `${saleCount} / ∞` : `${saleCount} / ${FREE_LIMIT}`}
-          </span>
-        </div>
+      <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4 pb-24">
+        {/* Free limit warning */}
+        {nearLimit && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+            <AlertCircle size={16} className="text-amber-500 flex-shrink-0" />
+            <p className="text-amber-700 text-sm">
+              {isBn
+                ? `সতর্কতা: আপনি ${FREE_ITEM_LIMIT - salesCount}টি বিক্রয় আর যোগ করতে পারবেন (ফ্রি সীমা: ১৯৯)`
+                : `Warning: You can add ${FREE_ITEM_LIMIT - salesCount} more sales (free limit: 199)`}
+            </p>
+          </div>
+        )}
+
+        {atLimit && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200">
+            <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
+            <p className="text-red-700 text-sm">
+              {isBn ? 'ফ্রি সীমা শেষ! প্রিমিয়াম নিন আনলিমিটেড বিক্রয় যোগ করতে।' : 'Free limit reached! Get Premium for unlimited sales.'}
+            </p>
+          </div>
+        )}
 
         {/* Product Name */}
-        <div className="mb-4">
-          <label className="text-gray-400 text-sm mb-1.5 block">
-            {language === 'bn' ? 'পণ্যের নাম' : 'Product Name'}
+        <div>
+          <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {isBn ? 'পণ্যের নাম *' : 'Product Name *'}
           </label>
           <input
             type="text"
-            value={form.productName}
-            onChange={e => handleChange('productName', e.target.value)}
-            placeholder={language === 'bn' ? 'পণ্যের নাম লিখুন' : 'Enter product name'}
-            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600"
+            value={productName}
+            onChange={e => setProductName(e.target.value)}
+            placeholder={isBn ? 'পণ্যের নাম লিখুন' : 'Enter product name'}
+            className={`w-full px-4 py-3 rounded-xl border outline-none transition-colors ${
+              isDark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+            } focus:border-amber-500`}
           />
         </div>
 
-        {/* Quantity + Unit */}
-        <div className="flex gap-3 mb-4">
+        {/* Quantity & Unit */}
+        <div className="flex gap-3">
           <div className="flex-1">
-            <label className="text-gray-400 text-sm mb-1.5 block">
-              {language === 'bn' ? 'পরিমাণ' : 'Quantity'}
+            <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              {isBn ? 'পরিমাণ' : 'Quantity'}
             </label>
             <input
               type="number"
-              value={form.quantity}
-              onChange={e => handleChange('quantity', e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600"
+              value={quantity}
+              onChange={e => setQuantity(e.target.value)}
+              min="0.01"
+              step="0.01"
+              className={`w-full px-4 py-3 rounded-xl border outline-none transition-colors ${
+                isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+              } focus:border-amber-500`}
             />
           </div>
-          <div className="w-32">
-            <label className="text-gray-400 text-sm mb-1.5 block">
-              {language === 'bn' ? 'একক' : 'Unit'}
+          <div className="flex-1">
+            <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              {isBn ? 'একক' : 'Unit'}
             </label>
-            <div className="relative">
-              <button
-                onClick={() => setShowUnitDropdown(!showUnitDropdown)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-3 text-white flex items-center justify-between"
-              >
-                <span className="text-sm">{form.unit}</span>
-                <ChevronDown size={14} className="text-gray-400" />
-              </button>
-              {showUnitDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl overflow-hidden z-10 shadow-xl">
-                  {UNITS.map(u => (
-                    <button
-                      key={u}
-                      onClick={() => { handleChange('unit', u); setShowUnitDropdown(false); }}
-                      className="w-full px-4 py-2.5 text-left text-white text-sm hover:bg-gray-700"
-                    >
-                      {u}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <input
+              type="text"
+              value={unit}
+              onChange={e => setUnit(e.target.value)}
+              placeholder={isBn ? 'পিস/কেজি' : 'pcs/kg'}
+              className={`w-full px-4 py-3 rounded-xl border outline-none transition-colors ${
+                isDark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+              } focus:border-amber-500`}
+            />
           </div>
         </div>
 
         {/* Selling Price */}
-        <div className="mb-4">
-          <label className="text-gray-400 text-sm mb-1.5 block">
-            {language === 'bn' ? 'বিক্রয় মূল্য' : 'Selling Price'}{' '}
-            <span className="text-red-400">*</span>
+        <div>
+          <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {isBn ? 'বিক্রয় মূল্য (৳) *' : 'Selling Price (৳) *'}
           </label>
           <input
             type="number"
-            value={form.sellingPrice}
-            onChange={e => handleChange('sellingPrice', e.target.value)}
-            placeholder="৳ 0"
-            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600"
+            value={sellingPrice}
+            onChange={e => setSellingPrice(e.target.value)}
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            className={`w-full px-4 py-3 rounded-xl border outline-none transition-colors ${
+              isDark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+            } focus:border-amber-500`}
           />
         </div>
 
         {/* Buying Price */}
-        <div className="mb-4">
-          <label className="text-gray-400 text-sm mb-1.5 block">
-            {language === 'bn' ? 'ক্রয় মূল্য' : 'Buying Price'}
+        <div>
+          <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {isBn ? 'ক্রয় মূল্য (৳)' : 'Buying Price (৳)'}
           </label>
           <input
             type="number"
-            value={form.buyingPrice}
-            onChange={e => handleChange('buyingPrice', e.target.value)}
-            placeholder="৳ 0"
-            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600"
+            value={buyingPrice}
+            onChange={e => setBuyingPrice(e.target.value)}
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            className={`w-full px-4 py-3 rounded-xl border outline-none transition-colors ${
+              isDark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+            } focus:border-amber-500`}
           />
         </div>
 
-        {/* Color Tag */}
-        <div className="mb-4">
-          <label className="text-gray-400 text-sm mb-2 block">
-            {language === 'bn' ? 'রঙ বিভাজন' : 'Color Tag'}
+        {/* Color Tag - Premium locked for free users */}
+        <div>
+          <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {isBn ? 'রঙ ট্যাগ' : 'Color Tag'}
+            {!isPremium && (
+              <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                👑 {isBn ? 'প্রিমিয়াম' : 'Premium'}
+              </span>
+            )}
           </label>
-          <div className="flex gap-2 flex-wrap">
-            {COLOR_OPTIONS.map(c => (
+          <div className="flex gap-3">
+            {COLOR_TAGS.map(tag => (
               <button
-                key={c.key}
-                onClick={() => handleChange('colorTag', form.colorTag === c.key ? '' : c.key)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all ${
-                  form.colorTag === c.key
-                    ? `${c.border} bg-gray-800 ${c.text}`
-                    : 'border-gray-700 text-gray-500 hover:border-gray-500'
-                }`}
+                key={tag.value}
+                type="button"
+                onClick={() => handleColorTagClick(tag.value)}
+                className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
+                  colorTag === tag.value
+                    ? 'border-amber-500 scale-110'
+                    : isDark ? 'border-gray-600' : 'border-gray-200'
+                } ${!isPremium ? 'opacity-60' : ''}`}
               >
-                <div className={`w-3 h-3 rounded-full ${c.bg}`} />
-                <span className="text-xs font-medium">
-                  {language === 'bn' ? c.label : c.labelEn}
-                </span>
+                <div
+                  className="w-8 h-8 rounded-full shadow-sm"
+                  style={{ backgroundColor: tag.color }}
+                />
+                <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{tag.label}</span>
+                {!isPremium && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/10">
+                    <span className="text-xs">🔒</span>
+                  </div>
+                )}
               </button>
             ))}
           </div>
         </div>
 
         {/* Note */}
-        <div className="mb-4">
-          <label className="text-gray-400 text-sm mb-1.5 block">
-            {language === 'bn' ? 'নোট' : 'Note'}
+        <div>
+          <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {isBn ? 'নোট' : 'Note'}
           </label>
           <textarea
-            value={form.note}
-            onChange={e => handleChange('note', e.target.value)}
-            placeholder={language === 'bn' ? 'ঐচ্ছিক নোট...' : 'Optional note...'}
-            rows={2}
-            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-600 resize-none"
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder={isBn ? 'অতিরিক্ত তথ্য লিখুন...' : 'Additional notes...'}
+            rows={3}
+            className={`w-full px-4 py-3 rounded-xl border outline-none transition-colors resize-none ${
+              isDark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+            } focus:border-amber-500`}
           />
         </div>
 
-        {/* Product Image */}
-        <div className="mb-4">
-          <label className="text-gray-400 text-sm mb-2 block">
-            {language === 'bn' ? 'পণ্যের ছবি' : 'Product Image'}
+        {/* Image */}
+        <div>
+          <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {isBn ? 'ছবি (ঐচ্ছিক)' : 'Image (Optional)'}
           </label>
-          {form.image ? (
-            <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-700">
-              <img src={form.image} alt="Product" className="w-full h-full object-cover" />
+          {imageData ? (
+            <div className="relative inline-block">
+              <img src={imageData} alt="product" className="w-24 h-24 rounded-xl object-cover" />
               <button
-                onClick={() => handleChange('image', '')}
-                className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-white"
+                type="button"
+                onClick={() => setImageData(null)}
+                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center"
               >
-                <X size={16} />
+                <X size={12} />
               </button>
             </div>
           ) : (
-            <div className="flex gap-3">
-              {isPremium && (
-                <button
-                  onClick={() => setShowCamera(true)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-gray-900 border border-gray-700 rounded-xl py-3 text-gray-400 hover:border-green-600 hover:text-green-400 transition-colors"
-                >
-                  <Camera size={18} />
-                  <span className="text-sm">{language === 'bn' ? 'ক্যামেরা' : 'Camera'}</span>
-                </button>
-              )}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-900 border border-gray-700 rounded-xl py-3 text-gray-400 hover:border-green-600 hover:text-green-400 transition-colors"
-              >
-                <Image size={18} />
-                <span className="text-sm">{language === 'bn' ? 'গ্যালারি' : 'Gallery'}</span>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleGallerySelect}
-              />
-            </div>
-          )}
-          {!isPremium && !form.image && (
-            <div className="mt-2 bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-500">
-                {language === 'bn' ? 'বিজ্ঞাপন' : 'Advertisement'}
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowCamera(true)}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed transition-colors ${
+                isDark ? 'border-gray-600 text-gray-400 hover:border-amber-500' : 'border-gray-300 text-gray-500 hover:border-amber-500'
+              }`}
+            >
+              <Camera size={18} />
+              <span className="text-sm">{isBn ? 'ছবি তুলুন' : 'Take Photo'}</span>
+            </button>
           )}
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-4 bg-red-900/30 border border-red-700/50 rounded-xl px-4 py-3">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200">
+            <AlertCircle size={16} className="text-red-500" />
+            <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
 
         {/* Submit */}
         <button
-          onClick={handleSubmit}
-          disabled={submitted}
-          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${
-            submitted
-              ? 'bg-green-600 text-white scale-95'
-              : 'bg-green-600 hover:bg-green-500 text-white active:scale-95'
-          }`}
+          type="submit"
+          disabled={saving || atLimit}
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold text-lg shadow-lg disabled:opacity-50 active:scale-95 transition-transform"
         >
-          {submitted
-            ? '✅ ' + (language === 'bn' ? 'বিক্রয় যোগ হয়েছে!' : 'Sale Added!')
-            : (language === 'bn' ? 'বিক্রয় যোগ করুন' : 'Add Sale')}
+          {saving ? (isBn ? 'সংরক্ষণ হচ্ছে...' : 'Saving...') : (isBn ? 'বিক্রয় সংরক্ষণ করুন' : 'Save Sale')}
         </button>
-      </div>
+      </form>
 
-      {showCamera && (
-        <CameraModal
-          isOpen={showCamera}
-          onCapture={handleImageCapture}
-          onClose={() => setShowCamera(false)}
-        />
-      )}
+      {/* Camera Modal */}
+      <CameraModal
+        isOpen={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={(file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setImageData(e.target?.result as string);
+            setShowCamera(false);
+          };
+          reader.readAsDataURL(file);
+        }}
+      />
+
+      {/* Premium Modal */}
+      <PremiumModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        onActivate={handlePremiumActivate}
+      />
     </div>
   );
-};
-
-export default AddSale;
+}

@@ -131,7 +131,7 @@ const DeveloperInfoModal: React.FC<DeveloperInfoModalProps> = ({ isOpen, onClose
           style={{ borderColor: isDark ? '#333' : '#e5e7eb' }}
         >
           <a
-            href="https://www.facebook.com"
+            href="https://fb.openinapp.co/khncs"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold text-white"

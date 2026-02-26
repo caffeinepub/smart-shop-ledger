@@ -1,80 +1,119 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Smart Shop Ledger - A Bengali shop management web app (WebView-compatible) with sales tracking, task/shopping lists, AdMob banner ads, color categorization, premium subscription, and animated UI components.",
+  "projectStateVersion": 7,
+  "summary": "Smart Shop Ledger (স্মার্ট শপ লেজার) app - working on Version 31 with fixes: (1) Dark mode persistence fix so dark mode stays active after app close/reopen, (2) Revert premium modal design to Version 27 style, (3) Premium lock enforcement: color categorization on home screen, task list & shopping list (bottom nav), 3 color themes in settings, 199-item free tier limit (unlimited for premium), custom sound upload, data export, advanced statistics.",
   "architectural_notes": [
-    "App is a React+TypeScript web app hosted on Caffeine (smart-shop-ledger-j7l.caffeine.xyz), intended to be wrapped in a WebView Android app",
-    "AdMob App ID: ca-app-pub-1425556101841688~8624741531; Banner Ad Unit ID: ca-app-pub-1425556101841688/7582793038",
-    "Daily reset at midnight: Today's sales data auto-saves to history, counters reset to zero",
-    "Data persistence via LocalStorage with backup support"
+    "Facebook link updated to https://fb.openinapp.co/khncs (custom open-in-app link)",
+    "Admin email for premium BUY button: mdjahidhasanrubel73@gmail.com",
+    "Splash screen: text-only animation, no logo image; app interior uses original logos",
+    "Fake registration system (Google/Facebook/Email UI present but non-functional without premium); settings shows email saved but verification incomplete",
+    "Color categorization (red/green/blue/orange dots) on sales entry + home screen color summary - premium locked",
+    "Shopping list & task list as bottom-sheet popups with sound+animation+tap-hold-to-complete; both premium locked",
+    "Today's sales section: Daily Gross Income + Daily Net Profit shown separately; auto-reset midnight, history auto-save",
+    "Three sound types: click sound, popup sound, other (success/error); custom sound upload is premium feature",
+    "Premium locked features: shopping/task lists, color categorization, premium themes (half locked), custom sounds, camera, registration system",
+    "Promo codes (5 total): 987987, 789789, 2580, 01736026413, 01859040014"
   ],
   "known_issues": [
-    "Sales history previously showed incorrect profit/income logic - needs separation into Daily Gross Income and Daily Net Profit"
+    "Notifications not firing when items are added - needs fix in v26",
+    "Home screen items sold count shows 16 instead of correct count when one item is added - needs fix in v27",
+    "Dark mode resets to light mode after app close/reopen - needs fix"
   ],
-  "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Shopping basket icon with golden and green colors, transparent background, no black fill (shop-logo-golden-green.dim_128x128.png)",
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-integrate-admob-banner-ad-in-the-web-app-using-app-id-ca-app-pub-1425556101841688-8624741531-and-ad-unit-id-ca-app-pub-1425556101841688-7582793038-place-the-banner-ad-at-high-traffic-locations-e-g-bottom-of-home-page-above-the-nav-bar-and-top-of-history-page-following-google-admob-placement-policies-the-ad-should-only-be-visible-to-non-premium-users",
-      "title": "Integrate AdMob Banner Ad in the web app using App ID `ca-app-pub-1425556101841688~8624741531` and Ad Unit ID `ca-app-pub-1425556101841688/7582793038`. Place the banner ad at high-traffic locations (e.g., bottom of Home page above the nav bar, and top of History page) following Google AdMob placement policies. The ad should only be visible to non-premium users.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-facebook-page-button-link-in-the-settings-page-to-https-fb-openinapp-co-khncs-replacing-any-previously-hardcoded-facebook-url",
-      "title": "Update the Facebook Page button link in the Settings page to `https://fb.openinapp.co/khncs`, replacing any previously hardcoded Facebook URL.",
+      "id": "feature-add-two-new-promo-codes-01736026413-and-01859040014-to-the-existing-list-in-premiummodal-keeping-all-previous-codes-987987-789789-2580-the-total-valid-promo-code-list-must-be-987987-789789-2580-01736026413-01859040014",
+      "title": "Add two new promo codes ('01736026413' and '01859040014') to the existing list in PremiumModal, keeping all previous codes ('987987', '789789', '2580'). The total valid promo code list must be: 987987, 789789, 2580, 01736026413, 01859040014.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-fix-the-sales-history-summary-logic-in-frontend-src-pages-history-tsx-replace-the-current-single-profit-revenue-card-with-two-separate-cards-1-today-s-total-income-sum-of-all-today-s-selling-prices-gross-revenue-and-2-today-s-net-profit-today-s-total-income-minus-total-cost-of-goods-sold-both-cards-reset-at-midnight-and-are-auto-saved-to-history-display-them-side-by-side-as-distinct-styled-cards-with-clear-labels",
-      "title": "Fix the sales history summary logic in `frontend/src/pages/History.tsx`. Replace the current single profit/revenue card with two separate cards: (1) 'Today's Total Income' = sum of all today's selling prices (gross revenue), and (2) 'Today's Net Profit' = Today's Total Income minus total cost of goods sold. Both cards reset at midnight and are auto-saved to history. Display them side-by-side as distinct styled cards with clear labels.",
+      "id": "feature-fix-the-items-sold-count-bug-on-the-home-screen-dashboard-the-count-currently-shows-16-instead-of-the-correct-number-when-only-one-item-is-added-the-items-sold-counter-must-reflect-the-actual-number-of-sale-records-added-today-not-a-hardcoded-or-miscalculated-value",
+      "title": "Fix the items sold count bug on the Home screen dashboard. The count currently shows 16 instead of the correct number when only one item is added. The items sold counter must reflect the actual number of sale records added today, not a hardcoded or miscalculated value.",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-redesign-the-shopping-list-and-task-list-cards-on-the-home-page-to-open-as-bottom-sheet-popups-instead-of-navigating-to-a-separate-page-the-popup-should-slide-up-from-the-bottom-covering-80-of-the-screen-height-task-list-popup-tap-hold-an-item-for-2-seconds-to-mark-it-complete-with-glow-animation-confetti-animation-success-bell-sound-device-vibration-shopping-list-popup-swipe-an-item-left-right-to-mark-as-bought-with-card-fade-out-animation-cash-register-sound-sound-system-play-a-whoosh-sound-when-any-popup-opens-and-a-soft-click-sound-when-it-closes-persist-all-list-data-to-localstorage",
-      "title": "Redesign the Shopping List (কেনাকাটার তালিকা) and Task List (কাজের তালিকা) cards on the Home page to open as Bottom Sheet Popups instead of navigating to a separate page. The popup should slide up from the bottom covering 80% of the screen height. Task List popup: Tap & Hold an item for 2 seconds to mark it complete, with glow animation + confetti animation + success bell sound + device vibration. Shopping List popup: Swipe an item left/right to mark as bought, with card fade-out animation + cash register sound. Sound system: play a 'Whoosh' sound when any popup opens and a 'Soft Click' sound when it closes. Persist all list data to localStorage.",
+      "id": "feature-in-the-settings-page-ensure-the-facebook-page-button-opens-the-url-https-fb-openinapp-co-khncs-verify-and-update-the-developerinfomodal-or-wherever-the-facebook-link-is-stored-so-that-tapping-it-opens-exactly-this-url",
+      "title": "In the Settings page, ensure the Facebook Page button opens the URL https://fb.openinapp.co/khncs. Verify and update the DeveloperInfoModal or wherever the Facebook link is stored so that tapping it opens exactly this URL.",
       "reqIds": [
         "REQ-4"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-color-categorization-to-the-add-sale-flow-in-frontend-src-pages-addsale-tsx-when-adding-a-sale-show-4-color-tag-options-displayed-as-colored-dot-label-in-a-single-row-red-yellow-green-blue-save-the-selected-color-tag-with-each-sale-record-on-the-home-screen-update-the-card-to-show-a-breakdown-of-today-s-sales-count-per-color-tag-e-g-red-3-yellow-2-etc",
-      "title": "Add color categorization (রঙ বিভাজন) to the Add Sale flow in `frontend/src/pages/AddSale.tsx`. When adding a sale, show 4 color tag options displayed as colored dot + label in a single row: Red (লাল), Yellow (হলুদ), Green (সবুজ), Blue (নীল). Save the selected color tag with each sale record. On the Home screen, update the 'রঙ বিভাজন' card to show a breakdown of today's sales count per color tag (e.g., 🔴 Red: 3, 🟡 Yellow: 2, etc.).",
+      "id": "feature-update-the-splashscreen-component-to-remove-the-logo-image-and-show-only-a-text-based-animation-the-splash-screen-should-animate-only-the-app-name-text-e-g-smart-shop-ledger-without-displaying-any-logo-graphic",
+      "title": "Update the SplashScreen component to remove the logo image and show only a text-based animation. The splash screen should animate only the app name text (e.g., 'Smart Shop Ledger' / 'স্মার্ট শপ লেজার') without displaying any logo graphic.",
       "reqIds": [
         "REQ-5"
       ],
       "version": 1
     },
     {
-      "id": "feature-upgrade-the-premium-section-ui-in-frontend-src-components-premiummodal-tsx-and-any-premium-plans-display-add-a-buy-button-above-each-of-the-3-subscription-plans-when-a-buy-button-is-clicked-display-the-owner-s-contact-email-with-a-one-tap-copy-to-clipboard-option-trigger-a-bubble-float-up-animation-and-a-sound-effect-after-a-user-successfully-activates-a-subscription-code-show-a-full-screen-congratulations-animation-confetti-or-similar-improve-the-overall-premium-ui-with-better-spacing-typography-and-visual-hierarchy",
-      "title": "Upgrade the Premium section UI in `frontend/src/components/PremiumModal.tsx` and any premium plans display. Add a 'BUY' button above each of the 3 subscription plans. When a BUY button is clicked: display the owner's contact email with a one-tap copy-to-clipboard option, trigger a bubble/float-up animation and a sound effect. After a user successfully activates a subscription code, show a full-screen 'Congratulations' animation (confetti or similar). Improve the overall premium UI with better spacing, typography, and visual hierarchy.",
+      "id": "feature-fix-dark-mode-persistence-save-the-user-s-dark-light-mode-preference-to-localstorage-so-that-when-the-app-is-closed-and-reopened-the-dark-mode-state-is-restored-exactly-as-it-was-left-the-themecontext-must-read-from-localstorage-on-initialization-and-write-to-localstorage-on-every-toggle",
+      "title": "Fix dark mode persistence: save the user's dark/light mode preference to localStorage so that when the app is closed and reopened, the dark mode state is restored exactly as it was left. The ThemeContext must read from localStorage on initialization and write to localStorage on every toggle.",
       "reqIds": [
         "REQ-6"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-a-today-s-sales-summary-popup-on-the-home-screen-the-existing-stats-area-should-be-tappable-clicking-it-opens-a-smooth-slide-up-bottom-sheet-popup-70-80-screen-height-showing-a-detailed-list-of-all-today-s-sales-with-product-names-quantities-selling-prices-and-a-totals-row-total-income-net-profit-at-the-bottom",
-      "title": "Add a 'Today's Sales' summary popup on the Home screen. The existing stats area should be tappable; clicking it opens a smooth slide-up bottom sheet popup (70-80% screen height) showing a detailed list of all today's sales with product names, quantities, selling prices, and a totals row (Total Income + Net Profit) at the bottom.",
+      "id": "feature-revert-the-premiummodal-component-s-visual-design-back-to-the-version-27-style-the-modal-must-use-the-original-layout-color-scheme-card-styles-typography-button-styles-and-overall-visual-appearance-from-version-27-do-not-change-any-promo-code-logic-or-plan-pricing-only-restore-the-ui-design",
+      "title": "Revert the PremiumModal component's visual design back to the Version 27 style. The modal must use the original layout, color scheme, card styles, typography, button styles, and overall visual appearance from Version 27. Do not change any promo code logic or plan pricing — only restore the UI design.",
       "reqIds": [
         "REQ-7"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-all-app-icons-and-logos-throughout-the-app-remove-any-black-background-from-icon-logo-elements-apply-a-golden-green-color-scheme-to-the-logo-and-use-a-shopping-basket-or-shopping-bag-icon-as-the-primary-logo-graphic-update-the-splash-screen-header-logo-and-favicon-accordingly",
-      "title": "Update all app icons and logos throughout the app: remove any black background from icon/logo elements, apply a golden + green color scheme to the logo, and use a shopping basket or shopping bag icon as the primary logo graphic. Update the splash screen, header logo, and favicon accordingly.",
+      "id": "feature-lock-the-color-categorization-feature-on-the-home-screen-behind-premium-when-a-free-user-tries-to-use-color-tags-to-categorize-items-the-color-picker-color-tag-selector-in-the-addsale-form-or-home-screen-breakdown-show-a-premiummodal-prompt-instead-of-allowing-access-premium-users-can-use-it-freely",
+      "title": "Lock the color categorization feature on the Home screen behind premium. When a free user tries to use color tags to categorize items (the color picker/color tag selector in the AddSale form or home screen breakdown), show a PremiumModal prompt instead of allowing access. Premium users can use it freely.",
       "reqIds": [
         "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-lock-the-task-list-and-product-list-bottom-navigation-or-bottom-options-behind-premium-free-users-tapping-these-options-must-see-a-premiummodal-prompt-premium-users-can-access-them-freely",
+      "title": "Lock the 'Task List' (তোমার কাজের তালিকা) and 'Product List' (তোমার পণ্যের তালিকা) bottom navigation or bottom options behind premium. Free users tapping these options must see a PremiumModal prompt. Premium users can access them freely.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-settings-page-lock-3-specific-color-themes-behind-premium-mark-those-3-themes-with-a-lock-icon-for-free-users-when-a-free-user-taps-a-locked-theme-show-the-premiummodal-premium-users-can-apply-all-themes-freely-the-default-theme-must-remain-usable-by-free-users",
+      "title": "In the Settings page, lock 3 specific color themes behind premium. Mark those 3 themes with a lock icon for free users. When a free user taps a locked theme, show the PremiumModal. Premium users can apply all themes freely. The default theme must remain usable by free users.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enforce-a-199-item-free-tier-limit-across-all-addable-content-sales-records-product-list-entries-task-list-items-shopping-list-items-when-a-free-user-attempts-to-add-a-200th-item-of-any-type-block-the-action-and-show-a-premiummodal-prompt-premium-users-have-no-item-limit-the-199-item-cap-applies-per-content-type",
+      "title": "Enforce a 199-item free tier limit across all addable content (sales records, product list entries, task list items, shopping list items). When a free user attempts to add a 200th item of any type, block the action and show a PremiumModal prompt. Premium users have no item limit. The 199-item cap applies per content type.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-lock-the-custom-sound-upload-feature-in-settings-behind-premium-free-users-should-see-the-custom-sound-upload-option-with-a-lock-icon-tapping-it-must-open-the-premiummodal-premium-users-can-upload-and-use-custom-sounds-freely",
+      "title": "Lock the custom sound upload feature in Settings behind premium. Free users should see the custom sound upload option with a lock icon; tapping it must open the PremiumModal. Premium users can upload and use custom sounds freely.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-data-export-premium-feature-allow-premium-users-to-export-their-sales-history-and-product-list-data-as-a-downloadable-csv-or-text-file-from-the-settings-or-history-page-for-free-users-show-the-export-option-with-a-lock-icon-that-opens-the-premiummodal-when-tapped",
+      "title": "Add a 'Data Export' premium feature: allow premium users to export their sales history and product list data as a downloadable CSV or text file from the Settings or History page. For free users, show the export option with a lock icon that opens the PremiumModal when tapped.",
+      "reqIds": [
+        "REQ-13"
       ],
       "version": 1
     }
@@ -82,56 +121,36 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "AdMob Banner Ad integration (App ID: ca-app-pub-1425556101841688~8624741531, Ad Unit ID: ca-app-pub-1425556101841688/7582793038) placed at high-traffic locations per Google policy",
-      "reqIds": [],
+      "summary": "In the Settings page, update the Facebook Page button URL from the old link to the new custom link: https://fb.openinapp.co/khncs. When the user taps the Facebook Page button, the app must open this new URL.",
+      "reqIds": [
+        "REQ-1"
+      ],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Update Facebook link in settings (image position 1) to https://fb.openinapp.co/khncs",
+      "summary": "Fix dark mode persistence: dark mode should remain active even after app is closed and reopened (save preference to storage).",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Fix sales history logic: separate 'Today's Total Income' (Daily Gross Income = sum of all sales) and 'Today's Net Profit' (Daily Net Profit = Gross Income - Total Cost), shown as separate cards with daily reset at midnight and auto-save to history",
+      "summary": "Revert premium modal/UI design back to Version 27 style.",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Redesign কেনাকাটা ও কাজের তালিকা as Bottom Sheet Popups (80% screen height, slide-up animation). Task list: Tap & Hold 2s to complete with glow+confetti+bell sound+vibration. Shopping list: Swipe to mark bought with fade+cash register sound. Sound system: Whoosh on open, Soft Click on close.",
+      "summary": "Enforce premium locks: color categorization on home screen, task list & product list (bottom options), 3 color themes in settings locked, free tier capped at 199 items (unlimited for premium), custom sound upload locked, data export locked, advanced statistics locked.",
       "reqIds": [],
       "status": "pending"
     },
     {
-      "id": "AR-5",
-      "summary": "Replace default click sound with new sound file (to be provided by user later)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Update all app icons/logos: no background, golden + green color, shopping basket/bag icon",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Premium section upgrade: add BUY button above 3 plans showing owner email on click (copyable), bubble animation + sound on BUY click, Congratulations animation after subscription purchase, improved premium UI",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Color categorization (রং বিভাজন): 4 color options (Red, Yellow, Green, Blue) as dot+name in single line when adding a sale. Home screen shows color-wise breakdown of sales count/items.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Today's Sales popup on home screen: compact card showing Total Income + Net Profit, click opens smooth slide-up popup (70-80% height) with product list, quantities, prices, and totals",
-      "reqIds": [],
+      "id": "AR-13",
+      "summary": "Add an 'Advanced Statistics' premium feature: show premium users a detailed analytics section (e.g., weekly/monthly profit trends, top-selling products, best sales days) accessible from the Home or History page. For free users, show the section with a lock overlay that opens the PremiumModal when tapped.",
+      "reqIds": [
+        "REQ-14"
+      ],
       "status": "pending"
     }
   ],

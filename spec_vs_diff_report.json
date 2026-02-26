@@ -1,94 +1,48 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T13:45:03.346Z",
-  "summary": "The diff implements most of the 8 requirements. REQ-1 through REQ-7 are substantially implemented. REQ-8 (logo/icon update) appears partially addressed via file references but the actual image asset is not confirmed in the diff. Several specific acceptance criteria have gaps: the AdMob App ID in index.html uses only the publisher ID prefix, the midnight reset/auto-save to history logic for REQ-3 is not evident, and the glow animation for Task List completion (REQ-4) is not confirmed.",
+  "generatedAt": "2026-02-26T03:40:44.204Z",
+  "summary": "The diff implements most of the requested requirements. REQ-6 (dark mode persistence), REQ-8 (color tag lock), REQ-9 (task/product list nav lock), REQ-10 (3 premium themes), REQ-11 (199-item limit for sales, products, tasks, shopping list), REQ-12 (custom sound lock), and REQ-13 (data export) are all clearly implemented. REQ-14 (Advanced Statistics) shows a BarChart2 icon import in Settings but no actual AdvancedStatistics section is visible in the diff. REQ-7 (revert PremiumModal to Version 27 style) is ambiguous — the modal was changed but it cannot be confirmed it matches Version 27 style.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "AdMob script must be loaded with the correct App ID ca-app-pub-1425556101841688~8624741531",
-      "reason": "In frontend/index.html, the adsbygoogle.js script uses client=ca-app-pub-1425556101841688 (publisher ID only), not the full App ID ca-app-pub-1425556101841688~8624741531. The full App ID with the tilde and suffix is missing.",
+      "id": "REQ-14",
+      "requirement": "Add an 'Advanced Statistics' premium feature: show premium users a detailed analytics section (weekly/monthly profit trends, top-selling products, best sales days) accessible from the Home or History page. For free users, show the section with a lock overlay that opens the PremiumModal when tapped.",
+      "reason": "No AdvancedStatistics component or section is visible in any of the modified files. The BarChart2 icon is imported in Settings but no advanced statistics UI with profit trends, top-selling products, or best sales days is implemented in the diff.",
       "evidence": [
-        "frontend/index.html"
+        "frontend/src/pages/Settings.tsx"
       ]
     },
     {
-      "id": "REQ-1",
-      "requirement": "Banner ad appears at the bottom of Home page (above nav bar) for non-premium users",
-      "reason": "AdMobBanner is explicitly imported and placed only in History.tsx in the diff. The Layout component summary mentions an ad banner above the nav bar, but no direct AdMobBanner placement is visible in Home.tsx source.",
+      "id": "REQ-7",
+      "requirement": "Revert the PremiumModal component's visual design back to the Version 27 style with original layout, color scheme, card styles, typography, and button styles.",
+      "reason": "The PremiumModal.tsx was modified but the diff shows a design with animated bubbles background and tab-based layout. Without access to the Version 27 reference design, it cannot be confirmed this matches Version 27. The implementation appears to be a new design rather than a literal revert.",
       "evidence": [
-        "frontend/src/pages/History.tsx",
-        "frontend/src/pages/Home.tsx"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "requirement": "Both cards reset to zero at midnight and previous day's totals are saved to history before reset",
-      "reason": "History.tsx computes totalIncome and netProfit from today's sales on render, but there is no evidence of a midnight reset timer or auto-save of previous day's totals to a history store anywhere in the diff.",
-      "evidence": [
-        "frontend/src/pages/History.tsx"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "requirement": "Task List: glow animation on task completion",
-      "reason": "TaskListPopup.tsx shows confetti animation and bell sound/vibration on task completion, but no glow animation class or style is visible in the truncated code.",
-      "evidence": [
-        "frontend/src/components/TaskListPopup.tsx"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Updated logo appears on splash screen, header, and as favicon with golden+green shopping basket/bag icon and no black background",
-      "reason": "The diff references existing image paths like app-logo.dim_80x80.png in HTML and components, but the actual new image asset files with golden+green shopping basket design are not present in the added files list. It cannot be confirmed the icons were replaced.",
-      "evidence": [
-        "frontend/index.html",
-        "frontend/src/pages/Home.tsx"
+        "frontend/src/components/PremiumModal.tsx"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "InterstitialAdScreen component integrated into the app startup flow",
-      "reason": "The build request only asked for AdMob banner ads (REQ-1). An interstitial ad screen shown at app startup was not requested.",
+      "description": "Extra promo codes 'PREMIUM2024' and 'SMART2024' added to VALID_PROMO_CODES array in PremiumModal",
+      "reason": "The build request explicitly states 'Do not change any existing promo code values (987987, 789789, 2580, 01736026413, 01859040014)'. The diff adds two new undocumented promo codes 'PREMIUM2024' and 'SMART2024' that were never requested.",
       "evidence": [
-        "frontend/src/App.tsx"
-      ]
-    },
-    {
-      "description": "Global click sound listener firing on all button and interactive element clicks throughout the app",
-      "reason": "While sound effects for specific interactions were requested in REQ-4 and REQ-6, a global click sound listener attached to all buttons app-wide was not part of any requirement.",
-      "evidence": [
-        "frontend/src/App.tsx"
-      ]
-    },
-    {
-      "description": "Sound upload feature in Settings allowing users to upload a custom click sound file",
-      "reason": "The build request explicitly states custom sound file replacement is out of scope. The Settings page still implements a handleUploadSound function with a file input for audio upload.",
-      "evidence": [
-        "frontend/src/pages/Settings.tsx"
+        "frontend/src/components/PremiumModal.tsx"
       ]
     }
   ],
   "confidence": 0.72,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/index.html",
     "frontend/src/App.tsx",
-    "frontend/src/components/AdMobBanner.tsx",
-    "frontend/src/components/BottomSheet.tsx",
-    "frontend/src/components/CongratulationsAnimation.tsx",
+    "frontend/src/components/Layout.tsx",
     "frontend/src/components/PremiumModal.tsx",
     "frontend/src/components/ShoppingListPopup.tsx",
     "frontend/src/components/TaskListPopup.tsx",
-    "frontend/src/components/TodaysSalesPopup.tsx",
-    "frontend/src/index.css",
+    "frontend/src/contexts/ThemeContext.tsx",
     "frontend/src/pages/AddSale.tsx",
-    "frontend/src/pages/History.tsx",
-    "frontend/src/pages/Home.tsx",
+    "frontend/src/pages/Lists.tsx",
+    "frontend/src/pages/ProductList.tsx",
     "frontend/src/pages/Settings.tsx",
-    "frontend/src/utils/sounds.ts",
-    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

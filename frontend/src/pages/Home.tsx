@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { TrendingUp, ShoppingCart, Package, Tag, Plus, History, List, ShoppingBag } from 'lucide-react';
 import TaskListPopup from '../components/TaskListPopup';
@@ -27,7 +27,13 @@ function getTodaysSales(): Sale[] {
     if (!data) return [];
     const sales: Sale[] = JSON.parse(data);
     const today = new Date().toDateString();
-    return sales.filter(s => new Date(s.date).toDateString() === today);
+    return sales.filter(s => {
+      try {
+        return new Date(s.date).toDateString() === today;
+      } catch {
+        return false;
+      }
+    });
   } catch {
     return [];
   }
@@ -58,16 +64,44 @@ const Home: React.FC = () => {
   const [shoppingPopupOpen, setShoppingPopupOpen] = useState(false);
   const [salesPopupOpen, setSalesPopupOpen] = useState(false);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
+  const refreshData = useCallback(() => {
     setTodaysSales(getTodaysSales());
     setShopProfile(getShopProfile());
   }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    refreshData();
+
+    // Listen for storage changes (when sales are added from AddSale page)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'sales') {
+        setTodaysSales(getTodaysSales());
+      }
+    };
+
+    // Also listen for custom navigate events to refresh on return
+    const handleNavigate = () => {
+      refreshData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', refreshData);
+    document.addEventListener('visibilitychange', handleNavigate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', refreshData);
+      document.removeEventListener('visibilitychange', handleNavigate);
+    };
+  }, [refreshData]);
+
+  // Count of individual sale records added today (not sum of quantities)
+  const itemsSold = todaysSales.length;
+
   const totalIncome = todaysSales.reduce((sum, s) => sum + (s.sellingPrice || 0), 0);
   const totalCost = todaysSales.reduce((sum, s) => sum + (s.buyingPrice || 0), 0);
   const netProfit = totalIncome - totalCost;
-  const itemsSold = todaysSales.length;
 
   const colorCounts = COLOR_CONFIG.reduce((acc, c) => {
     acc[c.key] = todaysSales.filter(s => s.colorTag === c.key).length;
@@ -123,7 +157,7 @@ const Home: React.FC = () => {
           <p className="text-2xl font-bold text-white">৳{totalIncome.toFixed(0)}</p>
         </button>
 
-        {/* Items Sold */}
+        {/* Items Sold — counts individual sale records added today */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <Package size={16} className="text-green-400" />
